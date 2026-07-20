@@ -1,0 +1,25 @@
+# Obsidian local state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+
+# macOS
+.DS_Store
+
+# Secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*credentials*
+*token*
+*secret*
+
+# Runtime and temporary files
+*.log
+*.tmp
+.tmp/
+
+# Large local evidence; keep only the index in the shared Vault
+08-evidence/attachments/
