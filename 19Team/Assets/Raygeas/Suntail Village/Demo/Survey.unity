@@ -8442,7 +8442,7 @@ MonoBehaviour:
   _first: {fileID: 252624669}
   _find: {fileID: 773114956}
   _dog: {fileID: 2029685723}
-  _apiKey: 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
+  _apiKey: 
   _endpoint: https://api.openai.com/v1/responses
   _model: gpt-4.1-mini
   _instructions: "\uC0AC\uC6A9\uC790\uC758 \uBC18\uB824\uACAC \uC124\uBB38 \uC751\uB2F5\uC744
