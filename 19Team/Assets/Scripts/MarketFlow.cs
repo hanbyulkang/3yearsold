@@ -25,6 +25,15 @@ public sealed class MarketFlow : MonoBehaviour
     public Sprite boneGoldSprite;
     public Sprite jerkySprite;
 
+    [Header("F-05 육포 충전")]
+    public Sprite packCardSprite;
+    public Sprite packCardBestSprite;
+    public Sprite priceButtonSprite;
+    public Sprite limitCardSprite;
+    public Sprite limitGaugeTrackSprite;
+    public Sprite limitGaugeFillSprite;
+    public Sprite jerkyTileSprite;
+
     // ---------- 서버 연동 상태 ----------
     // 가격·잔액을 클라가 계산하지 않는다. 전부 서버 값이다 (PRD §5.5).
     private Backend.ShopApi.Skin[] _catalog = System.Array.Empty<Backend.ShopApi.Skin>();
@@ -110,7 +119,8 @@ public sealed class MarketFlow : MonoBehaviour
         Shop,
         Skin,
         Set,
-        Checkout
+        Checkout,
+        Topup     // F-05 육포 충전
     }
 
     private void Start()
@@ -176,6 +186,12 @@ public sealed class MarketFlow : MonoBehaviour
         ShowScreen(ScreenId.Checkout);
     }
 
+    public void ShowTopup()
+    {
+        ShowScreen(ScreenId.Topup);
+        LoadTopup();
+    }
+
     public string CurrentScreenName()
     {
         return currentScreen.ToString();
@@ -200,6 +216,7 @@ public sealed class MarketFlow : MonoBehaviour
         if (screen == ScreenId.Shop) BuildShop();
         else if (screen == ScreenId.Skin) BuildSkin();
         else if (screen == ScreenId.Set) BuildSet();
+        else if (screen == ScreenId.Topup) BuildTopup();
         else BuildCheckout();
     }
 
@@ -244,6 +261,7 @@ public sealed class MarketFlow : MonoBehaviour
         }
 
         CreateText(screenRoot, "모든 상품은 확정 구매예요 — 뽑기·랜덤박스는 없어요", 14f, Muted, TextAnchor.MiddleCenter, 24f, 846f, 638f, 34f);
+        CreatePrimaryButton(screenRoot, "육포 충전하기", 24f, 892f, 638f, 76f, ShowTopup);
     }
 
 
@@ -533,5 +551,116 @@ private GameObject CreatePanel(string name, Transform parent, float x, float y, 
         if (EventSystem.current != null) return;
         GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
         if (Application.isPlaying) DontDestroyOnLoad(eventSystem);
+    }
+
+    // ---------- F-05 육포 충전 ----------
+
+    private Backend.ShopApi.JerkyPack[] _packs = System.Array.Empty<Backend.ShopApi.JerkyPack>();
+    private Backend.ShopApi.PaymentLimit _limit;
+
+    /// <summary>
+    /// 충전 화면. 결제 한도 게이지 + 패키지 목록.
+    ///
+    /// 한도는 서버가 강제한다 — 클라가 버튼을 흐리게 하는 건 안내일 뿐이고,
+    /// 초과 요청은 purchase_jerky가 거부한다.
+    /// </summary>
+    private void BuildTopup()
+    {
+        CreateHeader(screenRoot, "육포 충전", true, ShowShop);
+
+        // --- 이번 달 결제 한도 ---
+        GameObject card = CreateSpritePanel("Limit Card", screenRoot, 24f, 156f, 638f, 150f, limitCardSprite, White);
+        CreateText(card.transform, "이번 달 결제 한도", 18f, Ink, TextAnchor.MiddleLeft, 22f, 16f, 300f, 34f);
+        CreateText(card.transform,
+            _limit != null ? $"{_limit.spent:N0} / {_limit.cap:N0}원" : "불러오는 중",
+            18f, GoldDark, TextAnchor.MiddleRight, 316f, 16f, 300f, 34f);
+
+        CreateSpritePanel("Limit Track", card.transform, 22f, 66f, 594f, 22f, limitGaugeTrackSprite, new Color32(90, 58, 32, 38));
+        if (_limit != null && _limit.percent > 0)
+        {
+            float width = Mathf.Max(22f, 594f * Mathf.Clamp01(_limit.percent / 100f));
+            CreateSpritePanel("Limit Fill", card.transform, 22f, 66f, width, 22f, limitGaugeFillSprite, new Color32(240, 168, 50, 255));
+        }
+        CreateText(card.transform,
+            _limit != null ? $"남은 한도 {_limit.remaining:N0}원" : "한도를 확인하는 중이에요",
+            15f, Muted, TextAnchor.MiddleLeft, 22f, 100f, 594f, 30f);
+
+        // --- 충전 패키지 ---
+        float y = 336f;
+        if (_packs != null && _packs.Length > 0)
+        {
+            foreach (Backend.ShopApi.JerkyPack pack in _packs)
+            {
+                CreatePackRow(pack, y);
+                y += 116f;
+            }
+        }
+        else
+        {
+            CreateText(screenRoot, "충전 상품을 불러오지 못했어요", 16f, Muted, TextAnchor.MiddleCenter, 24f, y, 638f, 44f);
+            y += 76f;
+        }
+
+        // 정직성 라벨 — 데모라는 사실을 숨기지 않는다 (PRD §6.5와 같은 태도)
+        CreateText(screenRoot, "데모 빌드예요 — 실제 결제는 일어나지 않고 육포만 지급돼요",
+            14f, Muted, TextAnchor.MiddleCenter, 24f, y + 8f, 638f, 44f);
+    }
+
+    /// <summary>충전 패키지 한 줄. best면 강조 카드 자산을 쓴다.</summary>
+    private void CreatePackRow(Backend.ShopApi.JerkyPack pack, float y)
+    {
+        Sprite frame = (pack.best && packCardBestSprite != null) ? packCardBestSprite : packCardSprite;
+        GameObject row = CreateSpritePanel("Pack " + pack.sku, screenRoot, 24f, y, 638f, 104f, frame, White);
+
+        CreateSpritePanel("Tile", row.transform, 20f, 22f, 60f, 60f, jerkyTileSprite, new Color32(255, 244, 202, 255));
+        CreateSpriteIcon(row.transform, jerkySprite, 34f, 36f, 32f, 32f);
+
+        CreateText(row.transform, $"육포 {pack.jerky}", 21f, Ink, TextAnchor.MiddleLeft, 100f, 20f, 300f, 34f);
+        CreateText(row.transform, pack.SubLabel, 15f, pack.best ? GoldDark : Muted, TextAnchor.MiddleLeft, 100f, 56f, 300f, 30f);
+
+        // 한도를 넘으면 미리 흐리게 — 그래도 최종 판정은 서버가 한다
+        bool affordable = _limit == null || _limit.remaining >= pack.krw;
+        GameObject button = CreateSpritePanel("Price", row.transform, 448f, 26f, 168f, 54f, priceButtonSprite, Gold);
+        if (!affordable)
+        {
+            Image image = button.GetComponent<Image>();
+            if (image != null) image.color = new Color(image.color.r, image.color.g, image.color.b, 0.4f);
+        }
+        CreateText(button.transform, $"{pack.krw:N0}원", 18f, BrownDark, TextAnchor.MiddleCenter, 0f, 0f, 168f, 54f);
+
+        Button click = button.AddComponent<Button>();
+        Backend.ShopApi.JerkyPack captured = pack;
+        click.onClick.AddListener(delegate { TopupPurchase(captured); });
+    }
+
+    /// <summary>충전 실행. 한도 초과·오류는 서버 메시지를 그대로 보여준다.</summary>
+    private async void TopupPurchase(Backend.ShopApi.JerkyPack pack)
+    {
+        Backend.ShopApi.TopupResult result = await Backend.ShopApi.PurchaseJerky(pack.sku);
+        if (!result.Ok)
+        {
+            _notice = result.message;
+            Debug.LogWarning($"[Market] 충전 실패: {result.message}");
+            Refresh();
+            return;
+        }
+
+        _jerky = await Backend.ShopApi.GetJerky();
+        _limit = await Backend.ShopApi.GetLimit();
+        _notice = $"육포 {result.jerky}개를 지급했어요 (모의 결제)";
+        Refresh();
+    }
+
+    /// <summary>충전 화면 진입 — 패키지·한도를 서버에서 읽고 그린다.</summary>
+    private async void LoadTopup()
+    {
+        if (!await Backend.AppSession.EnsureSignedIn())
+        {
+            Debug.LogWarning("[Market] 로그인 실패 — 충전 정보를 불러오지 못했어요");
+            return;
+        }
+        _packs = await Backend.ShopApi.GetPacks();
+        _limit = await Backend.ShopApi.GetLimit();
+        if (currentScreen == ScreenId.Topup) Refresh();
     }
 }

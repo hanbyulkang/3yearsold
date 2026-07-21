@@ -254,6 +254,13 @@ MonoBehaviour:
   stepCardWaitingSprite: {fileID: 21300000, guid: 41ea45133987e443db1c67f82092e36f, type: 3}
   boneGoldSprite: {fileID: 21300000, guid: 4bbebaf4a0e9f48da9a13452c7b9f81d, type: 3}
   jerkySprite: {fileID: 21300000, guid: 1da8b10b5eae9442e8a0e15ecb4ddcaa, type: 3}
+  packCardSprite: {fileID: 21300000, guid: e06b34637e5c47b1a538dc9f462ee24b, type: 3}
+  packCardBestSprite: {fileID: 21300000, guid: d3fcc6fe880346b5b0502a8435685d00, type: 3}
+  priceButtonSprite: {fileID: 21300000, guid: e8acfd40aa2b456eb3038ae567a5eee9, type: 3}
+  limitCardSprite: {fileID: 21300000, guid: 4c7aea97386041a08c9ab9e915e5585b, type: 3}
+  limitGaugeTrackSprite: {fileID: 21300000, guid: 0e1360f1ab7e41608d59f62339d3db51, type: 3}
+  limitGaugeFillSprite: {fileID: 21300000, guid: 4a41c63a2c0c479888b812642322af88, type: 3}
+  jerkyTileSprite: {fileID: 21300000, guid: 8887cad9b1894b828d27d6de9b9e2984, type: 3}
 --- !u!4 &1873423961
 Transform:
   m_ObjectHideFlags: 0
