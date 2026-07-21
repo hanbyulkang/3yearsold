@@ -82,6 +82,15 @@
   - next_action: Edge Function 배포 + 시크릿 등록, `shelter-traits` 1회 실행해 프로덕션 traits 채우기
   - evidence: 로컬 41건 + 실 LLM 호출 16건. 상반된 두 설문 → 견종·참여 단계가 갈림, 겹치는 보호견도 사용자별 다른 이유
 
+- [x] 프론트엔드 ↔ 백엔드 연결 (D 추천 실데이터 · MG1 서버 재화 · 씬 네비)
+  - id: frontend-backend-wiring
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: d-recommend/mini-game-1 씬, RecLoading.WaitForApi 훅, IRewardClient 인터페이스
+  - output: `19Team/Assets/Scripts/Backend/` 8종, RecBootstrap·RecData·MG1GameManager 수정, DemoNavBar, 빌드 씬 4개
+  - next_action: 팀원이 Unity에서 열어 Play 확인. A 온보딩 씬이 오면 OnboardingApi로 연결
+  - evidence: 서버 e2e — 데모 계정 추천 3마리 캐시, game-start 발바닥 5→4, bones 45→30(상한), 재제출 차단, 잔액 30. Unity 배치 컴파일 로그
+
 ## 막힘
 
 ```markdown

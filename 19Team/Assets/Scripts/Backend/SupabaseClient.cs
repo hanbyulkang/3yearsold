@@ -13,12 +13,11 @@ namespace Backend
     ///  · service_role 키를 클라이언트에 두지 않는다. anon 키와 사용자 토큰만 쓴다.
     ///    WebGL은 빌드 결과에서 문자열이 그대로 보인다.
     ///  · 재화 계산을 클라에서 하지 않는다. 서버 응답값을 그대로 표시한다 (PRD §5.5).
-    ///
-    /// 설정은 Resources/BackendConfig.asset 에 둔다 (BackendConfig.cs).
     /// </summary>
     public static class SupabaseClient
     {
         public static string AccessToken { get; private set; }
+        public static string UserId { get; private set; }
         public static bool IsSignedIn => !string.IsNullOrEmpty(AccessToken);
 
         static BackendConfig Config => BackendConfig.Instance;
@@ -26,7 +25,8 @@ namespace Backend
         // ---------- 인증 ----------
 
         [Serializable] class SignInBody { public string email; public string password; }
-        [Serializable] class SignInResp { public string access_token; public string refresh_token; }
+        [Serializable] class SignInUser { public string id; }
+        [Serializable] class SignInResp { public string access_token; public SignInUser user; }
 
         public static async Task<bool> SignIn(string email, string password)
         {
@@ -34,17 +34,18 @@ namespace Backend
             var resp = await Send<SignInResp>(
                 $"{Config.Url}/auth/v1/token?grant_type=password", "POST", body, useAuth: false);
             AccessToken = resp?.access_token;
+            UserId = resp?.user?.id;
             return IsSignedIn;
         }
 
-        public static void SignOut() => AccessToken = null;
+        public static void SignOut() { AccessToken = null; UserId = null; }
 
         // ---------- Edge Function ----------
 
         public static Task<T> Invoke<T>(string function, string jsonBody = null)
             => Send<T>($"{Config.Url}/functions/v1/{function}", "POST", jsonBody ?? "{}");
 
-        // ---------- REST (설문 저장 등) ----------
+        // ---------- REST ----------
 
         /// <summary>설문은 문항 단위로 즉시 저장한다 — 이탈 후 이어하기 (와이어프레임 A-03).</summary>
         public static async Task<bool> UpsertSurveyAnswer(string userId, string questionId, string valueJson)
@@ -57,17 +58,54 @@ namespace Backend
             finally { req.Dispose(); }
         }
 
+        /// <summary>REST GET — 응답 JSON 원문을 돌려준다. 실패 시 null.</summary>
+        public static async Task<string> GetRaw(string pathAndQuery)
+        {
+            var req = Build($"{Config.Url}/rest/v1/{pathAndQuery}", "GET", null, useAuth: true);
+            try
+            {
+                await req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning($"[Supabase] GET {pathAndQuery} 실패 ({req.responseCode})");
+                    return null;
+                }
+                return req.downloadHandler.text;
+            }
+            finally { req.Dispose(); }
+        }
+
+        /// <summary>RPC 호출 — 스칼라·단일행 응답이 있어 원문을 돌려준다. 실패 시 null.</summary>
+        public static async Task<string> RpcRaw(string fn, string jsonBody = "{}")
+        {
+            var req = Build($"{Config.Url}/rest/v1/rpc/{fn}", "POST", jsonBody, useAuth: true);
+            try
+            {
+                await req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning($"[Supabase] rpc/{fn} 실패 ({req.responseCode}): {req.downloadHandler.text}");
+                    return null;
+                }
+                return req.downloadHandler.text;
+            }
+            finally { req.Dispose(); }
+        }
+
         // ---------- 내부 ----------
 
         static UnityWebRequest Build(string url, string method, string body, bool useAuth)
         {
             var req = new UnityWebRequest(url, method)
             {
-                uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body ?? "{}")),
                 downloadHandler = new DownloadHandlerBuffer(),
                 timeout = 40,   // AI 분석은 5~7초 걸린다. 넉넉히 둔다 (A-08은 30초 예산).
             };
-            req.SetRequestHeader("Content-Type", "application/json");
+            if (body != null)
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.SetRequestHeader("Content-Type", "application/json");
+            }
             req.SetRequestHeader("apikey", Config.AnonKey);
             // 로그인 전에는 anon 키로, 로그인 후에는 사용자 토큰으로 호출한다.
             req.SetRequestHeader("Authorization",
@@ -77,7 +115,7 @@ namespace Backend
 
         static async Task<T> Send<T>(string url, string method, string body, bool useAuth = true)
         {
-            var req = Build(url, method, body, useAuth);
+            var req = Build(url, method, body ?? "{}", useAuth);
             try
             {
                 await req.SendWebRequest();

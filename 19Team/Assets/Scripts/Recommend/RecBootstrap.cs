@@ -17,9 +17,11 @@ namespace Recommend
         [Header("배경 (없으면 크림색 단색으로 폴백)")]
         [SerializeField] Sprite background;
 
-        [Header("로딩 — 추천 API 가 붙기 전까지 쓰는 임시 대기 시간(초)")]
+        [Header("로딩 — 끄면 서버 없이 목업으로 즉시 연다 (오프라인 개발용)")]
         [SerializeField] bool showLoading = true;
+#pragma warning disable 0414   // 씬 직렬화 호환용으로 남겨둠 (서버 연동 후 미사용)
         [SerializeField] float loadingSeconds = 2.5f;
+#pragma warning restore 0414
 
         RecNav _nav;
 
@@ -35,22 +37,39 @@ namespace Recommend
 
             // 화면은 전부 활성 상태로 만든 뒤(글자 높이를 재야 하므로) Show 가 나머지를 끈다.
             _nav = gameObject.AddComponent<RecNav>();
-            RecScreens.BuildAll(_nav, canvas);
-            _nav.Show("d01", false);
 
-            if (!showLoading) return;
+            if (!showLoading)
+            {
+                // 오프라인 개발 경로 — 서버 없이 목업으로 즉시 연다.
+                RecScreens.BuildAll(_nav, canvas);
+                _nav.Show("d01", false);
+                return;
+            }
 
-            // 추천은 결과가 나오기까지 기다림이 생기는 지점이라, 첫 화면은 로딩으로 연다.
-            // 지금은 그냥 n초를 흘려보낸다 — 실제 추천 API 가 붙으면 RecLoading 위쪽 주석대로
-            // WaitForApi + Finish() 로 바꾸면 화면은 그대로 두고 대기 조건만 교체된다.
-            _nav.HideAll();
+            // 백엔드 연결 (RecLoading 주석의 WaitForApi 패턴 그대로).
+            // 서버 추천을 RecData에 덮어쓴 뒤 화면을 만든다 — 실패하면 목업이 그대로 보인다.
             var loading = RecLoading.Create(canvas, "추천 중입니다", new[]
             {
                 "설문에 남겨주신 답변을 살펴보고 있어요",
                 "최근 산책·돌봄 기록을 함께 보고 있어요",
                 "가까운 보호소의 보호견을 맞춰보고 있어요",
             });
-            loading.RunForSeconds(loadingSeconds, () => _nav.Show("d01", false));
+            loading.WaitForApi(() => _nav.Show("d01", false));
+            Boot(canvas, loading);
+        }
+
+        async void Boot(Transform canvas, RecLoading loading)
+        {
+            try
+            {
+                await Backend.RecApi.LoadIntoRecData();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Rec] 서버 추천 실패 — 목업 데이터로 표시: {e.Message}");
+            }
+            RecScreens.BuildAll(_nav, canvas);
+            loading.Finish();
         }
 
         Transform BuildCanvas()

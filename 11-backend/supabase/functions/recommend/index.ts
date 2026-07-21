@@ -39,7 +39,13 @@ Deno.serve(async (req) => {
       .select("animal_seq, reason, rank").eq("analysis_id", analysisRow.id)
       .order("rank");
     if (cached?.length === 3 && !new URL(req.url).searchParams.has("refresh")) {
-      return json({ analysisId: analysisRow.id, cached: true, picks: cached });
+      // 신규 생성 경로와 같은 형태(seq·reason)로 정규화한다.
+      // 캐시냐 아니냐에 따라 키가 달라지면 클라가 두 형태를 다 다뤄야 한다.
+      return json({
+        analysisId: analysisRow.id,
+        cached: true,
+        picks: cached.map((r) => ({ seq: r.animal_seq, reason: r.reason })),
+      });
     }
 
     // 후보 좁히기는 SQL이 한다. 목록 전체를 LLM에 넘기지 않는다.

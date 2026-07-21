@@ -129,7 +129,11 @@ namespace MiniGame1
 
         void Awake()
         {
-            _reward = new LocalMockRewardClient(); // DEMO-MOCK (§6.3)
+            // 서버 연동 (PRD §5.5) — 발바닥 차감·지급이 Supabase에 기록된다.
+            // 오프라인이면 ServerRewardClient가 조용히 로컬 추정값으로 동작하므로
+            // 데모가 네트워크에 인질 잡히지 않는다. 순수 로컬 개발은 아래 목업으로 교체:
+            //   _reward = new LocalMockRewardClient();
+            _reward = new Backend.ServerRewardClient();
             _score = new ScoreSystem();
             _brands = brandConfigs != null && brandConfigs.Length > 0
                 ? brandConfigs

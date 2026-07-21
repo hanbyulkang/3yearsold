@@ -71,6 +71,22 @@ namespace Backend
             return r;
         }
 
+        [Serializable] class BonesBody { public string sessionId; public int bones; }
+
+        /// <summary>
+        /// MG1 데모 지급 경로 (D-023) — 획득 뼈다귀를 제출하면 서버가
+        /// 세션 상한·일일 상한 안에서 지급한다. 세션당 1회 멱등.
+        /// MG1은 피버·특수블록 등 클라 전용 로직이라 서버 리플레이가 불가능해서
+        /// 상한 지급으로 방어한다. 랭킹을 켜기 전에 리플레이 검증으로 교체할 것.
+        /// </summary>
+        public static async Task<SubmitResult> SubmitBones(string sessionId, int bones)
+        {
+            var body = JsonUtility.ToJson(new BonesBody { sessionId = sessionId, bones = bones });
+            var r = await SupabaseClient.Invoke<SubmitResult>("game-submit", body);
+            if (r == null) return new SubmitResult { error = "네트워크 오류" };
+            return r;
+        }
+
         /// <summary>
         /// 플레이 결과를 제출한다. 서버가 시드로 재계산해 점수를 확정한다.
         /// 같은 세션을 다시 제출해도 중복 지급되지 않는다(멱등).

@@ -1,7 +1,8 @@
 namespace Recommend
 {
-    // 시안(Desktop/recomend.html)의 DCLogic.renderVals() 목업 데이터를 그대로 옮긴 것.
-    // 백엔드가 붙으면 이 클래스만 서버 응답으로 교체하면 된다.
+    // 시안(Desktop/recomend.html)의 DCLogic.renderVals() 목업 데이터.
+    // Backend.RecApi.LoadIntoRecData() 가 서버 응답으로 아래 필드를 덮어쓴다 —
+    // 그래서 서버가 덮는 필드는 readonly가 아니다. 서버 실패 시 이 목업이 그대로 보인다.
     public static class RecData
     {
         public struct HomeDog { public string Caption; }
@@ -15,14 +16,14 @@ namespace Recommend
 
         public struct SurveyRow { public string Label, Answer; }
 
-        public static readonly HomeDog[] HomeDogs =
+        public static HomeDog[] HomeDogs =
         {
             new HomeDog { Caption = "보리 · 노원구" },
             new HomeDog { Caption = "콩이 · 도봉구" },
             new HomeDog { Caption = "누리 · 성북구" },
         };
 
-        public static readonly ListDog[] ListDogs =
+        public static ListDog[] ListDogs =
         {
             new ListDog
             {
@@ -41,12 +42,12 @@ namespace Recommend
             },
         };
 
-        public static readonly string[] DetailTags =
+        public static string[] DetailTags =
         {
             "믹스", "추정 3세", "12kg", "여아", "보호 시작 2026-03-02",
         };
 
-        public static readonly Kv[] ShelterRows =
+        public static Kv[] ShelterRows =
         {
             new Kv { K = "보호소", V = "노원구 동물보호센터" },
             new Kv { K = "지역", V = "서울 노원구" },
@@ -80,12 +81,12 @@ namespace Recommend
         };
 
         // D-01 다음 한 걸음 (§4.4 — 항상 1개만)
-        public const string NextStepText =
+        public static string NextStepText =
             "매일 산책을 거르지 않으시네요. 지금은 <b>주말 봉사 한 번</b>이 잘 맞아 보여요. " +
             "서울 노원구 보호소가 주말 산책 봉사자를 찾고 있어요.";
 
         // D-03 AI 소개문
-        public const string DetailIntro =
+        public static string DetailIntro =
             "공고에는 \"겁 많음, 검정, 믹스\" 세 줄뿐이지만 — 보리는 처음 보는 사람 앞에서 몸을 낮추다가도, " +
             "간식을 내밀면 조심스럽게 다가오는 아이예요. 혼자 있는 시간을 잘 견뎌서, " +
             "평일 낮에 집을 비우는 당신의 생활에도 무리가 없어요.";
