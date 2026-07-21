@@ -39,6 +39,23 @@ namespace Donation
 
             // 화면은 전부 활성 상태로 만든 뒤(글자 높이를 재야 하므로) Show 가 나머지를 끈다.
             _nav = gameObject.AddComponent<RecNav>();
+            Boot(canvas);
+        }
+
+        /// <summary>
+        /// 서버 값을 DonData에 덮은 뒤 화면을 만든다 (D 추천과 같은 방식).
+        /// 실패하면 DonData의 목업이 그대로 보인다 — 데모가 네트워크에 인질 잡히지 않게.
+        /// </summary>
+        async void Boot(Transform canvas)
+        {
+            try
+            {
+                await Backend.DonApi.LoadIntoDonData();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Don] 서버 후원 데이터 실패 — 목업으로 표시: {e.Message}");
+            }
             DonScreens.BuildAll(_nav, canvas);
             _nav.Show("e01", false);
         }
