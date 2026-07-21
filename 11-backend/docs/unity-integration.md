@@ -187,11 +187,36 @@ Task<GameApi.SubmitResult> SubmitAsync(string sessionId, Move[] moves, int score
 
 ---
 
-## 6. 현재 데이터 상태
+## 6. 보호견 사진
+
+사진은 **`vPetImg`라는 별도 서비스**에 있다. `vPetInfo`에는 사진 필드가 없어서
+처음엔 "사진이 없다"고 판단했는데 오판이었다.
+
+```
+http://openapi.seoul.go.kr:8088/{KEY}/json/vPetImg/{start}/{end}/
+{ SEQ, IMG_TYPE: THUMB|IMG, IMG_NUM, IMG_URL }
+```
+
+`SEQ`가 `vPetInfo`와 같은 키다. **THUMB이 마리당 1장**(목록 대표),
+**IMG가 상세 갤러리**(마리당 5~19장). 24마리 전건 보유.
+
+DB에서는 `shelter_animal_photos` 테이블에 쌓고, `shelter_animals.photo_url`은
+THUMB에서 트리거로 파생된다 — 손으로 넣지 않는다.
+
+Unity에서는 `Backend.RemoteImage.Load(url, slot)`으로 기존 플레이스홀더 위에
+얹는다. 실패하면 플레이스홀더가 그대로 보이므로 오프라인에서도 깨지지 않는다.
+
+> `photo_is_breed_placeholder = true`인 개체가 생기면(실사진 없는 신규 개체)
+> 화면에 "견종 대표 사진"을 표기해야 한다. 현재는 전건 false다.
+
+---
+
+## 7. 현재 데이터 상태
 
 | | |
 |---|---|
 | 보호견 | 24마리 (입양문의가능 11) |
 | 보호견 성격(traits) | 17마리 — 입양문의가능 전건 완료 |
+| 보호견 사진 | **24마리 전건 실사진** (THUMB 24 + IMG 186) |
 | 견종 | 10종 + 사진 (Storage `breeds` 버킷) |
 | 계정 | 0 (테스트 계정 정리 완료) |

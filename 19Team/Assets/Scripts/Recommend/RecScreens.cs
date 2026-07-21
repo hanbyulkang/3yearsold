@@ -55,6 +55,7 @@ namespace Recommend
                     var slot = RecUI.Slot(grid, "Photo", x, 0f, cellW, photoH, 14f, "사진", RecTheme.Fs(15f));
                     Touch(slot, () => nav.Show("d03"));
                     photoSlots.Add(slot);
+                    Backend.RemoteImage.Load(RecData.HomeDogs[i].Photo, slot);   // 실패 시 "사진" 라벨 유지
                     var cap = RecUI.Text("Cap", grid, RecData.HomeDogs[i].Caption, RecTheme.FsTiny,
                         RecTheme.Sub, false, TextAlignmentOptions.Top);
                     RecUI.SetRect(cap.rectTransform, x, photoH + 8f, cellW, capH);
@@ -122,6 +123,7 @@ namespace Recommend
                 {
                     const float photo = 110f;
                     var slot = RecUI.Slot(inner.Parent, "Photo", 0f, inner.Y, photo, photo, 16f, "사진", RecTheme.Fs(15f));
+                    Backend.RemoteImage.Load(d.Photo, slot);   // 실패 시 "사진" 라벨 유지
 
                     float metaX = photo + 16f;
                     var pill = RecUI.Pill(inner.Parent, "Region", d.Region, RecTheme.PillFill, RecTheme.PillStroke,
@@ -185,6 +187,16 @@ namespace Recommend
             label.anchorMin = label.anchorMax = label.pivot = new Vector2(0.5f, 0.5f);
             label.sizeDelta = new Vector2(lw, 44f);
             label.anchoredPosition = Vector2.zero;
+            Backend.RemoteImage.Load(RecData.DetailPhoto, photo, () =>
+            {
+                // 견종 대표 사진 폴백이면 반드시 표기한다 (0011) — 라벨을 사진 하단으로 옮겨 유지
+                if (string.IsNullOrEmpty(RecData.DetailPhotoLabel)) { label.gameObject.SetActive(false); return; }
+                lt.text = RecData.DetailPhotoLabel;
+                label.sizeDelta = new Vector2(RecUI.MeasureW(lt) + 32f, 40f);
+                label.anchorMin = label.anchorMax = label.pivot = new Vector2(0.5f, 0f);
+                label.anchoredPosition = new Vector2(0f, 12f);
+                label.SetAsLastSibling();
+            });
             col.Advance(330f);
 
             TagFlow(col, RecData.DetailTags, 8f);

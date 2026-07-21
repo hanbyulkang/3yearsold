@@ -32,6 +32,8 @@ namespace Backend
             public float weight_kg;
             public string birth_ymd;  // yyyy-MM-dd
             public string one_liner;  // traits->>one_liner
+            public string photo_url;               // 견종 대표 사진 (0011 폴백)
+            public bool photo_is_breed_placeholder;
         }
 
         [Serializable] class Participation { public string reason; }
@@ -62,7 +64,7 @@ namespace Backend
             var seqs = string.Join(",", Array.ConvertAll(rec.picks, p => p.seq.ToString()));
             var raw = await SupabaseClient.GetRaw(
                 $"shelter_animals?seq=in.({seqs})" +
-                "&select=seq,name,breed,sex,weight_kg,birth_ymd,one_liner:traits->>one_liner");
+                "&select=seq,name,breed,sex,weight_kg,birth_ymd,photo_url,photo_is_breed_placeholder,one_liner:traits->>one_liner");
             if (string.IsNullOrEmpty(raw)) throw new Exception("보호견 조회 실패");
             var animals = ParseAnimals(raw);
 
@@ -117,8 +119,10 @@ namespace Backend
                     Desc = desc,
                     Region = "서울",   // vPetInfo는 서울동물복지지원센터 소관 (D-019)
                     Reason = picks[i].reason,
+                    Photo = a?.photo_url,
                 };
-                if (i < home.Length) home[i] = new RecData.HomeDog { Caption = $"{name} · 서울" };
+                if (i < home.Length)
+                    home[i] = new RecData.HomeDog { Caption = $"{name} · 서울", Photo = a?.photo_url };
             }
 
             RecData.HomeDogs = home;
@@ -139,6 +143,10 @@ namespace Backend
                 RecData.DetailIntro = string.IsNullOrEmpty(first.one_liner)
                     ? picks[0].reason
                     : $"{picks[0].reason}\n\n보호소 기록 한 줄 — \"{first.one_liner}\"";
+                RecData.DetailPhoto = first.photo_url;
+                // 견종 대표 사진이면 반드시 표기한다 — 실제 그 아이 사진처럼 보이면
+                // 입양 상담에서 사고가 난다 (0011, D-03 정직성)
+                RecData.DetailPhotoLabel = first.photo_is_breed_placeholder ? "견종 대표 사진" : null;
                 RecData.ShelterRows = new[]
                 {
                     new RecData.Kv { K = "보호소", V = "서울동물복지지원센터" },

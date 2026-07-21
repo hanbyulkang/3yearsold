@@ -5,11 +5,12 @@ namespace Recommend
     // 그래서 서버가 덮는 필드는 readonly가 아니다. 서버 실패 시 이 목업이 그대로 보인다.
     public static class RecData
     {
-        public struct HomeDog { public string Caption; }
+        public struct HomeDog { public string Caption; public string Photo; }
 
         public struct ListDog
         {
             public string Name, Desc, Region, Reason;
+            public string Photo;   // 서버가 채움 — null이면 플레이스홀더 유지
         }
 
         public struct Kv { public string K, V; }
@@ -84,6 +85,11 @@ namespace Recommend
         public static string NextStepText =
             "매일 산책을 거르지 않으시네요. 지금은 <b>주말 봉사 한 번</b>이 잘 맞아 보여요. " +
             "서울 노원구 보호소가 주말 산책 봉사자를 찾고 있어요.";
+
+        // D-03 사진 — 서버가 채움. Label이 비어있지 않으면 사진 위에 표기해야 한다
+        // (견종 대표 사진 폴백 — 실제 그 아이 사진처럼 보이면 안 된다, 0011 참고)
+        public static string DetailPhoto = null;
+        public static string DetailPhotoLabel = null;
 
         // D-03 AI 소개문
         public static string DetailIntro =

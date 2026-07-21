@@ -11,7 +11,7 @@
  */
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { normalize } from "../_shared/shelter.ts";
-import { fetchAll } from "../_shared/vpet.ts";
+import { fetchAll, fetchAllImages } from "../_shared/vpet.ts";
 
 Deno.serve(async () => {
   const key = Deno.env.get("SEOUL_API_KEY");
@@ -43,11 +43,39 @@ Deno.serve(async () => {
     const { error } = await db.from("shelter_animals").upsert(records, { onConflict: "seq" });
     if (error) throw error;
 
+    // 사진은 별도 서비스다 (vPetImg, 0013). SEQ가 같은 키.
+    // 개체를 먼저 넣어야 FK가 걸리므로 순서를 지킨다.
+    let photoCount = 0;
+    try {
+      const known = new Set(records.map((r) => r.seq));
+      const photos = (await fetchAllImages(key))
+        .map((p) => ({
+          seq: Number(p.SEQ),
+          img_type: String(p.IMG_TYPE).toUpperCase(),
+          img_num: Number(p.IMG_NUM),
+          img_url: p.IMG_URL,
+          synced_at: new Date().toISOString(),
+        }))
+        // 스냅샷에 없는 개체의 사진은 FK에 걸리므로 거른다
+        .filter((p) => known.has(p.seq) && (p.img_type === "THUMB" || p.img_type === "IMG"));
+
+      if (photos.length) {
+        const { error: pErr } = await db.from("shelter_animal_photos")
+          .upsert(photos, { onConflict: "seq,img_type,img_num" });
+        if (pErr) throw pErr;
+        photoCount = photos.length;
+      }
+    } catch (e) {
+      // 사진 실패가 개체 동기화를 되돌리지 않는다. 사진은 다음 실행에서 다시 시도된다.
+      console.error("사진 동기화 실패:", e);
+    }
+
     // 목록에서 사라진 개체는 지우지 않는다 — 입양 완료된 아이의 추천 이력이 끊기면
     // "이 아이는 가족을 만났어요" 같은 폐루프 연출을 만들 수 없다.
     return json({
       synced: records.length,
       fosterable: records.filter((r) => r.foster_ok).length,
+      photos: photoCount,
     });
   } catch (e) {
     return json({ error: String(e) }, 502);
