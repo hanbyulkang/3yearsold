@@ -210,3 +210,25 @@
 - tradeoff: **물량이 24마리(개 15·고양이 9, 입양문의가능 11)로 줄고 서울 지역에 한정된다.** 지역 필터(D-02)의 실효가 사실상 사라지고, "전국 서비스" 스케일 주장이 약해진다. 발표에서 물량 질문이 나오면 "국가 API로 전국 4,521건 확장이 가능하나 성격 데이터가 없어 AI 보완이 전제"라고 답할 수 있게 국가 API 조사 결과를 문서에 남겨 둔다.
 - owner: 팀
 - status: active
+
+## D-020 — LLM 프로바이더를 OpenAI로 시작하고, 호출부를 어댑터로 분리한다
+
+- date: 2026-07-22
+- decision: PRD가 스택에 명시한 Claude API 대신 **OpenAI(gpt-4.1)** 로 구현을 시작한다. 다만 프롬프트와 검증 로직을 프로바이더에서 떼어내 `_shared/llm.ts` 어댑터 뒤에 두고, Claude 어댑터 자리를 비워 둔다. 프로바이더 교체는 환경변수(`OPENAI_API_KEY` / `ANTHROPIC_API_KEY`)와 어댑터 한 줄로 끝나게 한다.
+- alternatives: Claude API 키를 확보할 때까지 LLM 기능 착수를 미루는 안, OpenAI로 갈아타고 PRD 스택을 영구 변경하는 안
+- reason: 현재 확보된 키가 OpenAI뿐이고, 데모 경로(설문 → AI 분석 → 견종 3개 → 보호견 추천)가 전부 LLM에 걸려 있어 착수를 미룰 수 없다. 반대로 PRD가 정한 스택을 조용히 바꾸는 것도 옳지 않다. 프롬프트·검증·화이트리스트 로직은 프로바이더와 무관하므로, 어댑터로 분리하면 나중에 Claude 키가 생겼을 때 프롬프트를 다시 짜지 않아도 된다.
+- evidence: `11-backend/supabase/functions/_shared/llm.ts` (openAI / anthropic 어댑터, `fromEnv` 선택), 실제 호출 검증 `tests/e2e_analysis.ts`·`tests/e2e_recommend.ts`
+- tradeoff: 모델별로 톤과 JSON 준수도가 달라 Claude로 옮길 때 프롬프트 미세 조정이 필요하다. 검증 로직(견종 화이트리스트·금칙어·3개 고정)이 그 차이를 막아주지만, 옮긴 뒤 e2e를 다시 돌려야 한다. PRD §스택 표기는 Claude로 두고 이 결정을 각주로 참조한다.
+- owner: 팀
+- status: active
+
+## D-021 — 캐릭터견 견종 후보에 보더콜리를 항상 포함한다
+
+- date: 2026-07-22
+- decision: AI가 추천하는 견종 3개 중 하나는 **항상 보더콜리**로 고정한다. 고정 목록은 코드가 아니라 `config.breeds.pinned`에 두고, LLM 프롬프트에 지시하는 동시에 응답 검증에서도 강제한다.
+- alternatives: 고정 없이 16종 중 자유 추천, 견종 목록 자체를 에셋 보유분으로 축소
+- reason: 캐릭터견은 3D로 렌더되는데 현재 준비된 에셋이 보더콜리뿐이다. 고정하지 않으면 사용자가 에셋 없는 견종을 골라 캐릭터 생성이 깨질 수 있다. 견종 목록 자체를 1종으로 줄이면 "AI가 3개를 추천하고 유저가 고른다"(§4.1)는 온보딩 설계가 무너지므로, 목록은 16종을 유지하고 한 자리만 고정한다.
+- evidence: `11-backend/supabase/migrations/0006_breeds.sql` (`pinned`), `_shared/analysis.ts` 검증, `tests/e2e_analysis.ts` — 여건이 상반된 두 사용자 모두 결과에 보더콜리 포함 확인
+- tradeoff: 여건상 보더콜리가 적합하지 않은 사용자에게도 후보로 노출된다. 프롬프트에서 "억지로 맞추지 말고 감안할 점을 정직하게 쓰라"고 지시해 완화했으나, 추천 정확도는 일부 희생된다. **에셋이 늘어나면 `pinned` 배열을 비우는 것으로 즉시 해제된다.**
+- owner: 팀
+- status: active

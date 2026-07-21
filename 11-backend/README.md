@@ -3,8 +3,8 @@
 Supabase(Postgres + Edge Functions) 기반. **경제 무결성과 보호견 데이터 파이프라인**을 먼저 구현했습니다.
 
 - 상태: `verified` — **Supabase 프로젝트 `balang`에 배포 완료** (2026-07-22)
-- 검증: 로컬 **49건** + 원격 실환경 검증. 보호견 실데이터 24건 적재
-- 관련 결정: D-019 (보호견 1차 소스 = 서울 vPetInfo)
+- 검증: 로컬 **41건** + LLM 실호출 **16건** + 원격 실환경 검증. 보호견 실데이터 24건 적재
+- 관련 결정: D-019 (보호견 1차 소스 = 서울 vPetInfo) · D-020 (LLM 프로바이더) · D-021 (보더콜리 고정)
 
 ```bash
 ./tests/run.sh            # 스키마·RLS·파서 (오프라인)
@@ -39,18 +39,31 @@ supabase/
     0003_rls.sql         RLS 정책 (쓰기 정책의 부재가 곧 방어)
     0004_auth.sql        auth.users 연동 — 가입 시 프로필 자동 생성
     0005_account_deletion.sql  탈퇴 시 원장 익명 보존 (G-01)
+    0006_breeds.sql      견종 화이트리스트 + 고정 견종 (A-09, D-021)
   seed.sql               config — 밸런스 상수는 전부 여기 (클라 복제 금지)
   functions/
     _shared/shelter.ts   vPetInfo 정규화·CONT 섹션 분리
     _shared/vpet.ts      API 호출 (부작용 없음 — 테스트에서 재사용)
-    shelter-sync/        CRON 동기화 핸들러
+    _shared/llm.ts       LLM 어댑터 (OpenAI / Claude 자리) — D-020
+    _shared/analysis.ts  AI 상황 분석 프롬프트·검증 (단일 엔진)
+    _shared/traits.ts    보호견 성격 5축 구조화 (D-03 창작 금지)
+    _shared/recommend.ts 보호견 추천·이유 생성
+    _shared/http.ts      인증·응답 공통
+    shelter-sync/        CRON 보호견 동기화
+    shelter-traits/      CRON 성격 구조화
+    survey-analyze/      AI 상황 분석 (A-08)
+    survey-probe/        설문 되묻기 (A-06·A-07)
+    recommend/           보호견 추천 (D-01~D-03)
 tests/
   00_local_auth_stub.sql Supabase auth 흉내 (로컬 전용, 배포 안 함)
   integrity_test.sql     경제 공격 13건
   auth_test.sql          Auth 연동·탈퇴 9건
   rls_test.sql           RLS 공격 11건
   shelter_test.ts        파서 10건 (픽스처)
+  analysis_test.ts       분석 검증 12건 (오프라인)
   e2e_shelter_sync.ts    실 API → Postgres 6건
+  e2e_analysis.ts        AI 분석 8건 (실 LLM)
+  e2e_recommend.ts       성격 구조화·추천 8건 (실 LLM)
   run.sh
 ```
 
@@ -68,6 +81,11 @@ tests/
 `anon`에게 **테이블 권한을 전부 준 상태에서** 공격합니다. Supabase가 실제로 그렇게 동작하므로, "권한이 없어 막힌 것"과 "RLS가 막은 것"을 구분하기 위해서입니다.
 
 원장 직접 INSERT·UPDATE / 레벨 조작 / 발바닥 충전 / 게임 점수 삽입 / 돌봄 기록 위조 / 타인 데이터 조회 / 보호견 위조 / **전환 비율 조작** / 설문 저장은 정상 허용(과잉 차단 아님) / 공격 전후 잔액 불변
+
+### LLM 파이프라인 (실호출 16건)
+**AI 상황 분석 8건** — 견종 화이트리스트 준수 / 사용자 문장 인용 / 서로 다른 설문 → 서로 다른 결과 / 금칙어 미사용 / **여건 빠듯한 사용자에게 입양을 서두르지 않음** / 보더콜리 고정 포함 / 성격 프리필
+
+**성격 구조화·추천 8건** — traits 항목이 원문에 근거(36/36) / 모르는 축은 null 유지 / 추천이 후보 안에서만 / 이유가 사용자 문장 인용 / **겹치는 보호견도 사용자별로 다른 이유** / 금칙어 미사용
 
 ### 보호견 파이프라인 (16건)
 파서 10건은 픽스처, e2e 6건은 **실제 API 호출**입니다.
@@ -123,10 +141,10 @@ append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바
 
 ## 6. 아직 안 한 것
 
-- **Edge Function 핸들러 대부분** — `shelter-sync`만 작성. `survey-analyze`·`game-submit`·`commerce/*`는 미구현
-- **LLM 연동 전부** — `traits` 구조화, 추천 이유 생성, 설문 되묻기(`10-survey-engine/survey-prompts.md`에 명세만)
 - **레벨 곡선·방치 하락** — config에 상수만 있고 함수 미구현
-- **커머스 웹훅** — HMAC 검증·order_token·CRON 재대조 (PRD §7.6)
+- **미니게임 서버 검증** — `game_sessions` 테이블만 있고 재계산 로직 미구현 (C-02)
+- **커머스 전체** — 결제 의도·웹훅·스킨 지급·미성년 한도 스키마 자체가 없음 (PRD §7)
+- **돌봄 요구량 계산** — 성격에서 요구량을 뽑는 로직 (B-02)
 - **Edge Function 미배포** — `shelter-sync`는 코드만 있고 `supabase functions deploy` 전이다. 현재 보호견 24건은 로컬에서 적재했다
 - **CRON 미설정** — 동기화 주기 스케줄 등록 필요
 

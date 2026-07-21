@@ -73,6 +73,15 @@
   - next_action: Supabase 프로젝트 연결 후 배포. survey-analyze·game-submit 핸들러와 LLM 연동 구현
   - evidence: 단언 40건 통과 — 경제 무결성 13 · RLS 공격 11 · 파서 10 · 실 API 전 구간 6 (`./tests/run.sh`)
 
+- [x] LLM 파이프라인 — AI 상황 분석 · 보호견 성격 구조화 · 추천
+  - id: backend-llm
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: PRD §4.3, 와이어프레임 A-06~A-09·D-01~D-04, `10-survey-engine/survey-prompts.md`
+  - output: `11-backend/supabase/functions/` (핸들러 5 · 공유 모듈 5), `0006_breeds.sql`
+  - next_action: Edge Function 배포 + 시크릿 등록, `shelter-traits` 1회 실행해 프로덕션 traits 채우기
+  - evidence: 로컬 41건 + 실 LLM 호출 16건. 상반된 두 설문 → 견종·참여 단계가 갈림, 겹치는 보호견도 사용자별 다른 이유
+
 ## 막힘
 
 ```markdown
