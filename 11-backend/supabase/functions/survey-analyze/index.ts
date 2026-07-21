@@ -30,11 +30,16 @@ Deno.serve(async (req) => {
   try {
     await admin.rpc("ensure_profile", { p_user: userId });
 
-    const [{ data: responses }, { data: followups }, { data: cfg }] = await Promise.all([
-      admin.from("survey_responses").select("question_id, value").eq("user_id", userId),
-      admin.from("survey_followups").select("question_id, probe, answer, skipped").eq("user_id", userId),
-      admin.from("config").select("value").eq("key", "breeds").single(),
-    ]);
+    const [{ data: responses }, { data: followups }, { data: cfg }, { data: breedRows }] =
+      await Promise.all([
+        admin.from("survey_responses").select("question_id, value").eq("user_id", userId),
+        admin.from("survey_followups").select("question_id, probe, answer, skipped").eq("user_id", userId),
+        admin.from("config").select("value").eq("key", "breeds").maybeSingle(),
+        // 견종 정본은 breeds 테이블이다 (0007). config에는 고정 견종 설정만 남는다.
+        admin.from("breeds")
+          .select("name, activity, timid, affection, image_url, image_license, image_author, attribution_required")
+          .order("sort_order"),
+      ]);
 
     const answers: Record<string, unknown> = {};
     for (const r of responses ?? []) answers[r.question_id] = r.value;
@@ -44,8 +49,10 @@ Deno.serve(async (req) => {
       return json({ error: "필수 문항(Q4·Q5)이 아직 없습니다" }, 400);
     }
 
-    const breeds: Breed[] = cfg?.value?.list ?? [];
-    if (!breeds.length) return json({ error: "견종 목록 설정 누락" }, 500);
+    const breeds: Breed[] = (breedRows ?? []).map((b) => ({
+      name: b.name, activity: b.activity, timid: b.timid, affection: b.affection,
+    }));
+    if (!breeds.length) return json({ error: "견종 목록이 비어 있습니다 (breeds 테이블)" }, 500);
     // 3D 에셋이 준비된 견종은 항상 후보에 넣는다 (config로 관리 — 코드에 박지 않는다)
     const pinned: string[] = cfg?.value?.pinned ?? [];
 
@@ -88,7 +95,24 @@ Deno.serve(async (req) => {
       await admin.from("analyses").update({ superseded_by: saved.id }).eq("id", prev.id);
     }
 
-    return json({ analysisId: saved.id, ...analysis });
+    // 화면(A-09)은 사진과 성격 프리필까지 한 번에 받아야 한다.
+    // CC BY 계열은 출처 표기가 의무라 라이선스 정보를 함께 내려보낸다.
+    const byName = new Map((breedRows ?? []).map((b) => [b.name, b]));
+    const enriched = analysis.breeds.map((b) => {
+      const meta = byName.get(b.name);
+      return {
+        ...b,
+        imageUrl: meta?.image_url ?? null,
+        personality: meta
+          ? { activity: meta.activity, timid: meta.timid, affection: meta.affection }
+          : null,
+        attribution: meta?.attribution_required
+          ? { author: meta.image_author, license: meta.image_license }
+          : null,
+      };
+    });
+
+    return json({ analysisId: saved.id, ...analysis, breeds: enriched });
   } catch (e) {
     // 분석 실패가 설문을 날리지 않는다. 클라는 재시도만 하면 된다.
     if (e instanceof AnalysisInvalid) {
