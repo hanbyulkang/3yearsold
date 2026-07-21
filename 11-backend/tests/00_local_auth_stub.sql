@@ -18,6 +18,15 @@ language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
 
+-- auth.users 최소 형태. 0004_auth.sql의 FK·트리거를 로컬에서도 검증하기 위한 것으로,
+-- 운영 Supabase의 실제 테이블에는 이보다 훨씬 많은 컬럼이 있다.
+create table if not exists auth.users (
+  id                  uuid primary key default gen_random_uuid(),
+  email               text,
+  raw_user_meta_data  jsonb,
+  created_at          timestamptz not null default now()
+);
+
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon nologin;

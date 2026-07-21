@@ -3,7 +3,7 @@
 Supabase(Postgres + Edge Functions) 기반. **경제 무결성과 보호견 데이터 파이프라인**을 먼저 구현했습니다.
 
 - 상태: `verified` — **Supabase 프로젝트 `balang`에 배포 완료** (2026-07-22)
-- 검증: 로컬 40건 + 원격(PG17) 재검증 13건. 보호견 실데이터 24건 적재
+- 검증: 로컬 **49건** + 원격 실환경 검증. 보호견 실데이터 24건 적재
 - 관련 결정: D-019 (보호견 1차 소스 = 서울 vPetInfo)
 
 ```bash
@@ -37,6 +37,8 @@ supabase/
     0001_schema.sql      테이블 12 · 뷰 2 (balances, ranking_scores)
     0002_integrity.sql   ledger_append · convert_jerky_to_point · paw_* · care_perform
     0003_rls.sql         RLS 정책 (쓰기 정책의 부재가 곧 방어)
+    0004_auth.sql        auth.users 연동 — 가입 시 프로필 자동 생성
+    0005_account_deletion.sql  탈퇴 시 원장 익명 보존 (G-01)
   seed.sql               config — 밸런스 상수는 전부 여기 (클라 복제 금지)
   functions/
     _shared/shelter.ts   vPetInfo 정규화·CONT 섹션 분리
@@ -45,6 +47,7 @@ supabase/
 tests/
   00_local_auth_stub.sql Supabase auth 흉내 (로컬 전용, 배포 안 함)
   integrity_test.sql     경제 공격 13건
+  auth_test.sql          Auth 연동·탈퇴 9건
   rls_test.sql           RLS 공격 11건
   shelter_test.ts        파서 10건 (픽스처)
   e2e_shelter_sync.ts    실 API → Postgres 6건
@@ -57,6 +60,9 @@ tests/
 
 ### 경제 무결성 (13건)
 원장 UPDATE·DELETE 차단 / 잔액 초과 차감 차단 / 멱등(웹훅 재전송) / 일일 상한 / 육포→포인트 전환 / **역방향 전환 함수 부재** / 랭킹에서 과금 유래 제외 / **기부해도 랭킹 점수 유지** / 발바닥 소비·회복 / 돌봄 멱등 / 목욕 거부는 실패가 아님
+
+### Auth 연동 (9건)
+가입 시 프로필 자동 생성 / 생년월일 메타데이터 전달 / 유령 계정 차단 / `ensure_profile` 멱등 / 탈퇴 시 cascade / **탈퇴해도 원장은 익명 보존** / 익명 항목 재연결 차단 / 익명 항목은 잔액·랭킹 제외 / **익명화 예외가 append-only를 뚫지 않음**
 
 ### RLS 방어선 (11건)
 `anon`에게 **테이블 권한을 전부 준 상태에서** 공격합니다. Supabase가 실제로 그렇게 동작하므로, "권한이 없어 막힌 것"과 "RLS가 막은 것"을 구분하기 위해서입니다.
@@ -89,13 +95,18 @@ psql "$DB_URL" -f supabase/seed.sql
 | 경제 무결성 (PG17에서 재실행) | **13건 전부 통과** |
 | 보호견 실데이터 적재 | **24건** (입양문의가능 11 · 임시보호가능 2) |
 | 실제 `anon` 롤 공격 | 원장 직접 INSERT 차단 확인 |
+| **실제 회원가입 (admin API)** | 프로필 자동 생성 + 생년월일 전달 확인, 탈퇴 시 정리 확인 |
 
 로컬 검증은 Postgres 16, 운영은 17이므로 **원격에서 무결성 테스트를 다시 돌렸습니다.**
 
 ### 운영 시 알아야 할 것 두 가지
 
-**1. 원장은 DELETE가 막혀 있어 TRUNCATE로만 지워집니다.**
-`ledger`의 append-only 트리거는 행 단위 DELETE를 막습니다. `profiles`를 지워도 cascade DELETE가 트리거에 걸려 실패합니다. 테스트 데이터 정리는 `TRUNCATE ... CASCADE`로만 가능합니다(TRUNCATE는 행 트리거를 발화시키지 않음). 바꿔 말하면 **테이블 소유자 권한이 있으면 append-only를 우회할 수 있습니다.** anon·authenticated는 RLS로 막히므로 실사용 경로에는 구멍이 없지만, service_role 키를 쓰는 서버 코드에서는 규율로 지켜야 합니다.
+**1. 탈퇴는 삭제가 아니라 익명화입니다.**
+계정을 지우면 `ledger`의 행은 남고 `user_id`만 `null`이 됩니다(0005). 금액·출처·시각이 보존되므로 기부 집행 증빙이 유지되고, 개인과의 연결은 끊어집니다 — G-01의 "익명화 보존" 요구를 만족합니다. 익명 항목은 `balances`·`ranking_scores`에서 제외되고, 다른 계정에 재연결할 수 없습니다.
+
+append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바꾸면서 금액·출처·시각 중 하나라도 함께 바꾸면 트리거가 막습니다(테스트 9번이 이걸 확인합니다).
+
+단, **테이블 소유자 권한으로 `TRUNCATE`하면 append-only가 우회됩니다** (TRUNCATE는 행 트리거를 발화시키지 않음). anon·authenticated는 RLS로 막히므로 실사용 경로에 구멍은 없지만, service_role 키를 쓰는 서버 코드에서는 규율로 지켜야 합니다.
 
 **2. 비로그인 사용자에게는 보호견이 0건으로 보입니다.**
 `shelter_animals` 정책이 `auth.uid() is not null`이라, 로그인 전에는 목록이 비어 있습니다. 로그인 후 24건이 보입니다. PRD의 온보딩이 로그인부터 시작하므로 의도와 맞지만(A-01), 만약 **비로그인 상태에서 보호견을 미리 보여주는 화면**을 만들 계획이라면 정책을 바꿔야 합니다.
@@ -116,7 +127,6 @@ psql "$DB_URL" -f supabase/seed.sql
 - **LLM 연동 전부** — `traits` 구조화, 추천 이유 생성, 설문 되묻기(`10-survey-engine/survey-prompts.md`에 명세만)
 - **레벨 곡선·방치 하락** — config에 상수만 있고 함수 미구현
 - **커머스 웹훅** — HMAC 검증·order_token·CRON 재대조 (PRD §7.6)
-- **`auth.users` 연동** — 스키마는 배포됐지만 `profiles.user_id`가 아직 `auth.users`에 FK로 걸려 있지 않다. Supabase Auth 가입 시 `profiles` 행을 자동 생성하는 트리거도 필요하다
 - **Edge Function 미배포** — `shelter-sync`는 코드만 있고 `supabase functions deploy` 전이다. 현재 보호견 24건은 로컬에서 적재했다
 - **CRON 미설정** — 동기화 주기 스케줄 등록 필요
 

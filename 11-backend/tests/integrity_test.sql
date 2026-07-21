@@ -8,11 +8,17 @@
 \set QUIET on
 \set ON_ERROR_STOP on
 
--- 테스트용 유저
-insert into profiles (user_id) values
-  ('11111111-1111-1111-1111-111111111111'),
-  ('22222222-2222-2222-2222-222222222222')
+-- 테스트용 유저.
+-- profiles는 auth.users에 FK로 묶여 있고(0004) 가입 트리거가 행을 만들므로,
+-- 계정을 먼저 만든다. profiles를 직접 넣지 않는 것이 실제 흐름과 같다.
+insert into auth.users (id, email) values
+  ('11111111-1111-1111-1111-111111111111', 'test1@example.com'),
+  ('22222222-2222-2222-2222-222222222222', 'test2@example.com')
 on conflict do nothing;
+
+-- 트리거가 없는 환경(스텁 테이블 직접 삽입 등)을 대비한 보정
+insert into profiles (user_id)
+select id from auth.users on conflict do nothing;
 
 do $$
 declare
