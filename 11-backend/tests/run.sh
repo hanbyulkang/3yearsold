@@ -31,6 +31,7 @@ $PSQL -f supabase/seed.sql
 echo "▶ Auth 연동 · 경제 무결성 · RLS 방어선"
 $PSQL -f tests/integrity_test.sql 2>&1 | sed 's/^psql:.*NOTICE:  //'
 $PSQL -f tests/auth_test.sql      2>&1 | sed 's/^psql:.*NOTICE:  //'
+$PSQL -f tests/game_test.sql      2>&1 | sed 's/^psql:.*NOTICE:  //'
 $PSQL -f tests/rls_test.sql       2>&1 | sed 's/^psql:.*NOTICE:  //'
 
 echo "▶ 파서 단위 테스트 (픽스처 기반, 오프라인)"
