@@ -159,7 +159,42 @@ Task<GameApi.SubmitResult> SubmitAsync(string sessionId, Move[] moves, int score
 
 ---
 
-## 4. 엔드포인트 목록
+## 3-2. MG2 (2048) — ✅ 연동 완료
+
+`MiniGame2048`이 `Backend.Game2048Bridge`를 쓴다. MG1과 같은 규칙이다.
+
+| 시점 | 동작 |
+|---|---|
+| `Start()` | `Refresh()` — 서버 발바닥 잔량 조회 후 첫 판 |
+| `NewGame()` | `BeginRound()` — 발바닥 1 차감 + 세션 발급. **0이면 판을 열지 않고 안내** |
+| 게임오버·클리어 | `EndRound(score)` — 점수/512 만큼 뼈다귀 제출, 한 판 1회 |
+
+지급은 MG1과 같은 세션 상한 방식이다 (D-023).
+
+---
+
+## 4. CRON
+
+`pg_cron` + `pg_net`으로 등록돼 있다 (0014). 손으로 호출할 필요 없다.
+
+| 잡 | 스케줄 (UTC) | KST | 하는 일 |
+|---|---|---|---|
+| `shelter-sync-daily` | `0 19 * * *` | 매일 04:00 | 보호견 + 사진 동기화 |
+| `shelter-traits-daily` | `30 19 * * *` | 매일 04:30 | 새 개체 성격 구조화 |
+
+**service_role 키는 SQL에 없다.** Supabase Vault(`service_role_key`·`project_url`)에서
+실행 시점에 읽는다 — 마이그레이션 파일은 저장소에 남기 때문이다.
+
+확인·수동 실행:
+```sql
+select jobname, schedule, active from cron.job;
+select cron_invoke_function('shelter-sync');    -- 즉시 1회
+select status_code, content from net._http_response order by created desc limit 3;
+```
+
+---
+
+## 5. 엔드포인트 목록
 
 | 함수 | 인증 | 용도 |
 |---|---|---|
@@ -175,7 +210,7 @@ Task<GameApi.SubmitResult> SubmitAsync(string sessionId, Move[] moves, int score
 
 ---
 
-## 5. 클라이언트가 하지 말아야 할 것
+## 6. 클라이언트가 하지 말아야 할 것
 
 와이어프레임 주석과 PRD §5.5가 정한 것들입니다.
 
@@ -187,7 +222,7 @@ Task<GameApi.SubmitResult> SubmitAsync(string sessionId, Move[] moves, int score
 
 ---
 
-## 6. 보호견 사진
+## 7. 보호견 사진
 
 사진은 **`vPetImg`라는 별도 서비스**에 있다. `vPetInfo`에는 사진 필드가 없어서
 처음엔 "사진이 없다"고 판단했는데 오판이었다.
@@ -211,7 +246,7 @@ Unity에서는 `Backend.RemoteImage.Load(url, slot)`으로 기존 플레이스�
 
 ---
 
-## 7. 현재 데이터 상태
+## 8. 현재 데이터 상태
 
 | | |
 |---|---|
