@@ -26,6 +26,8 @@ namespace Backend
             ("퍼즐",  "mini-game-1"),
             ("2048", "minigame02"),
             ("추천",  "d-recommend"),
+            ("후원",  "e-donation"),
+            ("상점",  "marketFlow"),
         };
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -62,7 +64,7 @@ namespace Backend
             rt.anchorMin = new Vector2(1f, 1f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(Tabs.Length * 92f + 12f, 46f);
+            rt.sizeDelta = new Vector2(Tabs.Length * 78f + 12f, 46f);
             rt.anchoredPosition = new Vector2(-8f, -8f);
 
             var layout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();

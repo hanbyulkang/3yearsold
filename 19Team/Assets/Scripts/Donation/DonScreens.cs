@@ -89,9 +89,10 @@ namespace Donation
                 }
                 inner.Advance(46f);
 
-                // TODO(백엔드): 차감·적립은 Edge Function + 원장에서만 처리한다 (§5.5).
-                // 잔액을 클라이언트에서 깎지 말 것 — 여기서는 요청만 보내고 갱신된 잔액을 받아 그린다.
-                var cta = RecUI.GoldButton(inner, "Cta", Label(picked), null,
+                // 차감·적립은 서버 원장에서만 일어난다 (§5.5).
+                // 여기서는 요청만 보내고, 성공하면 서버 값으로 화면을 다시 그린다.
+                var cta = RecUI.GoldButton(inner, "Cta", Label(picked),
+                    () => Donate(nav, DonData.DonateAmounts[picked]),
                     62f, RecTheme.FsBtnGoldCta, 16f, 3f, 6f);
                 ctaLabel = DonUI.FitLabel(cta, RecTheme.Fs(16f));
             });
@@ -202,10 +203,10 @@ namespace Donation
             RecUI.Para(col, "Rotation", DonData.RotationNote, RecTheme.Fs(14.5f), RecTheme.Caption,
                 false, RecTheme.LineNormal);
 
-            // 하단 고정 CTA.
-            // TODO(백엔드): 배분 트랜잭션도 Edge Function + 원장 (§5.5).
+            // 하단 고정 CTA — 배분 트랜잭션도 서버 원장에서 (§5.5).
             // 뼈다귀는 재원이 아니라 분배 의사다 — 집행액은 판매·과금 재원에서 순환 배분으로 산정한다 (§6.1).
-            var cta = RecUI.GoldButton(f.Footer, "Allocate", CtaText(), null,
+            var cta = RecUI.GoldButton(f.Footer, "Allocate", CtaText(),
+                () => Allocate(nav, selected, amount),
                 0f, 0f, RecTheme.FrameW - RecTheme.Pad * 2f, 60f, RecTheme.FsBtnGoldCta, 18f, 3f, 6f);
             ctaLabel = DonUI.FitLabel(cta, RecTheme.Fs(15f));
 
@@ -326,6 +327,35 @@ namespace Donation
             col.Y = top + h + col.Gap;
 
             RecNav.FinishFrame(f);
+        }
+        // ---------- 서버 액션 (§5.5 — 재화는 서버 원장에서만 움직인다) ----------
+
+        /// <summary>공동 창고 기부. 성공하면 서버 값으로 E-01을 다시 그린다.</summary>
+        static async void Donate(RecNav nav, int amount)
+        {
+            bool ok = await Backend.DonActions.DonateToWarehouse(amount);
+            if (!ok) { Debug.LogWarning("[E-01] 기부 실패 — 뼈다귀가 부족하거나 네트워크 오류"); return; }
+            await Backend.DonApi.LoadIntoDonData();   // 잔액·진행률·내기여를 서버에서 다시 읽는다
+            Rebuild(nav, "e01");
+        }
+
+        /// <summary>지정 후원 배분. 금액을 안 적었으면 아무것도 하지 않는다.</summary>
+        static async void Allocate(RecNav nav, int targetIndex, string amountText)
+        {
+            if (!int.TryParse(amountText, out int v) || v <= 0) return;
+            bool ok = await Backend.DonActions.AllocateToTarget(targetIndex, v);
+            if (!ok) { Debug.LogWarning("[E-02] 배분 실패 — 뼈다귀가 부족하거나 네트워크 오류"); return; }
+            await Backend.DonApi.LoadIntoDonData();
+            Rebuild(nav, "e01");   // 배분 후에는 창고 화면으로 돌아가 갱신된 잔액을 보여준다
+        }
+
+        /// <summary>화면 전체를 서버 값으로 다시 만든다.</summary>
+        static void Rebuild(RecNav nav, string show)
+        {
+            var canvas = nav.transform.Find("DonCanvas");
+            if (canvas == null) { nav.Show(show, false); return; }
+            BuildAll(nav, canvas);
+            nav.Show(show, false);
         }
     }
 }
