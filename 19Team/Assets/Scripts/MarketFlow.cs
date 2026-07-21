@@ -24,6 +24,65 @@ public sealed class MarketFlow : MonoBehaviour
     public Sprite boneGoldSprite;
     public Sprite jerkySprite;
 
+    // ---------- 서버 연동 상태 ----------
+    // 가격·잔액을 클라가 계산하지 않는다. 전부 서버 값이다 (PRD §5.5).
+    private Backend.ShopApi.Skin[] _catalog = System.Array.Empty<Backend.ShopApi.Skin>();
+    private string[] _owned = System.Array.Empty<string>();
+    private Backend.ShopApi.Skin _selected;
+    private int _jerky = -1;      // -1 = 아직 조회 전 → "—" 로 표시
+    private int _bones = -1;
+    private UnityEngine.UI.Text _jerkyLabel;
+    private UnityEngine.UI.Text _boneLabel;
+    private string _notice;       // 구매 결과 안내 (실패 사유 포함)
+
+    /// <summary>서버에서 카탈로그·잔액·보유목록을 읽고 화면을 다시 그린다.</summary>
+    private async void LoadFromServer()
+    {
+        if (!await Backend.AppSession.EnsureSignedIn())
+        {
+            Debug.LogWarning("[Market] 로그인 실패 — 목업 카탈로그로 표시합니다");
+            return;
+        }
+        _catalog = await Backend.ShopApi.GetCatalog();
+        _owned   = await Backend.ShopApi.GetOwned();
+        _jerky   = await Backend.ShopApi.GetJerky();
+        _bones   = await BonesAsync();
+        Refresh();
+    }
+
+    private static async System.Threading.Tasks.Task<int> BonesAsync()
+    {
+        var raw = await Backend.SupabaseClient.RpcRaw("my_bones");
+        return int.TryParse((raw ?? "").Trim(), out var v) ? v : -1;
+    }
+
+    /// <summary>육포로 구매. 가격은 보내지 않는다 — sku만 보내고 서버가 정한다.</summary>
+    private async void Purchase()
+    {
+        if (_selected == null) { ShowSkinPurchased(); return; }   // 오프라인 목업 경로
+
+        var r = await Backend.ShopApi.BuyWithJerky(_selected.sku);
+        if (!r.Ok)
+        {
+            _notice = r.message;
+            Debug.LogWarning($"[Market] 구매 실패: {r.message}");
+            Refresh();
+            return;
+        }
+        if (r.alreadyOwned) { _notice = "이미 보유한 스킨이에요"; Refresh(); return; }
+
+        _jerky = r.jerkyLeft;
+        _owned = await Backend.ShopApi.GetOwned();
+        _notice = null;
+        ShowSkinPurchased();
+    }
+
+    private void ShowSkinFor(Backend.ShopApi.Skin item)
+    {
+        _selected = item;
+        ShowSkin();
+    }
+
     private const float ReferenceWidth = 686f;
     private const float ReferenceHeight = 1220f;
 
@@ -57,6 +116,19 @@ public sealed class MarketFlow : MonoBehaviour
     {
         BuildInterface();
         ShowShop();
+        LoadFromServer();   // 카탈로그·잔액을 받아오면 Refresh가 화면을 다시 그린다
+    }
+
+    /// <summary>현재 화면을 서버 값으로 다시 그린다. 잔액 라벨도 갱신된다.</summary>
+    private void Refresh()
+    {
+        if (!initialized) return;
+        ShowScreen(currentScreen);
+        if (!string.IsNullOrEmpty(_notice))
+        {
+            Debug.Log($"[Market] {_notice}");
+            _notice = null;
+        }
     }
 
     public void BuildInterface()
@@ -136,10 +208,38 @@ public sealed class MarketFlow : MonoBehaviour
         CreateTabs(screenRoot, 132f, "스킨");
         CreateText(screenRoot, "확정 구매 · 단추의 새 옷과 보호소 연동", 16f, Muted, TextAnchor.MiddleCenter, 24f, 188f, 638f, 28f);
 
-        CreateProductCard(screenRoot, 24f, 216f, "스킨", "노란 우비", "육포 8", false, ShowSkin);
-        CreateProductCard(screenRoot, 355f, 216f, "세트", "겨울 패딩 세트", "39,000원", true, ShowSet);
-        CreateProductCard(screenRoot, 24f, 526f, "스킨", "체크 목도리", "육포 5", false, null);
-        CreateProductCard(screenRoot, 355f, 526f, "스킨", "기본 반다나", "P 1,500", false, null);
+        if (_catalog != null && _catalog.Length > 0)
+        {
+            // 서버 카탈로그 — 2열 그리드. 가격·제목은 전부 서버 값이다.
+            for (int i = 0; i < _catalog.Length && i < 4; i++)
+            {
+                var item = _catalog[i];
+                float x = (i % 2 == 0) ? 24f : 355f;
+                float y = (i < 2) ? 216f : 526f;
+                bool owned = System.Array.IndexOf(_owned, item.sku) >= 0;
+                string price = owned ? "보유 중" : item.PriceLabel;
+
+                if (item.IsJerky)
+                {
+                    var captured = item;
+                    CreateProductCard(screenRoot, x, y, item.KindLabel, item.title, price, false,
+                        owned ? (UnityEngine.Events.UnityAction)null : delegate { ShowSkinFor(captured); });
+                }
+                else
+                {
+                    // 실물 결제 상품은 자사몰 플로우로 (F-03) — 서버 구매 대상이 아니다
+                    CreateProductCard(screenRoot, x, y, item.KindLabel, item.title, price, true, ShowSet);
+                }
+            }
+        }
+        else
+        {
+            // 오프라인 폴백 — 서버를 못 읽어도 화면은 깨지지 않는다
+            CreateProductCard(screenRoot, 24f, 216f, "스킨", "노란 우비", "육포 8", false, ShowSkin);
+            CreateProductCard(screenRoot, 355f, 216f, "세트", "겨울 패딩 세트", "39,000원", true, ShowSet);
+            CreateProductCard(screenRoot, 24f, 526f, "스킨", "체크 목도리", "육포 5", false, null);
+            CreateProductCard(screenRoot, 355f, 526f, "스킨", "기본 반다나", "P 1,500", false, null);
+        }
 
         CreateText(screenRoot, "모든 상품은 확정 구매예요 — 뽑기·랜덤박스는 없어요", 14f, Muted, TextAnchor.MiddleCenter, 24f, 846f, 638f, 34f);
     }
@@ -147,11 +247,16 @@ public sealed class MarketFlow : MonoBehaviour
 
     private void BuildSkin()
     {
-        CreateHeader(screenRoot, "노란 우비", true, ShowShop);
+        string title = _selected != null ? _selected.title : "노란 우비";
+        string price = _selected != null ? _selected.PriceLabel : "육포 8";
+        string desc  = _selected != null && !string.IsNullOrEmpty(_selected.description)
+            ? _selected.description : "비 오는 날 마당 연출이 바뀌어요";
+
+        CreateHeader(screenRoot, title, true, ShowShop);
         CreatePreview(screenRoot, 24f, 156f, 638f, 370f, "단추 착용 미리보기");
-        CreatePanelWithText(screenRoot, "노란 우비", "육포 8", "비 오는 날 마당 연출이 바뀌어요", 24f, 552f, 638f, 132f, White, Border);
+        CreatePanelWithText(screenRoot, title, price, desc, 24f, 552f, 638f, 132f, White, Border);
         CreateInfoBox(screenRoot, "이 구매액의 10%는 공동 창고에 적립되어 보호소 기부에 쓰여요", 24f, 708f, 638f, 94f, donateBannerSprite);
-        CreatePrimaryButton(screenRoot, "육포 8로 구매", 24f, 924f, 638f, 82f, delegate { ShowSkinPurchased(); });
+        CreatePrimaryButton(screenRoot, $"{price}로 구매", 24f, 924f, 638f, 82f, delegate { Purchase(); });
         CreateText(screenRoot, "디지털 상품은 사용(착용) 후 청약철회가 제한돼요", 13f, Muted, TextAnchor.MiddleCenter, 24f, 1018f, 638f, 34f);
     }
 
@@ -205,9 +310,12 @@ public sealed class MarketFlow : MonoBehaviour
         {
             CreateText(header.transform, title, 28f, Cream, TextAnchor.MiddleLeft, 22f, 20f, 190f, 56f);
             CreateSpriteIcon(header.transform, boneGoldSprite, 340f, 24f, 28f, 28f);
-            CreateText(header.transform, "12,680", 17f, Gold, TextAnchor.MiddleLeft, 372f, 24f, 86f, 48f);
+            // 잔액은 서버 값만 표시한다. 조회 전에는 "—" (PRD §5.5 — 클라가 계산하지 않는다)
+            _boneLabel = CreateText(header.transform, _bones >= 0 ? $"{_bones:N0}" : "—",
+                17f, Gold, TextAnchor.MiddleLeft, 372f, 24f, 86f, 48f);
             CreateSpriteIcon(header.transform, jerkySprite, 468f, 24f, 28f, 28f);
-            CreateText(header.transform, "육포 12", 17f, Cream, TextAnchor.MiddleLeft, 500f, 24f, 120f, 48f);
+            _jerkyLabel = CreateText(header.transform, _jerky >= 0 ? $"육포 {_jerky}" : "육포 —",
+                17f, Cream, TextAnchor.MiddleLeft, 500f, 24f, 120f, 48f);
         }
     }
 

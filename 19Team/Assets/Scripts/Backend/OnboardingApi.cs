@@ -83,5 +83,35 @@ namespace Backend
             if (r == null) return new AnalysisResult { error = "네트워크 오류", retryable = true };
             return r;
         }
+
+        [Serializable]
+        public class Character
+        {
+            public string name;
+            public string breed;
+            public int level;
+            public int exp;
+        }
+
+        [Serializable] class CreateCharacterBody { public string p_name; public string p_breed; }
+
+        /// <summary>
+        /// 캐릭터견을 만든다 (A-09 선택 → A-10 생성).
+        ///
+        /// 견종은 서버가 breeds 테이블과 대조한다 — 목록에 없으면 거부된다.
+        /// 성격을 넘기지 않으면 견종 기본값(A-10 프리필)이 적용된다.
+        /// </summary>
+        public static async Task<Character> CreateCharacter(string breedName, string dogName)
+        {
+            var body = JsonUtility.ToJson(new CreateCharacterBody { p_name = dogName, p_breed = breedName });
+            var raw = await SupabaseClient.RpcRaw("create_character", body);
+            if (string.IsNullOrEmpty(raw)) return null;
+            try { return JsonUtility.FromJson<Character>(raw); }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Onboarding] 캐릭터 응답 파싱 실패: {e.Message}");
+                return null;
+            }
+        }
     }
 }
