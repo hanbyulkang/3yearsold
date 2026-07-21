@@ -1,4 +1,4 @@
-/* B. 돌봄 루프 — 마당 · 돌봄 · 대화 (PRD §4.1) */
+/* B. 돌봄 루프 — 마당 · 돌봄 (PRD §4.1) */
 (function (S) {
 
 S.push({
@@ -40,7 +40,7 @@ S.push({
         </div>
       </div>
       <div class="row" style="gap:8px">
-        <div class="btn grow" data-goto="b04-chat">대화하기</div>
+        <div class="btn grow" data-goto="b03-feed">쓰다듬기</div>
         <div class="btn grow" data-goto="c01-hub">미니게임</div>
       </div>
     </div>
@@ -74,7 +74,7 @@ S.push({
         <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">밥 주기</div><div class="xs">매일 · 친밀도 +10</div></div></div>
         <div class="li"><span class="badge">남음</span><div class="grow"><div class="h3">산책 1/2</div><div class="xs">활동성이 높아 하루 2회를 원해요</div></div><span class="btn sm">하기</span></div>
         <div class="li"><span class="badge">남음</span><div class="grow"><div class="h3">똥 치우기</div><div class="xs">방치하면 마당 청결도가 내려가요</div></div><span class="btn sm">하기</span></div>
-        <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">쓰다듬기·대화</div><div class="xs">상시 · AI 반응</div></div></div>
+        <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">쓰다듬기·놀아주기</div><div class="xs">상시 · 성격별 반응</div></div></div>
         <div class="li"><span class="badge">내일</span><div class="grow"><div class="h3">목욕</div><div class="xs">2~3일 주기 · 겁이 많아 거부할 수 있어요</div></div></div>
         <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">빗질</div><div class="xs">짧은 주기 · 교감 보정</div></div></div>
         <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">원반던지기</div><div class="xs">마당 미니 인터랙션</div></div></div>
@@ -124,48 +124,8 @@ S.push({
 });
 
 S.push({
-  id: 'b04-chat',
+  id: 'b04-levelup',
   no: 'B-04',
-  group: 'B. 돌봄',
-  prd: '§4.1',
-  title: '캐릭터견 대화 (AI 페르소나)',
-  purpose: '성격에 따라 반응이 달라지는 대화. 교감 돌봄의 핵심.',
-  html: `
-    <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">단추와 대화</span><span class="act">Lv.7</span></div>
-    <div class="body">
-      <div class="aibox">
-        <div class="cap">단추</div>
-        <div class="s">(당신 옆에 살짝 앉았어요) 오늘은 어제보다 가까이 와도 괜찮아요…</div>
-      </div>
-      <div class="box" style="align-self:flex-end;max-width:80%">
-        <div class="s">단추야 오늘 산책 갈까?</div>
-      </div>
-      <div class="aibox">
-        <div class="cap">단추</div>
-        <div class="s">(귀가 쫑긋! 문 앞으로 달려가요) 왈! 왈!</div>
-      </div>
-      <div class="row wrap" style="gap:5px">
-        <span class="chip">쓰다듬기</span><span class="chip">간식 주기</span><span class="chip">산책 가자</span>
-      </div>
-    </div>
-    <div class="footer">
-      <div class="row" style="gap:8px">
-        <div class="field grow">메시지 입력…</div>
-        <div class="btn" style="flex:0 0 60px">전송</div>
-      </div>
-    </div>
-  `,
-  notes: [
-    '페르소나 시스템 프롬프트 = 성격 4축 + 친밀도 레벨. 겁많음 높고 친밀도 낮으면 거리 두는 반응.',
-    'LLM 호출은 Edge Function 경유. 프롬프트에 "유기견" 금칙·죄책감 톤 금지 명시.',
-    '대화 로그는 §4.3 추천의 행동 데이터로 누적.'
-  ]
-});
-
-S.push({
-  id: 'b05-levelup',
-  no: 'B-05',
   group: 'B. 돌봄',
   prd: '§5.3',
   title: '레벨업',
@@ -196,8 +156,8 @@ S.push({
 });
 
 S.push({
-  id: 'b06-return',
-  no: 'B-06',
+  id: 'b05-return',
+  no: 'B-05',
   group: 'B. 돌봄',
   prd: '§4.1',
   title: '오랜만의 재회 (복귀)',
@@ -229,8 +189,8 @@ S.push({
 });
 
 S.push({
-  id: 'b07-closet',
-  no: 'B-07',
+  id: 'b06-closet',
+  no: 'B-06',
   group: 'B. 돌봄',
   prd: '§5.4 · §7.4',
   title: '마당 꾸미기 · 옷장',
