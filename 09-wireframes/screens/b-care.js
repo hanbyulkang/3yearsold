@@ -13,7 +13,7 @@ S.push({
     <div class="appbar">
       <span class="t">단추의 마당</span>
       <div class="hud">
-        <span class="cur">🐾 3/5</span><span class="cur">P 12,400</span><span class="cur">육포 12</span>
+        <span class="cur">🐾 3/5</span><span class="cur">🦴 12,400</span><span class="cur">육포 12</span>
       </div>
     </div>
     <div class="body">
@@ -79,11 +79,11 @@ S.push({
         <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">빗질</div><div class="xs">짧은 주기 · 교감 보정</div></div></div>
         <div class="li"><span class="badge ok">완료</span><div class="grow"><div class="h3">원반던지기</div><div class="xs">마당 미니 인터랙션</div></div></div>
       </div>
-      <div class="s">오늘 요구량을 모두 채우면 일일 돌봄 완주 포인트를 받아요</div>
+      <div class="s">오늘 요구량을 모두 채우면 일일 돌봄 완주 뼈다귀를 받아요</div>
     </div>
   `,
   notes: [
-    '요구량은 성격 파라미터에서 계산(활동성 4 → 산책 2회). 완주 판정·포인트 지급은 서버.',
+    '요구량은 성격 파라미터에서 계산(활동성 4 → 산책 2회). 완주 판정·뼈다귀 지급은 서버.',
     '목욕 거부는 실패가 아니라 분기 — 응답 200 {result:"declined"}, 분석 이벤트명에 fail 금지.'
   ]
 });
@@ -129,7 +129,7 @@ S.push({
   group: 'B. 돌봄',
   prd: '§5.3',
   title: '레벨업',
-  purpose: '레벨업 일시금(주 포인트 경로) + 해금 안내.',
+  purpose: '레벨업 일시금(주 뼈다귀 경로) + 해금 안내.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
     <div class="body" style="justify-content:center;gap:14px">
@@ -139,10 +139,10 @@ S.push({
       </div>
       <div class="img" style="height:140px"><span>레벨업 연출</span></div>
       <div class="card">
-        <div class="row between"><span class="h3">포인트 보상</span><span class="h2 mono">+900 P</span></div>
+        <div class="row between"><span class="h3">뼈다귀 보상</span><span class="h2 mono">+900 🦴</span></div>
         <div class="divider"></div>
         <div class="row between"><span class="s">해금</span><span class="s">마당 타일 2종 · 스킨 슬롯 +1</span></div>
-        <div class="row between"><span class="s">일일 획득 상한</span><span class="s mono">1,200 → 1,350 P</span></div>
+        <div class="row between"><span class="s">일일 획득 상한</span><span class="s mono">1,200 → 1,350 🦴</span></div>
       </div>
     </div>
     <div class="footer">
@@ -194,10 +194,10 @@ S.push({
   group: 'B. 돌봄',
   prd: '§5.4 · §7.4',
   title: '마당 꾸미기 · 옷장',
-  purpose: '포인트로 마당 해금, 보유 스킨 착용. 상점으로 연결.',
+  purpose: '뼈다귀로 마당 해금, 보유 스킨 착용. 상점으로 연결.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">꾸미기</span><div class="hud"><span class="cur">P 12,400</span></div></div>
+    <div class="appbar"><span class="back">←</span><span class="t">꾸미기</span><div class="hud"><span class="cur">🦴 12,400</span></div></div>
     <div class="body">
       <div class="row" style="gap:6px">
         <span class="chip on">옷장</span><span class="chip">마당</span>
@@ -218,7 +218,7 @@ S.push({
         <div class="card grow center">
           <div class="img" style="height:70px"><span>타일</span></div>
           <div class="h3">잔디 타일</div>
-          <div class="btn sm">800 P 해금</div>
+          <div class="btn sm">800 🦴 해금</div>
         </div>
         <div class="card grow center">
           <div class="img" style="height:70px"><span>타일</span></div>
