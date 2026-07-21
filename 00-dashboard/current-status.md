@@ -18,10 +18,18 @@
 - evidence:
 
 ## 가장 중요한 다음 행동
-1.
-2.
-3.
+1. 팀원 담당자가 GitHub에 Private Repository를 생성하고 저장소 URL을 공유한다.
+2. 저장소 생성 후 `REMOTE_SETUP.md`의 HTTPS 명령으로 이 로컬 기준본을 push한다.
+3. 팀원 전원이 clone·Obsidian Vault 열기·첫 작업 등록까지 확인한다.
+
+## 협업 저장소 상태
+- local_git: ready
+- branch: main
+- github_repository: pending — 팀원 담당자가 생성
+- remote_origin: not configured
+- access_method: HTTPS
+- sensitive_data_scan: passed for current tracked files
 
 ## 마지막 업데이트
-- updated_at:
-- updated_by:
+- updated_at: 2026-07-21 09:00 KST
+- updated_by: Alfred
