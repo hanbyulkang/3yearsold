@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발랑 (Balanc) — CODEGATE 2026 발표 자료</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<div class="stage">
+<div class="slides" id="slides">
+
+<!-- ==================== 01 표지 ==================== -->
+<section class="slide dark" data-toc="표지">
+  <div class="cover-bg"></div>
+  <div class="cover-blocks">
+    <img src="assets/block_bone.png" alt=""><img src="assets/block_ball.png" alt=""><img src="assets/block_bowl.png" alt="">
+    <img src="assets/block_chew.png" alt=""><img src="assets/block_leash.png" alt=""><img src="assets/block_squeaky.png" alt="">
+  </div>
+  <div class="body-area" style="justify-content:center">
+    <div class="kicker">CODEGATE 2026 · 19팀</div>
+    <div class="brandmark">
+      <img src="assets/logo.png" alt="발랑 로고">
+      <div>
+        <div class="bm-name">발랑</div>
+        <div class="bm-en">Balanc</div>
+      </div>
+    </div>
+    <h1 style="font-size:58px;margin:24px 0 22px">
+      화면 속 밥그릇을 채우면,<br><b>보호소 밥그릇이 채워집니다.</b>
+    </h1>
+  </div>
+</section>
+
+<!-- ==================== 02 핵심 — 한 벌이 세 곳에 ==================== -->
+<section class="slide" data-toc="핵심 — 모든 행동이 밥그릇으로"
+  data-note="이 슬라이드가 발랑의 전부입니다. 플레이든 돌봄이든 구매든, 사용자의 모든 행동이 결국 보호소 밥그릇을 채우는 행동이 된다는 것. 한 번의 행동이 곧바로 한 그릇이 되는 건 아니고 모여서 목표에 닿아야 집행됩니다 — 게이지에 그대로 씁니다.">
+  <div class="kicker">THE LINK</div>
+  <h2>무엇을 하든 <b>같은 곳으로 모입니다</b></h2>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:26px">
+    <div class="converge">
+      <div class="cv-in">
+        <div class="cv-box">게임 플레이<span class="s">3매치로 뼈다귀 획득</span></div>
+        <div class="cv-box">매일 돌봄<span class="s">레벨업 보상</span></div>
+        <div class="cv-box">상품 구매<span class="s">사료 · 옷 · 용품</span></div>
+      </div>
+      <div class="cv-arw">→</div>
+      <div class="cv-mid">
+        <img src="assets/block_bone.png" alt="">
+        <div class="t">후원 재원</div>
+        <span class="s">뼈다귀는 어디에 쓸지 고르는 권한<br>구매액은 실제 재원</span>
+      </div>
+      <div class="cv-arw">→</div>
+      <div class="cv-out">
+        <img src="assets/block_bowl.png" alt="">
+        <div class="t">보호소 밥그릇</div>
+        <span class="s">사료 · 방한용품 · 봉사 연결</span>
+      </div>
+    </div>
+    <div class="quote" style="max-width:1000px">
+      <p>플레이하는 것도, 돌보는 것도, 사는 것도 — <b>전부 후원하는 행동이 됩니다.</b><br>
+      <span style="font-size:16px">한 번의 행동이 곧바로 한 그릇이 되는 건 아닙니다 — <b>모여서 목표에 닿아야 집행</b>되고, 그 진행률을 게이지에 그대로 씁니다.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 03 미디어 — 게임은 매대다 ==================== -->
+<section class="slide" data-toc="미디어 — 게임이 매대다">
+  <div class="kicker">MEDIA</div>
+  <h2>배너는 넘깁니다. <b>입고 있는 옷</b>은 못 넘깁니다.</h2>
+  <p class="lead">발랑에서 브랜드는 광고 지면이 아니라 <b>상품 그 자체</b>로 등장합니다.</p>
+  <div class="cols c3 grow" style="align-items:center">
+    <div class="card">
+      <div class="cap">노출</div>
+      <h3>매일 접속하는 화면</h3>
+      <p>밥·산책·교감 7종을 하러 매일 들어온다. 캐릭터견은 그동안 <b>계속 그 옷을 입고 있다</b></p>
+    </div>
+    <div class="card">
+      <div class="cap">체험</div>
+      <h3>사기 전에 입혀본다</h3>
+      <p>디지털 쌍둥이를 먼저 착용해 보고 실물을 산다. <b>반품률을 낮추는 구조</b></p>
+    </div>
+    <div class="card">
+      <div class="cap">전환</div>
+      <h3>사는 자리가 그 자리</h3>
+      <p>옷을 본 화면에서 바로 자사몰로 넘어간다. <b>매장을 따로 찾아가지 않는다</b></p>
+    </div>
+  </div>
+  <div class="foot">인게임 브랜드 노출은 블록 한 종류로 제한합니다 — 판 전체가 광고판이 되면 게임도 브랜드도 같이 죽습니다</div>
+</section>
+
+<!-- ==================== 04 벤치마킹 — TREAT ==================== -->
+<section class="slide" data-toc="벤치마킹 — TREAT"
+  data-note="TREAT은 iOS·Android에 이미 출시된 앱입니다. 가상 반려견을 돌보면 실제 보호소 개에게 물품이 가고, 그 개가 입양되면 알려줍니다. 시장이 존재한다는 증거로 쓰되, 우리가 무엇을 더 하는지를 분명히 말하세요 — 우리는 기부만이 아니라 내가 쓸 물건을 함께 파는 커머스입니다.">
+  <div class="kicker">BENCHMARK</div>
+  <h2>이미 <b>돌아가고 있는 시장</b>입니다</h2>
+  <div class="cols c-2-3 grow" style="align-items:center">
+    <div class="card" style="border-color:rgba(226,164,54,0.6);background:rgba(242,193,78,0.07)">
+      <div class="cap">레퍼런스 · iOS &amp; Android 출시</div>
+      <h3 style="font-size:30px">TREAT</h3>
+      <p style="margin-top:10px"><i>Play &amp; impact REAL dogs</i></p>
+      <p>가상 반려견을 돌보면 <b>실제 보호소 개에게 물품이 간다.</b>
+      그 개가 입양되면 유저에게 알려준다.</p>
+      <p class="pay">"가상 돌봄 → 실물 도착"이 <b>이미 검증된 동선</b></p>
+    </div>
+    <div>
+      <div class="cap" style="font-family:'Jua',sans-serif;font-size:13px;color:var(--caption);margin-bottom:12px">
+        발랑이 한 칸 더 가는 지점
+      </div>
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="card pad-sm">
+          <h3>기부가 아니라 <b>커머스</b></h3>
+          <p>TREAT은 보호소로 물품을 보낸다. 발랑은 <b>내가 쓸 물건을 나도 사고</b>, 팔린 만큼 보호견에게도 간다 — 매출이 나는 구조</p>
+        </div>
+        <div class="card pad-sm">
+          <h3>재원이 <b>브랜드 매출</b>에서 나온다</h3>
+          <p>기부금을 모아 집행하는 게 아니라, 상품이 팔리면 브랜드가 집행한다. <b>협찬이 끊겨도 약속이 무너지지 않는다</b></p>
+        </div>
+        <div class="card pad-sm">
+          <h3>AI가 <b>다음 걸음</b>까지 잇는다</h3>
+          <p>물품 후원에서 끝내지 않고 봉사·임시보호·입양까지, 그 사람에게 맞는 하나를 추천한다</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">TREAT — treatapp.co · App Store · Google Play (2026-07 확인)</div>
+</section>
+
+<!-- ==================== 05 수익 모델 ==================== -->
+<section class="slide" data-toc="수익 모델 3축"
+  data-note="숫자 비중은 아직 가안입니다. 스킨 매출의 공동 창고 적립률 10%, 육포 전환비 1:100 모두 밸런스 시트에서 확정 예정이라고 말합니다.">
+  <div class="kicker">REVENUE</div>
+  <h2>돈은 <b>세 군데</b>에서 들어옵니다</h2>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:20px">
+    <div class="cols c3">
+      <div class="card">
+        <div class="cap">① 디지털 · 게임 내</div>
+        <h3>스킨 판매</h3>
+        <p>과금 재화로 구매. <b>뽑기는 만들지 않는다</b> — 확률 공시 규제도, 사행성도 없다</p>
+        <p class="pay">매출의 <b>10%</b>는 공동 창고로 <span class="gloss">가안</span></p>
+      </div>
+      <div class="card" style="border-color:rgba(226,164,54,0.6);background:rgba(242,193,78,0.07)">
+        <div class="cap">② 실물 · 자사몰 <span class="chip solid" style="font-size:11px;padding:2px 9px;margin-left:4px">주력</span></div>
+        <h3>실물 옷 + 스킨 세트</h3>
+        <p>게임에서 본 옷을 자사몰에서 실제 결제. <b>스킨은 함께 지급</b></p>
+        <p class="pay">구매액 비례 <b>포인트 적립 + 기부 적립</b></p>
+      </div>
+      <div class="card">
+        <div class="cap">③ B2B · 브랜드</div>
+        <h3>시즌 스폰서십</h3>
+        <p>시즌당 1~2개 브랜드와 계약. 인게임 상시 노출 + 판매 연동 약정</p>
+        <p class="pay">쿠폰이 <b>자사몰 구매</b>로 이어진 비율이 성과 지표</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cap">브랜드가 내는 것과 얻는 것</div>
+      <table style="margin-top:6px">
+        <tr><th style="width:44%">브랜드가 내는 것</th><th>브랜드가 얻는 것</th></tr>
+        <tr><td>상품 공급 (옷·사료·용품)</td><td>게임 내 <b>상시 노출</b> + 새 판매 채널</td></tr>
+        <tr><td>판매 연동 구호 약정</td><td>판매 실적과 함께 나오는 <b>집행 증빙</b> <span class="gloss">사회공헌에 썼다는 증거</span></td></tr>
+        <tr><td>협찬 쿠폰</td><td><b>신규 구매 전환</b>, 브랜드 사용 경험</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 06 어필리에이트 ==================== -->
+<section class="slide" data-toc="어필리에이트 트래킹"
+  data-note="결제창은 iframe 대신 새 탭을 씁니다(3DS·SameSite·X-Frame-Options로 iframe에서 깨짐). 팝업 차단되면 링크+QR 폴백, 웹훅 유실은 30분 CRON 재대조, 중복은 order_id 멱등키로 1회만. 준법 — 미성년 법정대리인 동의·월 결제 한도·카드 정보 미보관.">
+  <div class="kicker">TRACKING</div>
+  <h2>누가 보낸 손님인지 <b>끝까지 따라갑니다</b>
+    <span class="gloss">어필리에이트 = 우리가 보낸 손님이 산 만큼 정산받는 구조</span></h2>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:22px">
+    <div class="card">
+      <div class="flowline">
+        <span class="n gold">게임에서<br>구매 클릭</span><span class="a">→</span>
+        <span class="n">주문표 발급<br><span class="sm-note">누가 보낸 손님인지 표시</span></span><span class="a">→</span>
+        <span class="n">자사몰 새 탭<br><span class="sm-note">주문표를 달고 이동</span></span><span class="a">→</span>
+        <span class="n">결제 완료 통보<br><span class="sm-note">웹훅 · 위조 방지 서명</span></span><span class="a">→</span>
+        <span class="n gold">스킨 지급<br>포인트 · 기부 적립</span>
+      </div>
+    </div>
+    <div class="cols c3">
+      <div class="card pad-sm"><h3>귀속이 새지 않는다</h3><p>주문 하나에 표가 하나. 중복 통보가 와도 <b>한 번만 반영</b>된다</p></div>
+      <div class="card pad-sm"><h3>끊겨도 복구된다</h3><p>통보가 유실되면 <b>30분마다 주문 내역과 재대조</b></p></div>
+      <div class="card pad-sm"><h3>취소도 처리한다</h3><p>반품되면 스킨을 회수한다. 착용 중이면 <b>유예 후 사유 안내</b></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 07 당위성 ==================== -->
+<section class="slide calm" data-toc="당위성 — 왜 이 커머스인가"
+  data-note="여기서 톤을 한 번 낮춥니다. 공익을 앞세워 파는 게 아니라는 점을 분명히 하세요. 숫자 출처는 2025 동물복지 국민의식조사, 전국 5,000명 대상입니다.">
+  <div class="kicker">WHY IT DESERVES TO EXIST</div>
+  <h2>공익은 <b>구호가 아니라 정산 구조</b>에 들어 있습니다</h2>
+  <div class="cols c-3-2 grow" style="align-items:center">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="cols c3">
+        <div class="card stat pad-sm"><div class="n" style="font-size:44px">95,685</div><div class="t">2025년 구조된 개</div></div>
+        <div class="card stat pad-sm"><div class="n" style="font-size:44px">25.6<span class="u">%</span></div><div class="t">그중 입양</div></div>
+        <div class="card stat pad-sm"><div class="n" style="font-size:44px">88.3<span class="u">%</span></div><div class="t">보호견 입양 의향</div></div>
+      </div>
+      <div class="quote">
+        <p>마음은 이미 있습니다. 꺼리는 이유 3위가
+        <b>"입양 방법이나 절차를 잘 모른다"</b> — 19.5%.<br>
+        막는 건 돈이 아니라 <b>정보와 노출</b>입니다.</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h3>보호소가 못 하는 일을 대신한다</h3>
+        <p>보호소는 돌봄만으로 벅차 개 한 마리당 소개를 계속 만들 수 없다. <b>그 몫을 AI가 쓴다</b></p>
+      </div>
+      <div class="card">
+        <h3>예산을 미리 태우지 않는다</h3>
+        <p>협찬이 끊기면 무너지는 약속을 하지 않는다. <b>팔린 만큼만 집행</b>된다</p>
+      </div>
+      <div class="card" style="border-color:rgba(28,107,58,0.4)">
+        <h3><span class="strike">유기견</span> → <b>보호견</b></h3>
+        <p>버려졌다는 과거 대신 지금 보호받는 상태로 부른다. UI·AI 프롬프트까지 전부</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">2025 동물복지 국민의식조사(전국 5,000명) · 국가 통계 "유실·유기동물" 인용</div>
+</section>
+
+<!-- ==================== 08 판매 연동 기부 ==================== -->
+<section class="slide" data-toc="판매 연동 기부 · 폐루프"
+  data-note="정직성 규칙 — 실제 집행이 없는 구간은 '모의 기부' 라벨을 그대로 노출하고, 게이지는 모금액이 아니라 참여량·판매 진행률임을 문구로 드러냅니다. 판매 목표는 미달성해도 결과를 공개합니다.">
+  <div class="kicker">CLOSED LOOP</div>
+  <h2>팔린 개수가 <b>그대로 구호 활동</b>이 됩니다</h2>
+  <div class="cols c-3-2 grow" style="align-items:center">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h3 style="margin-bottom:4px">겨울 패딩 <span style="font-size:14px;color:var(--sub)">스킨 + 실물 옷</span></h3>
+        <p style="margin-bottom:14px">목표 <b>500벌</b> → 브랜드가 보호소에 방한용품 집행</p>
+        <div class="gauge"><div class="fill" style="width:68%">342 / 500벌</div></div>
+        <p style="margin-top:14px">내 기여 <b>1벌 (+0.2%)</b> — 구매 즉시 게이지에 반영</p>
+      </div>
+      <div class="card">
+        <div class="cap">집행과 증명</div>
+        <div class="flowline" style="margin-top:10px">
+          <span class="n">목표 도달</span><span class="a">→</span>
+          <span class="n">보호소 선정</span><span class="a">→</span>
+          <span class="n">배송</span><span class="a">→</span>
+          <span class="n">수령 확인<br><span class="sm-note">사진 1장</span></span><span class="a">→</span>
+          <span class="n gold">구매자 전원에게<br>결과 리포트</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h3>구매 시점에 바로 보여준다</h3>
+        <p>"내 구매가 게이지를 얼마나 올렸는지"를 그 자리에서. <b>인과가 보이지 않으면 다시 사지 않는다</b></p>
+      </div>
+      <div class="card">
+        <h3>보호소가 하는 일은 둘뿐</h3>
+        <p>최초 <b>등록 1회</b>, 물품 도착 시 <b>사진 1장 + 확인</b>. 보호견 정보는 공공 API에서 동기화한다</p>
+      </div>
+      <div class="card" style="border-color:rgba(28,107,58,0.4)">
+        <h3>미달성도 공개한다</h3>
+        <p>조용히 사라지는 캠페인을 만들지 않는다. 집행 내역은 <b>전건 공개</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 09 왜 게임인가 ==================== -->
+<section class="slide" data-toc="왜 게임이어야 하나">
+  <div class="kicker">WHY A GAME</div>
+  <h2>사는 사람과 돕는 사람을 <b>같은 사람으로</b> 만들려면</h2>
+  <p class="lead">애착이 먼저 생겨야 지갑도 열립니다. 그래서 커머스 앞에 <b>매일 돌보는 경험</b>을 둡니다.</p>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:30px">
+    <div class="funnel">
+      <div class="step"><div class="lb">게임</div></div>
+      <div class="arw">›</div>
+      <div class="step"><div class="lb">관심</div></div>
+      <div class="arw">›</div>
+      <div class="step"><div class="lb">학습</div></div>
+      <div class="arw">›</div>
+      <div class="step hot"><div class="lb">후원</div><div class="sub">커머스 접점</div></div>
+      <div class="arw">›</div>
+      <div class="step hot"><div class="lb">물품 구매</div><div class="sub">커머스 접점</div></div>
+      <div class="arw">›</div>
+      <div class="step"><div class="lb">방문</div></div>
+      <div class="arw">›</div>
+      <div class="step"><div class="lb">봉사</div></div>
+      <div class="arw">›</div>
+      <div class="step"><div class="lb">임시보호</div></div>
+      <div class="arw">›</div>
+      <div class="step" style="border-color:rgba(28,107,58,0.5)"><div class="lb">입양</div></div>
+    </div>
+    <div class="cols c3">
+      <div class="card"><h3>멈춘 자리가 실패는 아니다</h3><p>구매까지만 하고 말아도 사업은 돈다</p></div>
+      <div class="card" style="border-color:rgba(226,164,54,0.6);background:rgba(242,193,78,0.07)"><h3>매출은 중간에서 난다</h3><p>후원·물품 단계가 <b>커머스와 겹친다</b></p></div>
+      <div class="card" style="border-color:rgba(28,107,58,0.4)"><h3>입양만은 재촉하지 않는다</h3><p>AI가 준비 상태를 보고 <b>다른 걸음</b>을 권한다</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10 AI 엔진 ==================== -->
+<section class="slide" data-toc="AI 필연성 — 같은 조건, 다른 개"
+  data-note="반박 대비 — 태그 매칭은 유저가 자기를 설명할 수 있을 때만 작동합니다. 임베딩 유사도는 견종·성격·크기라는 구조화된 명세를 못 만들고, 그건 키울 수가 없습니다. GPS는 쓰지 않습니다. 필요한 위치는 보호소 시·군·구 하나뿐이고 거리 판단은 사용자가 합니다. 보호견 데이터는 국가동물보호정보시스템 공공 API에서 동기화 — 보호소가 입력하는 건 없습니다.">
+  <div class="kicker">WHY AI</div>
+  <h2>같은 조건, <b>다른 개</b>
+    <span class="gloss">당신의 문장으로 만든 개가, 실제 개를 찾아옵니다</span></h2>
+  <div class="cols c-2-3 grow" style="align-items:center">
+    <div>
+      <div class="cap" style="font-family:'Jua',sans-serif;font-size:13px;color:var(--caption);margin-bottom:10px">
+        30대 · 원룸 · 월 20만원 — 조건은 똑같은 두 사람
+      </div>
+      <div class="quote" style="margin-bottom:12px">
+        <p style="font-size:18px">A · "퇴근하고 소파에서 같이 넷플릭스 보다 잠들면 좋겠어요"</p>
+      </div>
+      <div class="quote">
+        <p style="font-size:18px">B · "주말마다 등산 데리고 다니려고요"</p>
+      </div>
+      <div class="card pad-sm" style="margin-top:16px;border-color:rgba(179,38,30,0.35)">
+        <p>선택형 문항만 받으면 <b>이 둘은 같은 추천을 받습니다.</b> 조건 값이 같으니까요.
+        체크박스엔 "시간 여유 있음"인데 문장엔 "요즘 너무 지쳐서"라고 쓴 사람 —
+        <b>문장을 우선하는 판단은 규칙으로 못 씁니다.</b></p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="aibox">
+        <div class="cap">① 읽는다</div>
+        <p>정량 응답과 <b>자유 서술을 함께 해석</b>한다. 충돌하면 문장을 우선한다</p>
+      </div>
+      <div class="aibox">
+        <div class="cap">② 만든다</div>
+        <p>출력이 목록이 아니라 <b>한 마리</b>다 — 견종·성격·크기를 갖춘 캐릭터견.
+        유저는 그걸 고르고, 이름을 짓고, <b>키우기 시작한다</b></p>
+      </div>
+      <div class="aibox">
+        <div class="cap">③ 잇는다</div>
+        <p>그 캐릭터견의 명세가 <b>그대로 보호견 조회 조건</b>이 된다.
+        별도 매칭 엔진이 없다 — <b>사용자가 키우는 개가 그 역할을 한다</b></p>
+      </div>
+      <div class="card pad-sm" style="border-color:rgba(28,107,58,0.45)">
+        <p>닮은 개가 뜰 때 유저는 <b>이미 몇 주째 그 개를 키우고 있습니다.</b>
+        돌봄·플레이 데이터가 쌓일수록 조회 조건도 갱신돼, <b>시간이 지날수록 정확해집니다</b></p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">추천이 정확해질수록 커머스 전환도 올라갑니다 — 같은 엔진이 두 지표를 함께 움직입니다</div>
+</section>
+
+<!-- ==================== 11 설문 ==================== -->
+<section class="slide" data-toc="설문 설계">
+  <div class="kicker">SURVEY</div>
+  <h2>문항의 축은 <b>실제 파양이 일어나는 지점</b></h2>
+  <div class="cols c-3-2 grow" style="align-items:center">
+    <div>
+      <table class="card" style="padding:0;overflow:hidden">
+        <tr><th style="width:46px">#</th><th>문항</th><th style="width:120px">근거</th></tr>
+        <tr><td class="num">Q1</td><td>기본 여건</td><td>여건 변화 <b>20.2%</b></td></tr>
+        <tr><td class="num">Q2</td><td>함께할 시간</td><td>시간 <b>25.7%</b></td></tr>
+        <tr><td class="num">Q3</td><td>월 지출</td><td>지출 <b>35.2%</b></td></tr>
+        <tr><td class="num">Q4</td><td><b>짖음·훼손이 생기면?</b> <span class="chip" style="font-size:11px;padding:1px 8px">서술</span></td><td>행동 <b>42.7%</b></td></tr>
+        <tr><td class="num">Q5</td><td><b>어떤 하루를 보내고 싶나요?</b> <span class="chip" style="font-size:11px;padding:1px 8px">서술</span></td><td>견종 추천</td></tr>
+      </table>
+      <div class="cols c2" style="margin-top:18px">
+        <div class="card"><h3>왜 묻는지 같이 보여준다</h3><p>취조당하는 기분이 안 든다</p></div>
+        <div class="card"><h3>선택지만 받으면 다 똑같아진다</h3><p>내가 쓴 문장을 읽고 추천한다</p></div>
+      </div>
+    </div>
+    <div>
+      <div class="mock-fit" style="height:400px">
+        <div class="mock" data-no="A-06" data-nm="설문 Q4 — 근거 카드" data-shot="a-06"></div>
+      </div>
+      <div class="mock-cap"><div class="t">1문항 1페이지 · 11 → 5문항</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 12 데모 영상 ==================== -->
+<section class="slide dark" data-toc="▶ 데모 영상"
+  data-note="데모 빌드의 재화 지급은 로컬 mock입니다. 코드에 // DEMO-MOCK 태그로 남겨뒀고, 정식 구현은 Edge Function + ledger입니다. 숨기지 않고 말로 짚고 넘어갑니다.">
+  <div class="kicker">LIVE DEMO</div>
+  <h2>직접 <b>돌아가는 것</b>을 보여드립니다</h2>
+  <div class="cols c-3-2 grow" style="align-items:center">
+    <div class="video-slot" id="demoVideo" data-src="video/demo.mp4">
+      <div class="play">▶</div>
+      <div style="font-family:'Jua',sans-serif;color:#ffefd2;font-size:18px">데모 영상</div>
+      <div class="file">video/demo.mp4</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card"><h3>설치 없이 브라우저에서</h3><p>Unity 6 WebGL · 모바일 세로 393×852</p></div>
+      <div class="card"><h3>무대용 데모 모드</h3><p>이동 20 → <b>10회</b>로 축소</p></div>
+      <div class="card" style="border-color:rgba(28,107,58,0.45)"><h3>지금 상태</h3><p>3매치 <b>전 사이클 구현 완료</b> · 40화면 확정 · BGM·효과음 자체 제작</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 13 시나리오 ==================== -->
+<section class="slide" data-toc="데모 시나리오 4:30">
+  <div class="kicker">DEMO · 4분 30초</div>
+  <h2>무대에서 보여드릴 <b>한 사이클</b></h2>
+  <div class="cols c2 grow" style="gap:24px;align-items:center">
+    <div class="timeline">
+      <div class="tl-row"><div class="tm">0:00</div><div class="tx">설문 전 안내</div></div>
+      <div class="tl-row"><div class="tm">0:20</div><div class="tx">개인화 설문 5문항</div></div>
+      <div class="tl-row ai"><div class="tm">1:20</div><div class="tx"><span class="ai-tag">AI</span><b>상황 분석</b></div></div>
+      <div class="tl-row ai"><div class="tm">1:35</div><div class="tx"><span class="ai-tag">AI</span><b>견종 3개 → 선택</b></div></div>
+      <div class="tl-row"><div class="tm">2:00</div><div class="tx">성격 설정 · 첫 만남</div></div>
+      <div class="tl-row"><div class="tm">2:25</div><div class="tx">마당 · 돌봄 1회</div></div>
+    </div>
+    <div class="timeline">
+      <div class="tl-row"><div class="tm">2:45</div><div class="tx"><b>3매치 플레이</b></div></div>
+      <div class="tl-row"><div class="tm">3:20</div><div class="tx">뼈다귀 보상</div></div>
+      <div class="tl-row ai"><div class="tm">3:35</div><div class="tx"><span class="ai-tag">AI</span><b>같은 설문으로</b> 보호견 추천</div></div>
+      <div class="tl-row ai"><div class="tm">4:00</div><div class="tx"><span class="ai-tag">AI</span>참여 방식 추천</div></div>
+      <div class="tl-row" style="background:rgba(242,193,78,0.16);border-color:var(--gold-brd)">
+        <div class="tm">4:15</div><div class="tx"><b>커머스 — 옷을 사면 게이지가 오른다</b><span class="s">이 장면이 발랑의 결론입니다</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 14 화면 ① ==================== -->
+<section class="slide" data-toc="화면 ① 커머스 · 후원">
+  <div class="kicker">SCREENS 1 / 3</div>
+  <h2>돈이 <b>어디서 나와 어디로 가는지</b></h2>
+  <div class="cols c6 grow" style="gap:16px;align-items:center">
+    <div>
+      <div class="mock" data-no="F-01" data-nm="상점" data-shot="f-01"></div>
+      <div class="mock-cap"><div class="t">뽑기 없음</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="F-03" data-nm="실물 + 스킨" data-shot="f-03"></div>
+      <div class="mock-cap"><div class="t">판매 연동 기부</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="F-04" data-nm="자사몰 → 지급" data-shot="f-04"></div>
+      <div class="mock-cap"><div class="t">결제 후 자동 지급</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="E-01" data-nm="공동 창고" data-shot="e-01"></div>
+      <div class="mock-cap"><div class="t">게이지 = 참여량</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="E-03" data-nm="집행 내역" data-shot="e-03"></div>
+      <div class="mock-cap"><div class="t">전건 공개</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="E-04" data-nm="기부 증서" data-shot="e-04"></div>
+      <div class="mock-cap"><div class="t">명예는 못 산다</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 15 화면 ② ==================== -->
+<section class="slide" data-toc="화면 ② 돌봄 · 게임"
+  data-note="방치해도 개가 아프거나 위험해지지 않습니다. 유예 72시간, 하루 최대 1레벨, 성장 단계별 하한 보장, 표현은 '조금 시무룩해졌어요'까지. 복귀하면 책망 대신 반가움 + 3일 경험치 보너스.">
+  <div class="kicker">SCREENS 2 / 3</div>
+  <h2>매일 오게 만드는 <b>돌봄과 게임</b></h2>
+  <div class="cols c6 grow" style="gap:16px;align-items:center">
+    <div>
+      <div class="mock" data-no="B-01" data-nm="마당" data-shot="b-01"></div>
+      <div class="mock-cap"><div class="t">기본 화면</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="B-02" data-nm="오늘의 돌봄" data-shot="b-02"></div>
+      <div class="mock-cap"><div class="t">성격이 요구량을 바꾼다</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="B-06" data-nm="옷장 · 마당 꾸미기" data-shot="b-06"></div>
+      <div class="mock-cap"><div class="t">산 옷을 입히는 자리</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="C-01" data-nm="게임 허브" data-shot="c-01"></div>
+      <div class="mock-cap"><div class="t">입장 = 발바닥 1</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="C-02" data-nm="3매치" data-shot="c-02"></div>
+      <div class="mock-cap"><div class="t">타이머 없음</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="C-03" data-nm="결과 · 보상" data-shot="c-03"></div>
+      <div class="mock-cap"><div class="t">보상이 주인공</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 16 화면 ③ ==================== -->
+<section class="slide" data-toc="화면 ③ 온보딩 · 추천">
+  <div class="kicker">SCREENS 3 / 3</div>
+  <h2>설문 하나로 <b>끝까지 간다</b></h2>
+  <div class="cols c6 grow" style="gap:16px;align-items:center">
+    <div>
+      <div class="mock" data-no="A-02" data-nm="설문 전 안내" data-shot="a-02"></div>
+      <div class="mock-cap"><div class="t">편한 마음으로</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="A-08" data-nm="AI 분석" data-shot="a-08"></div>
+      <div class="mock-cap"><div class="t">단일 엔진</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="A-09" data-nm="견종 3개 추천" data-shot="a-09"></div>
+      <div class="mock-cap"><div class="t">선택은 유저가</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="D-01" data-nm="추천 홈" data-shot="d-01"></div>
+      <div class="mock-cap"><div class="t">다음 한 걸음</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="D-02" data-nm="보호견 목록" data-shot="d-02"></div>
+      <div class="mock-cap"><div class="t">이유 + 지역</div></div>
+    </div>
+    <div>
+      <div class="mock" data-no="D-04" data-nm="참여 방식" data-shot="d-04"></div>
+      <div class="mock-cap"><div class="t">입양만 장벽 유지</div></div>
+    </div>
+  </div>
+  <div class="foot">전체 40화면 · A 온보딩 11 · B 돌봄 6 · C 게임 5 · D 추천 6 · E 후원 4 · F 커머스 5 · G 계정 3</div>
+</section>
+
+<!-- ==================== 17 게임 · 재화 ==================== -->
+<section class="slide" data-toc="게임 · 재화 구조"
+  data-note="브랜드 3사는 로고 에셋만 확보했고 협업 계약은 아직 없습니다. 게임 안에서는 '모의 협업' 라벨을 함께 붙입니다. 시즌1 활성 브랜드는 바잇미 1곳.">
+  <div class="kicker">GAME &amp; ECONOMY · BGM·효과음 자체 제작</div>
+  <h2>재화 <b>3종</b>, 전환은 한 방향으로만</h2>
+  <div class="cols c-2-3 grow" style="align-items:center">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card pad-sm">
+        <div class="row" style="gap:10px;margin-bottom:6px"><img src="assets/ui_paw_icon.png" style="width:30px" alt=""><h3 style="margin:0">발바닥</h3></div>
+        <p>행동력 · <b>게임 입장 전용</b></p>
+      </div>
+      <div class="card pad-sm">
+        <div class="row" style="gap:10px;margin-bottom:6px"><img src="assets/block_bone.png" style="width:30px" alt=""><h3 style="margin:0">뼈다귀</h3></div>
+        <p>기본 재화 · 모은 만큼 <b>어디 쓸지 고른다</b></p>
+      </div>
+      <div class="card pad-sm" style="border-color:rgba(226,164,54,0.6);background:rgba(242,193,78,0.07)">
+        <div class="row" style="gap:10px;margin-bottom:6px"><img src="assets/block_chew.png" style="width:30px" alt=""><h3 style="margin:0">육포</h3></div>
+        <p>과금 재화 · <b>매출이 들어오는 지점</b></p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="cap">막아둔 전환. 여기가 흔들리면 기부도 못 믿는다</div>
+        <table>
+          <tr><th style="width:150px">전환</th><th style="width:50px"></th><th>이유</th></tr>
+          <tr><td>육포 → 뼈다귀</td><td class="num" style="color:var(--ok)">O</td><td>과금 유저의 정상 경로</td></tr>
+          <tr><td>뼈다귀 → 육포</td><td class="num" style="color:var(--warn)">X</td><td><b>환금성 차단</b> <span class="gloss">게임 재화를 현금처럼 못 쓰게</span></td></tr>
+          <tr><td>뼈다귀 → 발바닥</td><td class="num" style="color:var(--warn)">X</td><td><b>무한 인플레이션</b></td></tr>
+        </table>
+      </div>
+      <div class="cols c2">
+        <div class="card pad-sm">
+          <div class="cap">3매치 — 구현 완료</div>
+          <div class="blockrow" style="margin-top:10px">
+            <img class="sm" src="assets/block_bowl.png" alt=""><img class="sm" src="assets/block_bone.png" alt="">
+            <img class="sm" src="assets/block_ball.png" alt=""><img class="sm" src="assets/block_chew.png" alt="">
+            <img class="sm" src="assets/block_leash.png" alt=""><img class="sm" src="assets/block_squeaky.png" alt="">
+          </div>
+          <p style="margin-top:10px">블록은 전부 애견용품. 모은 만큼 그대로 보상</p>
+        </div>
+        <div class="card pad-sm">
+          <div class="cap">브랜드는 <b>판 위 블록</b>에서만</div>
+          <div class="brandbar" style="margin:12px 0 10px">
+            <img src="assets/biteme_logo_gnb.png" alt="바잇미">
+            <img src="assets/pethroom_logo.png" alt="페스룸">
+            <img src="assets/howlpot_logo_ink.png" alt="하울팟">
+          </div>
+          <p>터뜨리면 <b>+300점 · 뼈다귀 5</b></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18 실현 가능성 · 글로벌 ==================== -->
+<section class="slide" data-toc="실현 가능성 — 글로벌"
+  data-note="지금 붙어 있는 건 서울 열린데이터광장 하나입니다. 나머지는 조사해서 확인한 후보이지 이미 연동한 게 아니라는 점을 분명히 말하세요. Petfinder는 API 키 발급이 필요하고, RescueGroups는 비영리로 공개 데이터에 요청 제한이 없습니다.">
+  <div class="kicker">FEASIBILITY</div>
+  <h2>보호견 데이터는 <b>이미 열려 있습니다</b></h2>
+  <p class="lead">우리가 필요한 건 사진 한 장과 공고 기본 데이터뿐입니다. 소개 문구는 AI가 씁니다 — 그래서 <b>나라가 바뀌어도 붙이는 비용이 거의 같습니다.</b></p>
+  <div class="cols c-2-3 grow" style="align-items:center">
+    <div class="card" style="border-color:rgba(28,107,58,0.45)">
+      <div class="cap">지금 · 연동 완료</div>
+      <h3>서울 열린데이터광장</h3>
+      <p>유기동물 보호소 공고 API</p>
+      <p class="pay">한 곳으로 <b>전 사이클을 돌렸다</b></p>
+    </div>
+    <div>
+      <div class="cap" style="font-family:'Jua',sans-serif;font-size:13px;color:var(--caption);margin-bottom:12px">
+        같은 구조로 붙일 수 있는 곳 — 조사 완료, 연동 전
+      </div>
+      <table class="card" style="padding:0;overflow:hidden">
+        <tr><th style="width:100px">지역</th><th>공개 API</th><th>규모 · 조건</th></tr>
+        <tr>
+          <td class="num">전국</td>
+          <td><b>국가동물보호정보시스템</b></td>
+          <td>공공데이터포털 · 전국 보호소 공고</td>
+        </tr>
+        <tr>
+          <td class="num">북미</td>
+          <td><b>Petfinder API</b></td>
+          <td>입양 대기 <b>수십만 마리</b> · 동물복지단체 <b>1만+</b> · 키 발급 필요</td>
+        </tr>
+        <tr>
+          <td class="num">북미</td>
+          <td><b>RescueGroups.org</b></td>
+          <td>비영리 · 공개 데이터 <b>요청 수 제한 없음</b></td>
+        </tr>
+        <tr>
+          <td class="num">호주</td>
+          <td><b>PetRescue.com.au</b></td>
+          <td>REST API · 전국 구조단체 공고 검색</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="foot">보호소가 하는 일이 등록 1회 + 수령 확인뿐이라, 나라를 늘려도 운영 비용이 따라 늘지 않습니다</div>
+</section>
+
+<!-- ==================== 19 지표 ==================== -->
+<section class="slide" data-toc="로드맵 — 타임라인">
+  <div class="kicker">ROADMAP</div>
+  <h2>여기까지 왔고, <b>이렇게 갑니다</b></h2>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:26px">
+    <div class="miles">
+      <div class="mile done">
+        <div class="m-when">지금 · 해커톤</div>
+        <ul class="bul">
+          <li>3매치 <b>전 사이클 구현</b></li>
+          <li>설문 → AI 추천 파이프라인</li>
+          <li>서울 열린데이터광장 연동</li>
+          <li>BGM · 효과음 자체 제작</li>
+        </ul>
+      </div>
+      <div class="m-arw">→</div>
+      <div class="mile">
+        <div class="m-when">시즌 1</div>
+        <ul class="bul">
+          <li>브랜드 <b>1곳 실계약</b> → "모의" 라벨 떼기</li>
+          <li>재화 계산 <b>서버 이전</b> + 원장</li>
+          <li>전국 공공 API로 보호견 확대</li>
+        </ul>
+      </div>
+      <div class="m-arw">→</div>
+      <div class="mile">
+        <div class="m-when">시즌 2</div>
+        <ul class="bul">
+          <li>자사몰 결제·정산 <b>실연동</b></li>
+          <li>미니게임 추가 — 순차 완성</li>
+          <li>봉사·임시보호 신청 연결 확대</li>
+        </ul>
+      </div>
+      <div class="m-arw">→</div>
+      <div class="mile far">
+        <div class="m-when">확장</div>
+        <ul class="bul">
+          <li>북미 · 호주 공개 API — <b>글로벌</b></li>
+          <li>시즌 스폰서십 다변화</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card pad-sm" style="border-color:rgba(28,107,58,0.4);max-width:640px">
+      <p>어느 단계에서든 보호소가 하는 일은 <b>등록 1회 + 수령 확인</b>으로 늘지 않습니다</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 18 팀 ====================
+     팀원 이름·역할은 아래 team-grid 카드를 그대로 채우면 된다.
+     인원이 3명이면 카드 하나를 지우고 .c4 → .c3 으로만 바꾸면 정렬이 맞는다.
+-->
+<section class="slide" data-toc="팀 — 직접 만든 것"
+  data-note="키워드만 띄워두고 각자 한두 문장씩 말로 채웁니다. 핵심 메시지는 '이번 프로젝트에서 배운 게 아니라 원래 하던 것' — 그래서 출시 이후 운영까지 감당 가능하다는 것. 일현님 데모 파트를 여기서 예고합니다.">
+  <div class="kicker">TEAM</div>
+  <h2>이번에 <b>처음 해본 게 아닙니다</b></h2>
+  <div class="cols c-2-3 grow" style="align-items:center">
+
+    <div class="card lead-card">
+      <div class="cap">제작 총괄 · 데모 발표</div>
+      <div class="person big">
+        <img src="assets/team/jeong-ilhyeon.png" alt="정일현">
+        <div>
+          <div class="p-name">정일현</div>
+          <div class="p-role">(주)파이누스 대표 · Unity <span class="p-link">pinous.co.kr</span></div>
+        </div>
+      </div>
+      <div class="kw" style="margin-top:18px">
+        <span class="chip">Unity 게임 개발사 운영</span>
+        <span class="chip">상용 게임 50+</span>
+        <span class="chip">프로젝트 100+</span>
+        <span class="chip">WebGL · 모바일 · 콘솔</span>
+        <span class="chip">XR · VR · AR</span>
+        <span class="chip">크몽 Unity 1위</span>
+        <span class="chip">Unity 강의 수강생 2,000+</span>
+        <span class="chip">Unity MCP</span>
+      </div>
+      <div class="kw-tag">기획 → 개발 → 유지보수를 업으로 하는 사람</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card pad-sm">
+        <div class="person">
+          <img src="assets/team/kang-hanbyul.png" alt="강한별" style="object-position:center 22%">
+          <div>
+            <div class="p-name">강한별</div>
+            <div class="p-role">ML 리서치 · 백엔드 <span class="p-link">hanbyulkang.vercel.app</span></div>
+          </div>
+        </div>
+        <div class="kw">
+          <span class="chip">ML · NLP</span>
+          <span class="chip">PyTorch</span>
+          <span class="chip">컴퓨터 비전</span>
+          <span class="chip">Node · PostgreSQL</span>
+          <span class="chip">Docker · CI</span>
+          <span class="chip">ASSETS 2025 공저</span>
+          <span class="chip">UW CS · 언어학</span>
+        </div>
+        <div class="kw-tag">연구를 서비스로 이식</div>
+      </div>
+
+      <div class="card pad-sm">
+        <div class="person">
+          <img src="assets/team/ji-minseong.jpg" alt="지민성">
+          <div>
+            <div class="p-name">지민성</div>
+            <div class="p-role">풀스택 · 제품 <span class="p-link">jiminseong.com/portfolio</span></div>
+          </div>
+        </div>
+        <div class="kw">
+          <span class="chip">TypeScript · Next.js</span>
+          <span class="chip">React Native</span>
+          <span class="chip">Supabase</span>
+          <span class="chip">앱스토어 출시 자동화</span>
+          <span class="chip">지표 · 어드민</span>
+          <span class="chip">해커톤 수상 다수</span>
+        </div>
+        <div class="kw-tag">앱을 실제로 올려 본 사람</div>
+      </div>
+
+      <div class="card pad-sm">
+        <div class="person">
+          <img src="assets/team/jo-hohyeon.jpg" alt="조호현" style="object-position:center 30%">
+          <div>
+            <div class="p-name">조호현</div>
+            <div class="p-role">기획 · 사운드</div>
+          </div>
+        </div>
+        <div class="kw">
+          <span class="chip">AI Agent 설계</span>
+          <span class="chip">LLM 정보 추출 · 분류</span>
+          <span class="chip">보안 · 프라이버시 설계</span>
+          <span class="chip">작곡 · 탑라이닝</span>
+          <span class="chip">사운드 디렉션</span>
+          <span class="chip">MVP 범위 설정</span>
+        </div>
+        <div class="kw-tag">사운드를 외주 없이</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">AI는 기획을 대신하지 않았습니다 — <b>제작 병목을 줄이는 데 썼습니다</b></div>
+</section>
+
+<!-- ==================== 20 클로징 ==================== -->
+<section class="slide dark" data-toc="클로징">
+  <div class="cover-bg"></div>
+  <div class="body-area" style="justify-content:center">
+    <div class="brandmark" style="margin-bottom:34px">
+      <img src="assets/logo.png" alt="발랑 로고">
+      <div>
+        <div class="bm-name">발랑</div>
+        <div class="bm-en">Balanc</div>
+      </div>
+    </div>
+    <h1 style="font-size:56px;line-height:1.34;margin-bottom:34px">
+      화면 속 밥그릇을 채우면,<br><b>보호소 밥그릇이 채워집니다.</b>
+    </h1>
+    <div class="row wrap">
+      <span class="chip">미디어 × 커머스</span>
+      <span class="chip">팔린 만큼 집행</span>
+      <span class="chip">뽑기 없음</span>
+      <span class="chip brown">발랑 · Balanc</span>
+    </div>
+  </div>
+  <div class="foot">발랑 (Balanc) · CODEGATE 2026 · 19팀 · 감사합니다</div>
+</section>
+
+</div>
+</div>
+
+<div class="hud">
+  <span class="pill" id="prev">← 이전</span>
+  <span class="pill" id="next">다음 →</span>
+  <span class="pill" id="tocBtn">목차 (T)</span>
+  <span class="pill" id="noteBtn">발표 노트 (N)</span>
+  <span class="spacer"></span>
+  <span class="pill" id="counter">1 / 1</span>
+</div>
+
+<!-- 발표자용 노트 — 화면에 인쇄하지 않고 말로 짚을 내용 -->
+<div class="note" id="note"></div>
+
+<div class="toc" id="toc">
+  <h4>목차 — 클릭으로 이동 · T / Esc 닫기</h4>
+  <div class="toc-grid" id="tocGrid"></div>
+</div>
+
+<script src="deck.js"></script>
+</body>
+</html>
