@@ -62,7 +62,8 @@ public sealed class MiniGame2048 : MonoBehaviour
         Application.targetFrameRate = 60;
         best = PlayerPrefs.GetInt("MiniGame2048Best", 0);
         BuildInterface();
-        NewGame();
+        // 서버에서 발바닥 잔량을 받아온 뒤 첫 판을 연다 (오프라인이면 추정값으로 진행)
+        Backend.Game2048Bridge.Refresh(NewGame);
     }
 
     private void Update()
@@ -282,7 +283,13 @@ public sealed class MiniGame2048 : MonoBehaviour
     private void NewGame()
     {
         if (boardRoot == null) return;
-        score = 0; cleared = false; hasUndo = false; Array.Clear(board, 0, board.Length); AddRandomTile(); AddRandomTile(); UpdateView(); statusText.text = "발바닥 4개를 모아 뼈다귀를 만들어 보세요!"; if (gameOverOverlay != null) Destroy(gameOverOverlay);
+        // 판 시작에 발바닥 1개를 쓴다 (PRD §5.1 — 미니게임 입장 전용)
+        if (!Backend.Game2048Bridge.BeginRound())
+        {
+            statusText.text = "발바닥이 다 떨어졌어요. 잠시 뒤 다시 채워집니다";
+            return;
+        }
+        score = 0; cleared = false; hasUndo = false; Array.Clear(board, 0, board.Length); AddRandomTile(); AddRandomTile(); UpdateView(); statusText.text = $"발바닥 {Backend.Game2048Bridge.Paws}개 남음 · 합쳐서 뼈다귀를 모아보세요!"; if (gameOverOverlay != null) Destroy(gameOverOverlay);
     }
 
     private void SaveUndo()
@@ -407,9 +414,22 @@ public sealed class MiniGame2048 : MonoBehaviour
         }
     }
 
+    /// <summary>판이 끝나면 서버에 점수를 올리고 지급 결과를 표시한다.</summary>
+    private void GrantBones()
+    {
+        Backend.Game2048Bridge.EndRound(score, granted =>
+        {
+            if (statusText == null) return;   // 씬을 이미 떠났을 수 있다
+            statusText.text = granted > 0
+                ? $"뼈다귀 {granted}개를 받았어요!"
+                : "이번 판은 뼈다귀를 모으지 못했어요";
+        });
+    }
+
     private void ShowClear()
     {
         if (gameOverOverlay != null) return;
+        GrantBones();
         Transform root = boardRoot.parent;
         gameOverOverlay = new GameObject("Clear Overlay", typeof(RectTransform), typeof(Image));
         gameOverOverlay.transform.SetParent(root, false);
@@ -423,5 +443,5 @@ public sealed class MiniGame2048 : MonoBehaviour
 
     private void ShowGameOver()
     {
-        if (gameOverOverlay != null) return; Transform root = boardRoot.parent; gameOverOverlay = new GameObject("Game Over", typeof(RectTransform), typeof(Image)); gameOverOverlay.transform.SetParent(root, false); RectTransform rect = gameOverOverlay.GetComponent<RectTransform>(); SetRect(rect, new Vector2(0.075f, 0.325f), new Vector2(0.925f, 0.765f)); Image image = gameOverOverlay.GetComponent<Image>(); image.color = new Color32(35, 42, 83, 235); Text title = CreateText("Title", gameOverOverlay.transform, "NO MORE MOVES", 46, Color.white, TextAnchor.MiddleCenter); title.fontStyle = FontStyle.Bold; SetRect(title.rectTransform, new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f)); Text sub = CreateText("Sub", gameOverOverlay.transform, "한 번 더 도전해 볼까요?", 26, Cream, TextAnchor.MiddleCenter); SetRect(sub.rectTransform, new Vector2(0.1f, 0.38f), new Vector2(0.9f, 0.52f)); Button retry = CreateButton(gameOverOverlay.transform, "PLAY AGAIN", new Vector2(0.27f, 0.18f), new Vector2(0.73f, 0.32f), Orange); retry.onClick.AddListener(NewGame); }
+        if (gameOverOverlay != null) return; GrantBones(); Transform root = boardRoot.parent; gameOverOverlay = new GameObject("Game Over", typeof(RectTransform), typeof(Image)); gameOverOverlay.transform.SetParent(root, false); RectTransform rect = gameOverOverlay.GetComponent<RectTransform>(); SetRect(rect, new Vector2(0.075f, 0.325f), new Vector2(0.925f, 0.765f)); Image image = gameOverOverlay.GetComponent<Image>(); image.color = new Color32(35, 42, 83, 235); Text title = CreateText("Title", gameOverOverlay.transform, "NO MORE MOVES", 46, Color.white, TextAnchor.MiddleCenter); title.fontStyle = FontStyle.Bold; SetRect(title.rectTransform, new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f)); Text sub = CreateText("Sub", gameOverOverlay.transform, "한 번 더 도전해 볼까요?", 26, Cream, TextAnchor.MiddleCenter); SetRect(sub.rectTransform, new Vector2(0.1f, 0.38f), new Vector2(0.9f, 0.52f)); Button retry = CreateButton(gameOverOverlay.transform, "PLAY AGAIN", new Vector2(0.27f, 0.18f), new Vector2(0.73f, 0.32f), Orange); retry.onClick.AddListener(NewGame); }
 }

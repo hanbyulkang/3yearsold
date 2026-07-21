@@ -91,6 +91,15 @@
   - next_action: 팀원이 Unity에서 열어 Play 확인. A 온보딩 씬이 오면 OnboardingApi로 연결
   - evidence: 서버 e2e — 데모 계정 추천 3마리 캐시, game-start 발바닥 5→4, bones 45→30(상한), 재제출 차단, 잔액 30. Unity 배치 컴파일 로그
 
+- [x] MG2(2048) 재화 연동 + CRON 등록
+  - id: mg2-rewards-and-cron
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: MiniGame2048.cs, GameApi, pg_cron/pg_net
+  - output: `Game2048Bridge.cs`, MiniGame2048 훅 3곳, `0014_cron.sql`
+  - next_action: 데모 당일 아침 `select cron_invoke_function('shelter-sync')` 로 최신화 확인
+  - evidence: mg2 세션 발바닥 4→3, 뼈다귀 6 지급 accepted=true / CRON 잡 2건 active, 실호출 HTTP 200 {"synced":24,"photos":210}
+
 ## 막힘
 
 ```markdown
