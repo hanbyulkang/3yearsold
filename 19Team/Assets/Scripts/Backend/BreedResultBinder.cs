@@ -1,162 +1,371 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Backend
 {
-    /// <summary>
-    /// 견종 3개 추천 화면 (A-09).
-    ///
-    /// 씬의 Dog 패널 구조를 그대로 쓴다:
-    ///   Dog / Scroll View / Viewport / Content / Frame   ← 카드 1개가 템플릿
-    ///     Frame / Image / Image   사진
-    ///     Frame / Name            견종명
-    ///     Frame / Description     견종 설명
-    ///     Frame / AI / Description  추천 이유 (사용자 문장 인용)
-    ///
-    /// 템플릿을 3개로 복제해 서버 분석 결과를 채운다. 사진은 RemoteImage가
-    /// 기존 Image 위에 얹으므로 실패해도 원래 자리 그림이 남는다.
-    ///
-    /// 선택 → "선택하기"(Bottom (4)/Next) 버튼으로 캐릭터견 생성.
-    /// 견종은 서버가 화이트리스트로 다시 검증한다.
-    /// </summary>
-    public class BreedResultBinder : MonoBehaviour
+    /// <summary>API 추천 3종 표시와 Dog → Mind → Meet 온보딩 흐름.</summary>
+    public sealed class BreedResultBinder : MonoBehaviour
     {
-        [Tooltip("비워두면 이 오브젝트 아래에서 Content/Next를 이름으로 찾는다")]
         [SerializeField] private Transform _content;
         [SerializeField] private Button _selectButton;
 
-        [Tooltip("캐릭터견 이름 입력칸 (없으면 견종명을 그대로 이름으로 쓴다)")]
-        [SerializeField] private TMP_InputField _nameInput;
-
         readonly List<GameObject> _cards = new List<GameObject>();
         GameObject _template;
+        GameObject _dogRoot;
+        GameObject _mindRoot;
+        GameObject _meetRoot;
+        Button _mindNext;
+        TMP_InputField _nameInput;
+        TMP_InputField _meetName;
+        TMP_Text _meetSummary;
+        GameObject _meetDog;
+        SliderBinding _timid;
+        SliderBinding _activity;
+        SliderBinding _affection;
         int _selected = -1;
         OnboardingApi.AnalysisResult _result;
+        string _boundAnalysisId;
         bool _creating;
+
+        sealed class SliderBinding
+        {
+            public SurveyValueSlider slider;
+            public int Value => slider != null ? slider.Value : 0;
+
+            public void Set(int value)
+            {
+                if (slider == null) return;
+                slider.SetValue(value);
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Install()
+        {
+            SceneManager.sceneLoaded -= AttachToSurvey;
+            SceneManager.sceneLoaded += AttachToSurvey;
+        }
+
+        static void AttachToSurvey(Scene scene, LoadSceneMode mode)
+        {
+            if (!scene.name.Equals("Survey", StringComparison.OrdinalIgnoreCase)) return;
+            Transform dog = FindInScene(scene, "Dog");
+            if (dog == null || dog.GetComponent<BreedResultBinder>() != null) return;
+            dog.gameObject.AddComponent<BreedResultBinder>();
+        }
+
+        void Awake()
+        {
+            _dogRoot = gameObject;
+            Transform canvas = GetComponentInParent<Canvas>(true)?.transform;
+            _mindRoot = FindDeep(canvas, "Mind")?.gameObject;
+            _meetRoot = FindDeep(canvas, "Meet")?.gameObject;
+            _meetDog = FindWorldDog(gameObject.scene, _dogRoot);
+            _content = _content != null ? _content : FindDeep(transform, "Content");
+            _selectButton = _selectButton != null ? _selectButton : EnsureButton(FindDeep(transform, "Next"));
+
+            if (_mindRoot != null)
+            {
+                _mindNext = EnsureButton(FindDeep(_mindRoot.transform, "Next"));
+                _nameInput = _mindRoot.GetComponentInChildren<TMP_InputField>(true);
+                _timid = BuildSlider(_mindRoot.transform, "겁 많음");
+                _activity = BuildSlider(_mindRoot.transform, "활동성");
+                _affection = BuildSlider(_mindRoot.transform, "사람 좋아함");
+            }
+            if (_meetRoot != null)
+            {
+                _meetName = _meetRoot.GetComponentInChildren<TMP_InputField>(true);
+                foreach (TMP_Text text in _meetRoot.GetComponentsInChildren<TMP_Text>(true))
+                    if (text.text.Contains("{0}")) { _meetSummary = text; break; }
+            }
+
+            if (_selectButton != null) _selectButton.onClick.AddListener(ShowMind);
+            if (_mindNext != null) _mindNext.onClick.AddListener(CreateAndShowMeet);
+        }
 
         void OnEnable()
         {
             SurveyOpenAIAnalysis.AnalysisReady += Bind;
-            // 이미 분석이 끝난 뒤 화면이 켜지는 경우(대부분이 이 경로다)
             if (SurveyOpenAIAnalysis.Latest != null) Bind(SurveyOpenAIAnalysis.Latest);
         }
 
         void OnDisable() => SurveyOpenAIAnalysis.AnalysisReady -= Bind;
 
+        void OnDestroy()
+        {
+            if (_selectButton != null) _selectButton.onClick.RemoveListener(ShowMind);
+            if (_mindNext != null) _mindNext.onClick.RemoveListener(CreateAndShowMeet);
+        }
+
         void Bind(OnboardingApi.AnalysisResult result)
         {
             if (result?.breeds == null || result.breeds.Length == 0) return;
+            if (_boundAnalysisId == result.analysisId && _cards.Count > 0) return;
+            _boundAnalysisId = result.analysisId;
             _result = result;
-
-            var content = _content != null ? _content : FindDeep(transform, "Content");
-            if (content == null) { Debug.LogWarning("[A-09] Content를 찾지 못했습니다", this); return; }
+            if (_content == null) { Debug.LogWarning("[Survey Dog] Content를 찾지 못했습니다.", this); return; }
 
             if (_template == null)
             {
-                _template = FindDeep(content, "Frame")?.gameObject;
-                if (_template == null) { Debug.LogWarning("[A-09] Frame 템플릿이 없습니다", this); return; }
-                _template.SetActive(false);   // 원본은 숨기고 복제만 보여준다
+                _template = FindDeep(_content, "Frame")?.gameObject;
+                if (_template == null) { Debug.LogWarning("[Survey Dog] Frame 템플릿을 찾지 못했습니다.", this); return; }
+                _template.SetActive(false);
             }
 
-            foreach (var c in _cards) if (c != null) Destroy(c);
+            foreach (GameObject card in _cards) if (card != null) Destroy(card);
             _cards.Clear();
             _selected = -1;
 
-            for (int i = 0; i < result.breeds.Length; i++)
+            int recommendationCount = Mathf.Min(3, result.breeds.Length);
+            for (int i = 0; i < recommendationCount; i++)
             {
-                var b = result.breeds[i];
-                var card = Instantiate(_template, content);
-                card.name = $"Frame_{b.name}";
+                OnboardingApi.BreedPick breed = result.breeds[i];
+                GameObject card = Instantiate(_template, _content);
+                card.name = $"Frame_{i + 1}_{breed.name}";
                 card.SetActive(true);
 
-                SetText(card.transform, "Name", b.name);
-                SetText(card.transform, "Description", DescribeBreed(b));
-                var ai = FindDeep(card.transform, "AI");
-                if (ai != null) SetText(ai, "Description", b.reason);
+                SetText(card.transform, "Name", breed.name);
+                SetText(card.transform, "Description", BreedDescription(breed));
+                Transform ai = FindDeep(card.transform, "AI");
+                if (ai != null) SetText(ai, "Description", RecommendationReason(breed));
 
-                // 사진 — Frame/Image/Image 안쪽 슬롯에 얹는다
-                var imgSlot = FindDeep(card.transform, "Image");
-                if (imgSlot != null && !string.IsNullOrEmpty(b.imageUrl))
-                    RemoteImage.Load(b.imageUrl, imgSlot as RectTransform);
+                Transform imageSlot = FindDeepestExact(card.transform, "Image");
+                if (imageSlot != null && !string.IsNullOrWhiteSpace(breed.imageUrl))
+                    RemoteImage.Load(breed.imageUrl, imageSlot as RectTransform);
 
                 int index = i;
-                var btn = card.GetComponent<Button>() ?? card.AddComponent<Button>();
-                btn.onClick.AddListener(() => Select(index));
-
+                Button button = card.GetComponent<Button>() ?? card.AddComponent<Button>();
+                if (button.targetGraphic == null) button.targetGraphic = card.GetComponent<Graphic>();
+                button.onClick.AddListener(() => Select(index));
+                Outline outline = card.GetComponent<Outline>() ?? card.AddComponent<Outline>();
+                outline.effectColor = new Color32(231, 151, 66, 255);
+                outline.effectDistance = new Vector2(4f, -4f);
+                outline.enabled = false;
                 _cards.Add(card);
             }
 
-            Select(0);   // 첫 카드를 기본 선택 — 아무것도 안 고르고 넘어가는 상태를 없앤다
-
-            var next = _selectButton != null ? _selectButton : FindDeep(transform, "Next")?.GetComponent<Button>();
-            if (next != null)
-            {
-                next.onClick.RemoveListener(Confirm);
-                next.onClick.AddListener(Confirm);
-            }
+            Select(0);
+            Debug.Log($"[Survey Dog] API 추천 견종 {_cards.Count}개를 표시했습니다.", this);
         }
 
-        /// <summary>성격 프리필 값을 사람이 읽는 한 줄로 (A-10 값이 뭘 뜻하는지 보여준다).</summary>
-        static string DescribeBreed(OnboardingApi.BreedPick b)
+        static string RecommendationReason(OnboardingApi.BreedPick breed)
         {
-            var p = b.personality;
-            if (p == null) return string.Empty;
-            return $"활동량 {Bar(p.activity)} · 겁 {Bar(p.timid)} · 애정표현 {Bar(p.affection)}";
+            return string.IsNullOrWhiteSpace(breed.reason)
+                ? "설문 답변과 잘 맞는 친구예요."
+                : FirstCompleteSentence(breed.reason);
         }
 
-        static string Bar(int v) => new string('●', Mathf.Clamp(v, 1, 5)) + new string('○', 5 - Mathf.Clamp(v, 1, 5));
+        static string BreedDescription(OnboardingApi.BreedPick breed)
+        {
+            OnboardingApi.Personality p = breed.personality;
+            if (p == null) return "편안하게 교감하며 지낼 수 있는 아이예요.";
+            if (p.affection <= 2) return "독립적이고 혼자 있는 시간을 잘 견뎌요.";
+            if (p.activity >= 4 && p.affection >= 4) return "활발하고 사람과 함께 노는 걸 좋아해요.";
+            if (p.activity <= 2) return "차분하고 편안하게 쉬는 시간을 좋아해요.";
+            if (p.timid >= 4) return "조심스럽지만 익숙해지면 깊이 마음을 열어요.";
+            if (p.affection >= 4) return "사람을 좋아하고 애정 표현이 풍부해요.";
+            return "차분함과 활동성이 고르게 어우러진 아이예요.";
+        }
+
+        static string FirstCompleteSentence(string value)
+        {
+            string text = value.Replace('\n', ' ').Replace('\r', ' ').Trim();
+            while (text.Contains("  ")) text = text.Replace("  ", " ");
+            int sentenceEnd = text.IndexOfAny(new[] { '.', '!', '?', '。' });
+            if (sentenceEnd >= 0) return text.Substring(0, sentenceEnd + 1);
+            return text + ".";
+        }
 
         void Select(int index)
         {
+            if (index < 0 || index >= _cards.Count) return;
             _selected = index;
             for (int i = 0; i < _cards.Count; i++)
             {
-                var outline = _cards[i].GetComponent<Outline>();
-                if (outline != null) outline.enabled = (i == index);
-                var img = _cards[i].GetComponent<Image>();
-                if (img != null) img.color = (i == index) ? Color.white : new Color(1f, 1f, 1f, 0.72f);
+                Outline outline = _cards[i].GetComponent<Outline>();
+                if (outline != null) outline.enabled = i == index;
+                Image image = _cards[i].GetComponent<Image>();
+                if (image != null) image.color = i == index ? Color.white : new Color(1f, 1f, 1f, 0.72f);
+                _cards[i].transform.localScale = i == index ? Vector3.one * 1.025f : Vector3.one;
             }
         }
 
-        async void Confirm()
+        void ShowMind()
         {
-            if (_creating || _result?.breeds == null) return;
-            if (_selected < 0 || _selected >= _result.breeds.Length) return;
-
-            _creating = true;
-            string breed = _result.breeds[_selected].name;
-            string dogName = _nameInput != null && !string.IsNullOrWhiteSpace(_nameInput.text)
-                ? _nameInput.text.Trim()
-                : breed;   // 이름 화면이 아직 없으면 견종명을 임시로 쓴다
-
-            var ch = await OnboardingApi.CreateCharacter(breed, dogName);
-            _creating = false;
-
-            if (ch == null) { Debug.LogWarning($"[A-09] 캐릭터 생성 실패 ({breed})", this); return; }
-            Debug.Log($"[A-09] 캐릭터견 생성 — {ch.name} ({ch.breed}) LV.{ch.level}", this);
+            if (_result?.breeds == null || _selected < 0 || _selected >= Mathf.Min(3, _result.breeds.Length)) return;
+            OnboardingApi.Personality p = _result.breeds[_selected].personality;
+            _timid?.Set(p != null ? p.timid : 3);
+            _activity?.Set(p != null ? p.activity : 3);
+            _affection?.Set(p != null ? p.affection : 3);
+            _dogRoot.SetActive(false);
+            if (_meetRoot != null) _meetRoot.SetActive(false);
+            if (_mindRoot != null) _mindRoot.SetActive(true);
         }
 
-        // ---------- 이름으로 자식 찾기 ----------
+        async void CreateAndShowMeet()
+        {
+            if (_creating || _result?.breeds == null || _selected < 0) return;
+            string dogName = _nameInput != null ? _nameInput.text.Trim() : string.Empty;
+            if (string.IsNullOrWhiteSpace(dogName))
+            {
+                if (_nameInput != null) _nameInput.ActivateInputField();
+                Debug.LogWarning("[Survey Mind] 강아지 이름을 입력해 주세요.", this);
+                return;
+            }
+
+            OnboardingApi.BreedPick breed = _result.breeds[_selected];
+            var personality = new OnboardingApi.Personality
+            {
+                timid = _timid?.Value ?? 0,
+                activity = _activity?.Value ?? 0,
+                affection = _affection?.Value ?? 0,
+            };
+
+            _creating = true;
+            if (_mindNext != null) _mindNext.interactable = false;
+            OnboardingApi.Character character = await OnboardingApi.CreateCharacter(breed.name, dogName, personality);
+            _creating = false;
+            if (_mindNext != null) _mindNext.interactable = true;
+            if (character == null)
+            {
+                Debug.LogWarning($"[Survey Mind] 캐릭터 생성 실패: {dogName} ({breed.name})", this);
+                return;
+            }
+
+            PlayerPrefs.SetString("selected_dog_name", dogName);
+            PlayerPrefs.SetString("selected_dog_breed", breed.name);
+            PlayerPrefs.SetInt("selected_dog_timid", personality.timid);
+            PlayerPrefs.SetInt("selected_dog_activity", personality.activity);
+            PlayerPrefs.SetInt("selected_dog_affection", personality.affection);
+            PlayerPrefs.Save();
+
+            if (_meetName != null)
+            {
+                _meetName.text = dogName;
+                _meetName.readOnly = true;
+            }
+            if (_meetSummary != null)
+                _meetSummary.text = $"<color=#00FF00>{dogName}</color>를 만났어요\n" +
+                                    $"{breed.name} · 겁 많음 {personality.timid} · 활동성 {personality.activity} · 사람 좋아함 {personality.affection}";
+            if (_mindRoot != null) _mindRoot.SetActive(false);
+            if (_meetRoot != null) _meetRoot.SetActive(true);
+            if (_meetDog != null)
+            {
+                Transform borderCollie = FindByPartialName(_meetDog.transform, "Border Collie");
+                SurveyDogReveal reveal = _meetDog.GetComponent<SurveyDogReveal>() ?? _meetDog.AddComponent<SurveyDogReveal>();
+                _meetDog.SetActive(true);
+                reveal.Play(borderCollie != null ? borderCollie : _meetDog.transform);
+            }
+            Debug.Log($"[Survey Meet] {dogName} ({breed.name}) 생성 완료 — 성격 {personality.timid}/{personality.activity}/{personality.affection}", this);
+        }
+
+        static SliderBinding BuildSlider(Transform mind, string labelText)
+        {
+            Transform group = null;
+            foreach (TMP_Text label in mind.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (label.text.Replace(" ", string.Empty).IndexOf(labelText.Replace(" ", string.Empty), StringComparison.OrdinalIgnoreCase) < 0) continue;
+                group = label.transform.parent;
+                break;
+            }
+            if (group == null) return null;
+
+            Transform sliderRoot = FindDeep(group, "Slider");
+            if (sliderRoot == null) return null;
+            Transform fill = FindDeep(sliderRoot, "Fill");
+            Image fillImage = fill != null ? fill.GetComponent<Image>() : null;
+            TMP_Text count = FindDeep(group, "Count")?.GetComponent<TMP_Text>();
+            SurveyValueSlider slider = sliderRoot.GetComponent<SurveyValueSlider>() ?? sliderRoot.gameObject.AddComponent<SurveyValueSlider>();
+            slider.Configure(fillImage, count);
+
+            SliderBinding binding = new SliderBinding
+            {
+                slider = slider,
+            };
+            binding.Set(3);
+            return binding;
+        }
+
+        static GameObject FindWorldDog(Scene scene, GameObject uiDog)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+                if (root != uiDog && root.name.Equals("Dog", StringComparison.OrdinalIgnoreCase) && root.layer != 5)
+                    return root;
+            return null;
+        }
+
+        static Transform FindByPartialName(Transform root, string partialName)
+        {
+            if (root == null) return null;
+            if (root.name.IndexOf(partialName, StringComparison.OrdinalIgnoreCase) >= 0) return root;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindByPartialName(root.GetChild(i), partialName);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        static Button EnsureButton(Transform target)
+        {
+            if (target == null) return null;
+            Button button = target.GetComponent<Button>() ?? target.gameObject.AddComponent<Button>();
+            if (button.targetGraphic == null) button.targetGraphic = target.GetComponent<Graphic>();
+            return button;
+        }
+
+        static Transform FindInScene(Scene scene, string name)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                Transform found = FindDeep(root.transform, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        static Transform FindDirect(Transform parent, string name)
+        {
+            if (parent == null) return null;
+            for (int i = 0; i < parent.childCount; i++)
+                if (parent.GetChild(i).name.Equals(name, StringComparison.OrdinalIgnoreCase)) return parent.GetChild(i);
+            return null;
+        }
+
         static Transform FindDeep(Transform root, string name)
         {
             if (root == null) return null;
-            if (root.name == name) return root;
+            if (root.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return root;
             for (int i = 0; i < root.childCount; i++)
             {
-                var hit = FindDeep(root.GetChild(i), name);
+                Transform hit = FindDeep(root.GetChild(i), name);
                 if (hit != null) return hit;
             }
             return null;
         }
 
-        static void SetText(Transform root, string childName, string value)
+        static Transform FindDeepestExact(Transform root, string name)
         {
-            var t = FindDeep(root, childName);
-            if (t == null) return;
-            var tmp = t.GetComponent<TMP_Text>() ?? t.GetComponentInChildren<TMP_Text>(true);
-            if (tmp != null) tmp.text = value;
+            Transform deepest = null;
+            if (root == null) return null;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform hit = FindDeepestExact(root.GetChild(i), name);
+                if (hit != null) deepest = hit;
+            }
+            return deepest != null ? deepest : (root.name.Equals(name, StringComparison.OrdinalIgnoreCase) ? root : null);
+        }
+
+        static TMP_Text SetText(Transform root, string childName, string value)
+        {
+            Transform child = FindDeep(root, childName);
+            TMP_Text text = child != null ? child.GetComponent<TMP_Text>() ?? child.GetComponentInChildren<TMP_Text>(true) : null;
+            if (text != null) text.text = value;
+            return text;
         }
     }
 }

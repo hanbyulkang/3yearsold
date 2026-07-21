@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 public static class MarketFlowSceneSetup
 {
     private const string ScenePath = "Assets/Scenes/marketFlow.unity";
-    private const string FontPath = "Assets/Font/NotoSansKR-Black.ttf";
+    private const string FontPath = "Assets/Font/NoOutline.asset";
     private const string SvgRoot = "Assets/MarketFlow/svg-shop/";
     private const string GeneratedRoot = "Assets/MarketFlow/svg-shop/Generated/";
     private const string PreviewPath = "/tmp/marketFlow-preview.png";
@@ -30,7 +31,7 @@ public static class MarketFlowSceneSetup
 
         GameObject root = new GameObject("MarketFlow");
         MarketFlow flow = root.AddComponent<MarketFlow>();
-        flow.marketFont = AssetDatabase.LoadAssetAtPath<Font>(FontPath);
+        flow.marketFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
         if (flow.marketFont == null)
             throw new InvalidOperationException("MarketFlow font could not be loaded from " + FontPath);
         flow.productCardSprite = LoadSprite("product-card.png");

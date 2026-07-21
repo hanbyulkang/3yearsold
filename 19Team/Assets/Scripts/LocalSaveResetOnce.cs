@@ -3,7 +3,7 @@ using UnityEngine;
 public static class LocalSaveResetOnce
 {
     private const string ResetVersionKey = "local_save_reset_version";
-    private const int CurrentResetVersion = 2;
+    private const int CurrentResetVersion = 3;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void ResetOnce()

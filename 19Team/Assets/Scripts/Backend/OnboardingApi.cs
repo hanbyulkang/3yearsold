@@ -93,7 +93,12 @@ namespace Backend
             public int exp;
         }
 
-        [Serializable] class CreateCharacterBody { public string p_name; public string p_breed; }
+        [Serializable] class CreateCharacterBody
+        {
+            public string p_name;
+            public string p_breed;
+            public Personality p_personality;
+        }
 
         /// <summary>
         /// 캐릭터견을 만든다 (A-09 선택 → A-10 생성).
@@ -102,8 +107,16 @@ namespace Backend
         /// 성격을 넘기지 않으면 견종 기본값(A-10 프리필)이 적용된다.
         /// </summary>
         public static async Task<Character> CreateCharacter(string breedName, string dogName)
+            => await CreateCharacter(breedName, dogName, null);
+
+        public static async Task<Character> CreateCharacter(string breedName, string dogName, Personality personality)
         {
-            var body = JsonUtility.ToJson(new CreateCharacterBody { p_name = dogName, p_breed = breedName });
+            var body = JsonUtility.ToJson(new CreateCharacterBody
+            {
+                p_name = dogName,
+                p_breed = breedName,
+                p_personality = personality,
+            });
             var raw = await SupabaseClient.RpcRaw("create_character", body);
             if (string.IsNullOrEmpty(raw)) return null;
             try { return JsonUtility.FromJson<Character>(raw); }

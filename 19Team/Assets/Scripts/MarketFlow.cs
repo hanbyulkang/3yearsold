@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class MarketFlow : MonoBehaviour
 {
-    public Font marketFont;
+    public TMP_FontAsset marketFont;
     public Sprite productCardSprite;
     public Sprite productCardDonateSprite;
     public Sprite previewFrameSprite;
@@ -31,8 +32,8 @@ public sealed class MarketFlow : MonoBehaviour
     private Backend.ShopApi.Skin _selected;
     private int _jerky = -1;      // -1 = 아직 조회 전 → "—" 로 표시
     private int _bones = -1;
-    private UnityEngine.UI.Text _jerkyLabel;
-    private UnityEngine.UI.Text _boneLabel;
+    private TMP_Text _jerkyLabel;
+    private TMP_Text _boneLabel;
     private string _notice;       // 구매 결과 안내 (실패 사유 포함)
 
     /// <summary>서버에서 카탈로그·잔액·보유목록을 읽고 화면을 다시 그린다.</summary>
@@ -152,7 +153,7 @@ public sealed class MarketFlow : MonoBehaviour
         scaler.matchWidthOrHeight = 0.35f;
 
         if (marketFont == null)
-            marketFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            marketFont = TMP_Settings.defaultFontAsset;
     }
 
     public void ShowShop()
@@ -205,6 +206,7 @@ public sealed class MarketFlow : MonoBehaviour
     private void BuildShop()
     {
         CreateHeader(screenRoot, "상점", false);
+        CreateButton(screenRoot, "홈", 16f, 42f, 43f, 58f, 58f, SoftGold, BrownDark, AppSceneFlow.GoHome);
         CreateTabs(screenRoot, 132f, "스킨");
         CreateText(screenRoot, "확정 구매 · 단추의 새 옷과 보호소 연동", 16f, Muted, TextAnchor.MiddleCenter, 24f, 188f, 638f, 28f);
 
@@ -308,7 +310,7 @@ public sealed class MarketFlow : MonoBehaviour
         }
         else
         {
-            CreateText(header.transform, title, 28f, Cream, TextAnchor.MiddleLeft, 22f, 20f, 190f, 56f);
+            CreateText(header.transform, title, 28f, Cream, TextAnchor.MiddleLeft, 90f, 20f, 150f, 56f);
             CreateSpriteIcon(header.transform, boneGoldSprite, 340f, 24f, 28f, 28f);
             // 잔액은 서버 값만 표시한다. 조회 전에는 "—" (PRD §5.5 — 클라가 계산하지 않는다)
             _boneLabel = CreateText(header.transform, _bones >= 0 ? $"{_bones:N0}" : "—",
@@ -472,22 +474,38 @@ private GameObject CreatePanel(string name, Transform parent, float x, float y, 
         return objectToCreate;
     }
 
-    private Text CreateText(Transform parent, string content, float size, Color color, TextAnchor alignment, float x, float y, float width, float height)
+    private TMP_Text CreateText(Transform parent, string content, float size, Color color, TextAnchor alignment, float x, float y, float width, float height)
     {
-        GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
+        GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         textObject.transform.SetParent(parent, false);
         RectTransform rect = textObject.GetComponent<RectTransform>();
         Place(rect, x, y, width, height);
-        Text text = textObject.GetComponent<Text>();
+        TMP_Text text = textObject.GetComponent<TMP_Text>();
         text.text = content;
         text.font = marketFont;
-        text.fontSize = Mathf.RoundToInt(size);
+        text.fontSize = size;
         text.color = color;
-        text.alignment = alignment;
-        text.horizontalOverflow = HorizontalWrapMode.Wrap;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.alignment = ToTmpAlignment(alignment);
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Overflow;
         text.raycastTarget = false;
         return text;
+    }
+
+    private static TextAlignmentOptions ToTmpAlignment(TextAnchor alignment)
+    {
+        switch (alignment)
+        {
+            case TextAnchor.UpperLeft: return TextAlignmentOptions.TopLeft;
+            case TextAnchor.UpperCenter: return TextAlignmentOptions.Top;
+            case TextAnchor.UpperRight: return TextAlignmentOptions.TopRight;
+            case TextAnchor.MiddleLeft: return TextAlignmentOptions.Left;
+            case TextAnchor.MiddleRight: return TextAlignmentOptions.Right;
+            case TextAnchor.LowerLeft: return TextAlignmentOptions.BottomLeft;
+            case TextAnchor.LowerCenter: return TextAlignmentOptions.Bottom;
+            case TextAnchor.LowerRight: return TextAlignmentOptions.BottomRight;
+            default: return TextAlignmentOptions.Center;
+        }
     }
 
     private void CreateToast(string message)

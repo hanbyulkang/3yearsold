@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4187fee88d324e9f83cf176645c42c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiniGame1.MG1GameManager
-  koreanFont: {fileID: 11400000, guid: 9d482f7b1ce344dd6977305c0ac660a4, type: 2}
+  koreanFont: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   brandConfig: {fileID: 11400000, guid: 75c3e02da44ed4898b5a2b91829369fc, type: 2}
   brandConfigs:
   - {fileID: 11400000, guid: 75c3e02da44ed4898b5a2b91829369fc, type: 2}

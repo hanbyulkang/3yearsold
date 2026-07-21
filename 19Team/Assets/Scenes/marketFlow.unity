@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63ac0b050262b4f8686b04a23b6c4aae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MarketFlow
-  marketFont: {fileID: 12800000, guid: 7f39aba66d3f041b2a60ad3b3bb185b1, type: 3}
+  marketFont: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   productCardSprite: {fileID: 21300000, guid: 2c9e4816b76b443749e7f79be0e4cf68, type: 3}
   productCardDonateSprite: {fileID: 21300000, guid: b898d8b24ddcc41198dd0c0eb5a780f3, type: 3}
   previewFrameSprite: {fileID: 21300000, guid: 9582669e65ac440a7930264ab6371e44, type: 3}
