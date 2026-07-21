@@ -3,12 +3,14 @@
 Supabase(Postgres + Edge Functions) 기반. **경제 무결성과 보호견 데이터 파이프라인**을 먼저 구현했습니다.
 
 - 상태: `verified` — **Supabase 프로젝트 `balang`에 배포 완료** (2026-07-22)
-- 검증: 로컬 **41건** + LLM 실호출 **16건** + 원격 실환경 검증. 보호견 실데이터 24건 적재
+- 검증: **오프라인 56건** (SQL 33 · Deno 23) + **실호출 23건** (LLM 17 · 공공 API 6). 보호견 실데이터 24건 적재
 - 관련 결정: D-019 (보호견 1차 소스 = 서울 vPetInfo) · D-020 (LLM 프로바이더) · D-021 (보더콜리 고정)
 
 ```bash
-./tests/run.sh            # 스키마·RLS·파서 (오프라인)
-E2E=1 ./tests/run.sh      # + 실제 vPetInfo API 호출
+./tests/run.sh                              # 오프라인 56건
+E2E=1 ./tests/run.sh                        # + vPetInfo 실호출 6건
+deno run -A tests/e2e_analysis.ts           # AI 분석 실호출 8건
+deno run -A tests/e2e_recommend.ts          # 성격 구조화·추천 실호출 9건
 ```
 
 ---
@@ -60,10 +62,10 @@ tests/
   auth_test.sql          Auth 연동·탈퇴 9건
   rls_test.sql           RLS 공격 11건
   shelter_test.ts        파서 10건 (픽스처)
-  analysis_test.ts       분석 검증 12건 (오프라인)
+  analysis_test.ts       분석 검증 13건 (오프라인)
   e2e_shelter_sync.ts    실 API → Postgres 6건
   e2e_analysis.ts        AI 분석 8건 (실 LLM)
-  e2e_recommend.ts       성격 구조화·추천 8건 (실 LLM)
+  e2e_recommend.ts       성격 구조화·추천 9건 (실 LLM)
   run.sh
 ```
 
@@ -82,10 +84,10 @@ tests/
 
 원장 직접 INSERT·UPDATE / 레벨 조작 / 발바닥 충전 / 게임 점수 삽입 / 돌봄 기록 위조 / 타인 데이터 조회 / 보호견 위조 / **전환 비율 조작** / 설문 저장은 정상 허용(과잉 차단 아님) / 공격 전후 잔액 불변
 
-### LLM 파이프라인 (실호출 16건)
+### LLM 파이프라인 (실호출 17건)
 **AI 상황 분석 8건** — 견종 화이트리스트 준수 / 사용자 문장 인용 / 서로 다른 설문 → 서로 다른 결과 / 금칙어 미사용 / **여건 빠듯한 사용자에게 입양을 서두르지 않음** / 보더콜리 고정 포함 / 성격 프리필
 
-**성격 구조화·추천 8건** — traits 항목이 원문에 근거(36/36) / 모르는 축은 null 유지 / 추천이 후보 안에서만 / 이유가 사용자 문장 인용 / **겹치는 보호견도 사용자별로 다른 이유** / 금칙어 미사용
+**성격 구조화·추천 9건** — traits 항목이 원문에 근거(36/36) / 모르는 축은 null 유지 / 추천이 후보 안에서만 / 이유가 사용자 문장 인용 / **겹치는 보호견도 사용자별로 다른 이유** / 금칙어 미사용
 
 ### 보호견 파이프라인 (16건)
 파서 10건은 픽스처, e2e 6건은 **실제 API 호출**입니다.
