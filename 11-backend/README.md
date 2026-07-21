@@ -2,8 +2,8 @@
 
 Supabase(Postgres + Edge Functions) 기반. **경제 무결성과 보호견 데이터 파이프라인**을 먼저 구현했습니다.
 
-- 상태: `verified` (2026-07-22)
-- 검증: 스키마·RLS 24건 단언 + 파서 10건 + 실 API 전 구간 6건 = **40건 통과**
+- 상태: `verified` — **Supabase 프로젝트 `balang`에 배포 완료** (2026-07-22)
+- 검증: 로컬 40건 + 원격(PG17) 재검증 13건. 보호견 실데이터 24건 적재
 - 관련 결정: D-019 (보호견 1차 소스 = 서울 vPetInfo)
 
 ```bash
@@ -70,7 +70,39 @@ tests/
 
 ---
 
-## 4. 구현하며 발견한 것
+## 4. 배포 상태 (2026-07-22)
+
+**Supabase 프로젝트 `balang`(ap-northeast-1, Postgres 17.6)에 배포 완료.**
+
+```bash
+supabase link --project-ref <ref> -p "$SUPABASE_DB_PASSWORD"
+supabase db push --linked -p "$SUPABASE_DB_PASSWORD"
+psql "$DB_URL" -f supabase/seed.sql
+```
+
+원격 검증 결과:
+
+| 항목 | 결과 |
+|---|---|
+| 테이블 / 뷰 | 12 / 2 |
+| RLS 활성 테이블 / 정책 | 12 / 12 |
+| 경제 무결성 (PG17에서 재실행) | **13건 전부 통과** |
+| 보호견 실데이터 적재 | **24건** (입양문의가능 11 · 임시보호가능 2) |
+| 실제 `anon` 롤 공격 | 원장 직접 INSERT 차단 확인 |
+
+로컬 검증은 Postgres 16, 운영은 17이므로 **원격에서 무결성 테스트를 다시 돌렸습니다.**
+
+### 운영 시 알아야 할 것 두 가지
+
+**1. 원장은 DELETE가 막혀 있어 TRUNCATE로만 지워집니다.**
+`ledger`의 append-only 트리거는 행 단위 DELETE를 막습니다. `profiles`를 지워도 cascade DELETE가 트리거에 걸려 실패합니다. 테스트 데이터 정리는 `TRUNCATE ... CASCADE`로만 가능합니다(TRUNCATE는 행 트리거를 발화시키지 않음). 바꿔 말하면 **테이블 소유자 권한이 있으면 append-only를 우회할 수 있습니다.** anon·authenticated는 RLS로 막히므로 실사용 경로에는 구멍이 없지만, service_role 키를 쓰는 서버 코드에서는 규율로 지켜야 합니다.
+
+**2. 비로그인 사용자에게는 보호견이 0건으로 보입니다.**
+`shelter_animals` 정책이 `auth.uid() is not null`이라, 로그인 전에는 목록이 비어 있습니다. 로그인 후 24건이 보입니다. PRD의 온보딩이 로그인부터 시작하므로 의도와 맞지만(A-01), 만약 **비로그인 상태에서 보호견을 미리 보여주는 화면**을 만들 계획이라면 정책을 바꿔야 합니다.
+
+---
+
+## 5. 구현하며 발견한 것
 
 **`[성격]` 헤더가 없는 레코드가 있습니다** (seq 508 '미요'). 성격 항목이 `[보호 센터]` 뒤에 헤더 없이 나열돼 있어, 헤더 기반 파싱이 실패했습니다. 항목 라벨(`사람 친화력`, `에너지 레벨` 등)로 찾는 폴백을 넣어 24건 전부 추출됩니다. — 픽스처가 아니라 실데이터로 테스트했기에 잡힌 결함입니다.
 
@@ -78,15 +110,17 @@ tests/
 
 ---
 
-## 5. 아직 안 한 것
+## 6. 아직 안 한 것
 
 - **Edge Function 핸들러 대부분** — `shelter-sync`만 작성. `survey-analyze`·`game-submit`·`commerce/*`는 미구현
 - **LLM 연동 전부** — `traits` 구조화, 추천 이유 생성, 설문 되묻기(`10-survey-engine/survey-prompts.md`에 명세만)
 - **레벨 곡선·방치 하락** — config에 상수만 있고 함수 미구현
 - **커머스 웹훅** — HMAC 검증·order_token·CRON 재대조 (PRD §7.6)
-- **Supabase 프로젝트 미연결** — 로컬 Postgres로만 검증. 실 배포 시 `auth.users` FK 연결 필요
+- **`auth.users` 연동** — 스키마는 배포됐지만 `profiles.user_id`가 아직 `auth.users`에 FK로 걸려 있지 않다. Supabase Auth 가입 시 `profiles` 행을 자동 생성하는 트리거도 필요하다
+- **Edge Function 미배포** — `shelter-sync`는 코드만 있고 `supabase functions deploy` 전이다. 현재 보호견 24건은 로컬에서 적재했다
+- **CRON 미설정** — 동기화 주기 스케줄 등록 필요
 
-## 6. 주의
+## 7. 주의
 
 - **인증키는 이 저장소에 없습니다.** `.env.local`(gitignore)에만 두고, 팀원은 각자 발급받습니다.
 - 로컬 검증은 Docker 없이 돌도록 만들었습니다. `supabase start`를 쓸 수 있는 환경이면 `00_local_auth_stub.sql`은 불필요합니다.
