@@ -39,9 +39,30 @@ S.push({
   purpose: '총 5문항. 문항 옆에 근거 카드가 붙는 것이 이 설문의 정체성.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">2/5</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">Q1~Q3 / 5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:40%"></i></div>
+      <div class="gauge sm"><i style="width:60%"></i></div>
+      <div class="card">
+        <div class="h3">Q1. 기본 여건을 알려주세요</div>
+        <div class="evidence">
+          <div class="cap">왜 묻나요?</div>
+          <div class="txt">이사·취업 등 여건 변화가 파양 고려 이유 5위(20.2%)였어요</div>
+          <div class="src">— 2025 동물복지 국민의식조사</div>
+        </div>
+        <div class="col" style="gap:5px">
+          <div class="row" style="gap:8px">
+            <div class="col grow"><div class="label">나이</div><div class="field">28세</div></div>
+          </div>
+          <div class="label">주거 형태</div>
+          <div class="row wrap" style="gap:5px">
+            <span class="chip on">원룸·오피스텔</span><span class="chip">아파트·빌라</span><span class="chip">마당 있는 집</span>
+          </div>
+          <div class="label">함께 사는 사람</div>
+          <div class="row wrap" style="gap:5px">
+            <span class="chip on">혼자</span><span class="chip">가족·룸메이트</span><span class="chip">아이가 있어요</span>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="h3">Q2. 하루 중 강아지와 함께 있을 수 있는 시간은?</div>
         <div class="evidence">
@@ -92,9 +113,9 @@ S.push({
   purpose: '자유 서술이 추천의 주 재료. 짧으면 AI가 1회 되묻는다.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">4/5</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">Q4~Q5 / 5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:80%"></i></div>
+      <div class="gauge sm"><i style="width:100%"></i></div>
       <div class="card">
         <div class="row between">
           <div class="h3" style="flex:1">Q4. 강아지가 밤새 짖거나 물건을 망가뜨린다면 어떻게 하실 것 같으세요?</div>
@@ -113,11 +134,19 @@ S.push({
         <div class="s">이웃 항의가 걱정이신가요, 잠을 못 자는 게 더 힘드실까요? 한 줄만 더 적어주세요.</div>
         <div class="field">한 줄 더 적기 (건너뛰어도 됩니다)</div>
       </div>
+      <div class="card">
+        <div class="row between">
+          <div class="h3" style="flex:1">Q5. 강아지와 어떤 하루를 함께 보내고 싶으세요?</div>
+          <span class="badge warn">필수</span>
+        </div>
+        <div class="field area tall">퇴근하고 한강에서 같이 산책하고, 주말엔 카페도 데려가고 싶어요</div>
+        <div class="xs">예) "퇴근 후 같이 산책하는 하루" · "집에서 조용히 뒹구는 주말" — 이 답이 견종 추천의 가장 큰 재료가 돼요</div>
+      </div>
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
         <div class="btn sec" style="flex:0 0 90px">이전</div>
-        <div class="btn pri grow" data-goto="a04-analyzing">다음</div>
+        <div class="btn pri grow" data-goto="a04-analyzing">제출하고 분석 받기</div>
       </div>
     </div>
   `,
