@@ -116,6 +116,9 @@ psql "$DB_URL" -f supabase/seed.sql
 | 보호견 실데이터 적재 | **24건** (입양문의가능 11 · 임시보호가능 2) |
 | 실제 `anon` 롤 공격 | 원장 직접 INSERT 차단 확인 |
 | **실제 회원가입 (admin API)** | 프로필 자동 생성 + 생년월일 전달 확인, 탈퇴 시 정리 확인 |
+| **Edge Function 5종 배포** | survey-analyze · survey-probe · recommend · shelter-sync · shelter-traits |
+| **프로덕션 데모 경로** | 가입 → 설문 → AI 분석 → 보호견 추천까지 배포된 함수로 완주 |
+| **보호견 성격 구조화** | 17/24 생성 (입양문의가능 11건 전건 완료) |
 
 로컬 검증은 Postgres 16, 운영은 17이므로 **원격에서 무결성 테스트를 다시 돌렸습니다.**
 
@@ -147,8 +150,8 @@ append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바
 - **미니게임 서버 검증** — `game_sessions` 테이블만 있고 재계산 로직 미구현 (C-02)
 - **커머스 전체** — 결제 의도·웹훅·스킨 지급·미성년 한도 스키마 자체가 없음 (PRD §7)
 - **돌봄 요구량 계산** — 성격에서 요구량을 뽑는 로직 (B-02)
-- **Edge Function 미배포** — `shelter-sync`는 코드만 있고 `supabase functions deploy` 전이다. 현재 보호견 24건은 로컬에서 적재했다
-- **CRON 미설정** — 동기화 주기 스케줄 등록 필요
+- **CRON 미등록** — `shelter-sync`·`shelter-traits` 주기 실행 스케줄 필요 (함수는 배포됨)
+- **Claude 어댑터 미구현** — 키 확보 시 `_shared/llm.ts`의 `anthropic()`만 채우면 된다
 
 ## 7. 주의
 
