@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   const auth = await requireUser(req, db);
   if (auth instanceof Response) return auth;
 
-  let body: { sessionId?: string; moves?: Move[]; score?: number };
+  let body: { sessionId?: string; moves?: Move[]; score?: number; bones?: number };
   try {
     body = await req.json();
   } catch {
@@ -26,6 +26,29 @@ Deno.serve(async (req) => {
   const moves = Array.isArray(body.moves) ? body.moves : [];
   const claimed = Number(body.score ?? 0);
   if (!sessionId) return json({ error: "sessionId가 필요합니다" }, 400);
+
+  // ---------- MG1 데모 경로 (D-023) ----------
+  // 팀 MG1은 피버·특수블록 등 클라 전용 로직이라 서버 리플레이가 불가능하다.
+  // bones로 제출하면 세션 상한 안에서 지급한다. 멱등(세션당 1회)은 그대로다.
+  // 랭킹을 켜기 전에 반드시 리플레이 검증으로 교체할 것.
+  if (body.bones != null) {
+    const bones = Math.max(0, Math.floor(Number(body.bones)));
+    const { data: cfg } = await db.from("config").select("value").eq("key", "economy").single();
+    const cap = Number(cfg?.value?.mg1_session_bone_cap ?? 30);
+    const granted = Math.min(bones, cap);
+
+    const { data, error } = await db.rpc("game_submit", {
+      p_user: auth.userId, p_session: sessionId,
+      p_moves: [], p_claimed: granted, p_verified: granted, p_points: granted,
+    });
+    if (error) {
+      if (/세션을 찾을 수 없습니다/.test(error.message)) {
+        return json({ error: "세션을 찾을 수 없습니다" }, 404);
+      }
+      return json({ error: error.message }, 500);
+    }
+    return json({ ...data, mode: "capped", requested: bones, sessionCap: cap });
+  }
 
   // 시드는 서버에만 있다. 클라가 보낸 시드를 쓰지 않는다.
   const { data: session, error: sErr } = await db.from("game_sessions")
