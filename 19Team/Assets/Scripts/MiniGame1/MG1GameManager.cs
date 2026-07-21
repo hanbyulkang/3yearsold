@@ -180,7 +180,9 @@ namespace MiniGame1
             _bgm.Play();
 
             BuildUI();
-            ShowEntry();
+            // 입장 화면 없이 바로 한 판 시작한다. 발바닥은 이미 허브의
+            // 플레이 버튼에서 차감·예약됐다 — 여기서 한 번 더 묻는 건 같은 확인의 반복이다.
+            StartGame();
         }
 
         void PlaySfx(AudioClip clip, float volume = 1f)
@@ -221,25 +223,33 @@ namespace MiniGame1
 
         // ---- 상태 전환 ----
 
-        void ShowEntry()
+        /// <summary>
+        /// 발바닥이 없어 판을 열지 못했을 때만 보이는 화면.
+        ///
+        /// 정상 경로에서는 허브가 이미 발바닥을 차감하므로 여기까지 오지 않는다.
+        /// 씬을 직접 실행했거나 예약이 유실된 경우의 막다른 길을 막는 역할이다.
+        /// </summary>
+        void ShowNoPaw()
         {
             _state = State.Entry;
             _entryPanel.SetActive(true);
             _playPanel.SetActive(false);
             _resultPanel.SetActive(false);
-            int paws = GameCurrencyStore.GetPaws();
-            _pawText.text = $"발바닥 {paws} / {MG1Config.MaxPaws}";
-            bool canPlay = paws > 0;
-            _startButton.interactable = canPlay;
-            _entryNotice.text = canPlay
-                ? "입장하면 발바닥 1개를 사용해요"
-                : "발바닥이 부족해요 — 시간이 지나면 회복돼요"; // DEMO-MOCK: 회복 미구현
+            _pawText.text = $"발바닥 {GameCurrencyStore.GetPaws()} / {MG1Config.MaxPaws}";
+            _entryNotice.text = "발바닥이 부족해요 — 시간이 지나면 회복돼요";
         }
 
         void StartGame()
         {
+            // 발바닥은 두 곳에서 센다 — 허브가 미리 차감한 로컬 예약, 그리고 서버 paw_state.
             bool alreadyPaidAtEntry = GameCurrencyStore.ConsumeEntryReservation();
-            if (!alreadyPaidAtEntry && !GameCurrencyStore.TrySpendPaw()) { ShowEntry(); return; }
+            if (!alreadyPaidAtEntry && !GameCurrencyStore.TrySpendPaw()) { ShowNoPaw(); return; }
+
+            // 서버 세션을 여는 유일한 지점이다. 이걸 건너뛰면 game-submit이
+            // 붙을 세션이 없어 이번 판 뼈다귀가 원장에 기록되지 않는다.
+            // 실패해도 판은 진행한다 — 오프라인이 데모를 막지 않게 (§5.5 주석과 같은 태도).
+            if (!_reward.TrySpendPaw())
+                Debug.LogWarning("[MG1] 서버 발바닥 부족 — 판은 진행하되 지급은 서버가 거부합니다");
 
             // 실제 한 판이 시작된 시점에 미니게임 미션 진행도를 저장한다.
             // 마을 씬으로 돌아오면 MissionUIController가 같은 데이터셋의
@@ -513,7 +523,7 @@ namespace MiniGame1
             MakeIcon(_entryPanel.transform, "DogFace", dogFace, new Vector2(0, 290), 130f);
             MakeText(_entryPanel.transform, "Title", "3매치", 36, FontStyles.Bold, Ink,
                 new Vector2(0, 200), new Vector2(340, 60));
-            MakeText(_entryPanel.transform, "Subtitle", $"이동 {MovesPerGame}번 안에 뼈다귀 {GoalTargetCount}개를 모아보세요!", 16, FontStyles.Normal, Ink,
+            MakeText(_entryPanel.transform, "Subtitle", "지금은 한 판을 열 수 없어요", 16, FontStyles.Normal, Ink,
                 new Vector2(0, 155), new Vector2(360, 30));
 
             var pawCard = MakeCard(_entryPanel.transform, "PawCard", CardBg, new Vector2(0, 80), new Vector2(240, 70));
@@ -524,8 +534,10 @@ namespace MiniGame1
             _entryNotice = MakeText(_entryPanel.transform, "Notice", "", 15, FontStyles.Normal, Ink,
                 new Vector2(0, 20), new Vector2(340, 30));
 
-            _startButton = MakeArtButton(_entryPanel.transform, "StartButton", "시작하기", Color.white,
-                new Vector2(0, -70), new Vector2(260, 64), btnPrimary, btnPrimaryPressed, StartGame);
+            // 발바닥 부족 화면 전용이므로 나갈 길만 둔다. 여기서 "시작하기"를
+            // 눌러도 발바닥이 없어 다시 이 화면으로 돌아올 뿐이다.
+            _startButton = MakeArtButton(_entryPanel.transform, "StartButton", "마을로 돌아가기", Color.white,
+                new Vector2(0, -70), new Vector2(260, 64), btnPrimary, btnPrimaryPressed, ReturnToVillage);
 
         }
 
