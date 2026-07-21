@@ -35,7 +35,25 @@
 
 ## 검토 필요
 
+- [ ] 보호견 데이터 소스 2종 채택 여부 결정
+  - id: animal-api-source-decision
+  - owner: 팀 (조사: Claude / hanbyulkang 세션)
+  - status: review
+  - input: `04-research/animal-data-api-research.md`, `05-data/animal-data-samples.md`
+  - output: 추천 카드에 쓸 데이터 소스 확정 및 결정 로그 등록
+  - next_action: 국가 API(전국 4,521건·성격 빈약)와 서울 vPetInfo(24건·성격 풍부)를 함께 쓸지 팀이 판단
+  - evidence: 샘플 JSON 2종, 실제 HTTP 호출로 검증한 필드·품질 수치
+
 ## 완료
+
+- [x] 보호견 공개 API 2종 조사 및 실호출 검증
+  - id: animal-api-research
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: 공공데이터포털 구조동물 조회 API, 서울 열린데이터광장 `vPetInfo`
+  - output: `04-research/animal-data-api-research.md`, `05-data/animal-data-samples.md`, 샘플 JSON 2종
+  - next_action: 위 `animal-api-source-decision` 검토
+  - evidence: 5개 오퍼레이션 전부 HTTP 200 확인, 100건 샘플 품질 실측, 샘플 44건 저장
 
 ## 막힘
 
