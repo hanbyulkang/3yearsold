@@ -1,4 +1,4 @@
-/* A. 온보딩 — 로그인 · 설문 · 견종 선택 · 캐릭터견 생성 (PRD §4.1, §4.3) */
+/* A. 온보딩 — 로그인 · 설문(1문항 1페이지) · 견종 선택 · 캐릭터견 생성 (PRD §4.1, §4.3) */
 (function (S) {
 
 S.push({
@@ -31,122 +31,151 @@ S.push({
 });
 
 S.push({
-  id: 'a02-survey-quant',
+  id: 'a02-q1',
   no: 'A-02',
   group: 'A. 온보딩',
   prd: '§4.3',
-  title: '설문 — 정량 문항 (Q1~Q3)',
-  purpose: '총 5문항. 문항 옆에 근거 카드가 붙는 것이 이 설문의 정체성.',
+  title: '설문 Q1 — 기본 여건',
+  purpose: '1문항 1페이지. 문항마다 근거 카드가 붙는 것이 이 설문의 정체성.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">Q1~Q3 / 5</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">1/5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:60%"></i></div>
-      <div class="card">
-        <div class="h3">Q1. 기본 여건을 알려주세요</div>
-        <div class="evidence">
-          <div class="cap">왜 묻나요?</div>
-          <div class="txt">이사·취업 등 여건 변화가 파양 고려 이유 5위(20.2%)였어요</div>
-          <div class="src">— 2025 동물복지 국민의식조사</div>
-        </div>
-        <div class="col" style="gap:5px">
-          <div class="row" style="gap:8px">
-            <div class="col grow"><div class="label">나이</div><div class="field">28세</div></div>
-          </div>
-          <div class="label">주거 형태</div>
-          <div class="row wrap" style="gap:5px">
-            <span class="chip on">원룸·오피스텔</span><span class="chip">아파트·빌라</span><span class="chip">마당 있는 집</span>
-          </div>
-          <div class="label">함께 사는 사람</div>
-          <div class="row wrap" style="gap:5px">
-            <span class="chip on">혼자</span><span class="chip">가족·룸메이트</span><span class="chip">아이가 있어요</span>
-          </div>
-        </div>
+      <div class="gauge sm"><i style="width:20%"></i></div>
+      <div class="h2">Q1. 기본 여건을 알려주세요</div>
+      <div class="evidence">
+        <div class="cap">왜 묻나요?</div>
+        <div class="txt">이사·취업 등 여건 변화가 파양 고려 이유 5위(20.2%)였어요</div>
+        <div class="src">— 2025 동물복지 국민의식조사</div>
       </div>
-      <div class="card">
-        <div class="h3">Q2. 하루 중 강아지와 함께 있을 수 있는 시간은?</div>
-        <div class="evidence">
-          <div class="cap">왜 묻나요?</div>
-          <div class="txt">파양 고려 이유 3위가 '예상보다 많은 시간'(25.7%)이었어요</div>
-          <div class="src">— 2025 동물복지 국민의식조사</div>
-        </div>
-        <div class="col" style="gap:5px">
-          <div class="opt">2시간 미만</div>
-          <div class="opt on">2~4시간</div>
-          <div class="opt">4~8시간</div>
-          <div class="opt">8시간 이상</div>
-        </div>
+      <div class="col"><div class="label">나이</div><div class="field">28세</div></div>
+      <div class="label">주거 형태</div>
+      <div class="row wrap" style="gap:5px">
+        <span class="chip on">원룸·오피스텔</span><span class="chip">아파트·빌라</span><span class="chip">마당 있는 집</span>
       </div>
-      <div class="card">
-        <div class="h3">Q3. 월 지출로 감당 가능한 범위는?</div>
-        <div class="evidence">
-          <div class="cap">왜 묻나요?</div>
-          <div class="txt">파양 고려 이유 2위가 '예상보다 큰 지출'(35.2%)이었어요</div>
-          <div class="src">— 2025 동물복지 국민의식조사</div>
-        </div>
-        <div class="row wrap" style="gap:5px">
-          <span class="chip">5만원 미만</span><span class="chip on">5~10만원</span>
-          <span class="chip">10~20만원</span><span class="chip">20만원 이상</span>
-        </div>
+      <div class="label">함께 사는 사람</div>
+      <div class="row wrap" style="gap:5px">
+        <span class="chip on">혼자</span><span class="chip">가족·룸메이트</span><span class="chip">아이가 있어요</span>
       </div>
     </div>
     <div class="footer">
-      <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px">이전</div>
-        <div class="btn pri grow" data-goto="a03-survey-free">다음</div>
-      </div>
+      <div class="btn pri wide" data-goto="a03-q2">다음</div>
     </div>
   `,
   notes: [
-    '통계 수치·조사명은 하드코딩하지 않고 05-data 원본 기반 JSON에서 주입(매년 갱신).',
+    '나이는 가입 생년월일에서 프리필, 수정 가능. 단독 판단 근거로 쓰지 않음(§4.3).',
     '응답은 문항 단위 즉시 저장 — 이탈 후 이어하기.',
-    '근거 카드에 겁주는 톤 금지(§4.3).'
+    '통계 수치·조사명은 하드코딩하지 않고 05-data 원본 기반 JSON에서 주입(매년 갱신).'
   ]
 });
 
 S.push({
-  id: 'a03-survey-free',
+  id: 'a03-q2',
   no: 'A-03',
   group: 'A. 온보딩',
   prd: '§4.3',
-  title: '설문 — 자유 서술 (Q4·Q5)',
-  purpose: '자유 서술이 추천의 주 재료. 짧으면 AI가 1회 되묻는다.',
+  title: '설문 Q2 — 함께할 시간',
+  purpose: '파양 사유 3위(시간 부담) 축.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">Q4~Q5 / 5</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">2/5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:100%"></i></div>
-      <div class="card">
-        <div class="row between">
-          <div class="h3" style="flex:1">Q4. 강아지가 밤새 짖거나 물건을 망가뜨린다면 어떻게 하실 것 같으세요?</div>
-          <span class="badge warn">필수</span>
-        </div>
-        <div class="evidence">
-          <div class="cap">왜 묻나요?</div>
-          <div class="txt">파양 고려 이유 1위가 '행동 문제'(42.7%)였어요</div>
-          <div class="src">— 2025 동물복지 국민의식조사</div>
-        </div>
-        <div class="field area tall">이웃한테 미안해서 스트레스 받을 것 같아요. 그래도 왜 짖는지 먼저 찾아볼 것 같은데…</div>
-        <div class="xs">정답이 없는 질문이에요. 솔직할수록 추천이 정확해집니다</div>
+      <div class="gauge sm"><i style="width:40%"></i></div>
+      <div class="h2">Q2. 하루 중 강아지와 함께 있을 수 있는 시간은?</div>
+      <div class="evidence">
+        <div class="cap">왜 묻나요?</div>
+        <div class="txt">파양 고려 이유 3위가 '예상보다 많은 시간'(25.7%)이었어요</div>
+        <div class="src">— 2025 동물복지 국민의식조사</div>
       </div>
+      <div class="col" style="gap:5px">
+        <div class="opt">2시간 미만</div>
+        <div class="opt on">2~4시간</div>
+        <div class="opt">4~8시간</div>
+        <div class="opt">8시간 이상</div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="row" style="gap:8px">
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a02-q1">이전</div>
+        <div class="btn pri grow" data-goto="a04-q3">다음</div>
+      </div>
+    </div>
+  `,
+  notes: [
+    '근거 카드에 겁주는 톤 금지(§4.3) — 사실과 출처만.'
+  ]
+});
+
+S.push({
+  id: 'a04-q3',
+  no: 'A-04',
+  group: 'A. 온보딩',
+  prd: '§4.3',
+  title: '설문 Q3 — 월 지출',
+  purpose: '파양 사유 2위(지출) 축.',
+  html: `
+    <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">3/5</span></div>
+    <div class="body">
+      <div class="gauge sm"><i style="width:60%"></i></div>
+      <div class="h2">Q3. 강아지에게 월 얼마까지 쓸 수 있으세요?</div>
+      <div class="evidence">
+        <div class="cap">왜 묻나요?</div>
+        <div class="txt">파양 고려 이유 2위가 '예상보다 큰 지출'(35.2%)이었어요. 사료·병원·미용이 매달 들어가요</div>
+        <div class="src">— 2025 동물복지 국민의식조사</div>
+      </div>
+      <div class="col" style="gap:5px">
+        <div class="opt">5만원 미만</div>
+        <div class="opt on">5~10만원</div>
+        <div class="opt">10~20만원</div>
+        <div class="opt">20만원 이상</div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="row" style="gap:8px">
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a03-q2">이전</div>
+        <div class="btn pri grow" data-goto="a05-q4">다음</div>
+      </div>
+    </div>
+  `,
+  notes: [
+    '금액 구간은 밸런스·시장 데이터 확정 후 조정 가능 — 구간값을 상수로 클라에 심지 말 것.'
+  ]
+});
+
+S.push({
+  id: 'a05-q4',
+  no: 'A-05',
+  group: 'A. 온보딩',
+  prd: '§4.3',
+  title: '설문 Q4 — 행동 문제 (필수 서술)',
+  purpose: '파양 사유 1위 축. 짧으면 AI가 1회 되묻는다.',
+  html: `
+    <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">4/5</span></div>
+    <div class="body">
+      <div class="gauge sm"><i style="width:80%"></i></div>
+      <div class="row between">
+        <div class="h2" style="flex:1">Q4. 강아지가 밤새 짖거나 물건을 망가뜨린다면 어떻게 하실 것 같으세요?</div>
+        <span class="badge warn">필수</span>
+      </div>
+      <div class="evidence">
+        <div class="cap">왜 묻나요?</div>
+        <div class="txt">파양 고려 이유 1위가 '물건 훼손·짖음 등 행동 문제'(42.7%)였어요</div>
+        <div class="src">— 2025 동물복지 국민의식조사</div>
+      </div>
+      <div class="field area tall">이웃한테 미안해서 스트레스 받을 것 같아요. 그래도 왜 짖는지 먼저 찾아볼 것 같은데…</div>
+      <div class="xs">정답이 없는 질문이에요. 솔직할수록 추천이 정확해집니다</div>
       <div class="aibox">
         <div class="cap">AI · 되묻기</div>
         <div class="s">이웃 항의가 걱정이신가요, 잠을 못 자는 게 더 힘드실까요? 한 줄만 더 적어주세요.</div>
         <div class="field">한 줄 더 적기 (건너뛰어도 됩니다)</div>
       </div>
-      <div class="card">
-        <div class="row between">
-          <div class="h3" style="flex:1">Q5. 강아지와 어떤 하루를 함께 보내고 싶으세요?</div>
-          <span class="badge warn">필수</span>
-        </div>
-        <div class="field area tall">퇴근하고 한강에서 같이 산책하고, 주말엔 카페도 데려가고 싶어요</div>
-        <div class="xs">예) "퇴근 후 같이 산책하는 하루" · "집에서 조용히 뒹구는 주말" — 이 답이 견종 추천의 가장 큰 재료가 돼요</div>
-      </div>
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px">이전</div>
-        <div class="btn pri grow" data-goto="a04-analyzing">제출하고 분석 받기</div>
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a04-q3">이전</div>
+        <div class="btn pri grow" data-goto="a06-q5">다음</div>
       </div>
     </div>
   `,
@@ -158,8 +187,43 @@ S.push({
 });
 
 S.push({
-  id: 'a04-analyzing',
-  no: 'A-04',
+  id: 'a06-q5',
+  no: 'A-06',
+  group: 'A. 온보딩',
+  prd: '§4.3',
+  title: '설문 Q5 — 원하는 하루 (필수 서술)',
+  purpose: '견종 추천의 주 재료. 근거 카드 대신 예시 문장 제시.',
+  html: `
+    <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">5/5</span></div>
+    <div class="body">
+      <div class="gauge sm"><i style="width:100%"></i></div>
+      <div class="row between">
+        <div class="h2" style="flex:1">Q5. 강아지와 어떤 하루를 함께 보내고 싶으세요?</div>
+        <span class="badge warn">필수</span>
+      </div>
+      <div class="box fill">
+        <div class="xs">예) "퇴근 후 같이 산책하는 하루" · "집에서 조용히 뒹구는 주말" · "주말마다 교외로 나들이"</div>
+      </div>
+      <div class="field area tall">퇴근하고 한강에서 같이 산책하고, 주말엔 카페도 데려가고 싶어요</div>
+      <div class="xs">이 답이 견종 추천의 가장 큰 재료가 돼요</div>
+    </div>
+    <div class="footer">
+      <div class="row" style="gap:8px">
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a05-q4">이전</div>
+        <div class="btn pri grow" data-goto="a07-analyzing">제출하고 분석 받기</div>
+      </div>
+    </div>
+  `,
+  notes: [
+    'Q5는 근거 카드 없이 예시 문장 제시(§4.3 문항표).',
+    '제출 시 Q1~Q5 전체를 LLM 분석 입력으로 전달 — 이후 견종·보호견·참여 추천이 이 한 번의 분석을 공유(§4.3 단일 엔진).'
+  ]
+});
+
+S.push({
+  id: 'a07-analyzing',
+  no: 'A-07',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: 'AI 분석 (로딩)',
@@ -190,8 +254,8 @@ S.push({
 });
 
 S.push({
-  id: 'a05-breed-3',
-  no: 'A-05',
+  id: 'a08-breed-3',
+  no: 'A-08',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '견종 3개 추천 · 선택',
@@ -241,7 +305,7 @@ S.push({
       </div>
     </div>
     <div class="footer">
-      <div class="btn pri wide" data-goto="a06-persona">시바견으로 시작하기</div>
+      <div class="btn pri wide" data-goto="a09-persona">시바견으로 시작하기</div>
       <div class="btn gho wide">다시 추천받기</div>
     </div>
   `,
@@ -252,8 +316,8 @@ S.push({
 });
 
 S.push({
-  id: 'a06-persona',
-  no: 'A-06',
+  id: 'a09-persona',
+  no: 'A-09',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '성격 설정 · 이름 짓기',
@@ -285,18 +349,18 @@ S.push({
       </div>
     </div>
     <div class="footer">
-      <div class="btn pri wide" data-goto="a07-created">이 성격으로 만들기</div>
+      <div class="btn pri wide" data-goto="a10-created">이 성격으로 만들기</div>
     </div>
   `,
   notes: [
-    '성격 값이 LLM 페르소나 프롬프트와 돌봄 요구량 계산의 입력(활동성↑ → 산책 요구↑, 겁많음↑ → 초반 목욕 거부).',
+    '성격 값이 AI 페르소나(돌봄 반응 연출)와 돌봄 요구량 계산의 입력(활동성↑ → 산책 요구↑, 겁많음↑ → 초반 목욕 거부).',
     '견종 선택에 따라 기본값 프리필. 생성 후 변경 불가.'
   ]
 });
 
 S.push({
-  id: 'a07-created',
-  no: 'A-07',
+  id: 'a10-created',
+  no: 'A-10',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '캐릭터견 첫 만남',
