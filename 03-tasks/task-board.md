@@ -55,6 +55,15 @@
   - next_action: 위 `animal-api-source-decision` 검토
   - evidence: 5개 오퍼레이션 전부 HTTP 200 확인, 100건 샘플 품질 실측, 샘플 44건 저장
 
+- [x] 온보딩 설문 엔진 (화면과 분리된 로직 + AI 되묻기)
+  - id: survey-engine
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: PRD §4.3, 와이어프레임 A-02·A-03, `05-data/survey-evidence.md`
+  - output: `10-survey-engine/` (engine · spec · 프롬프트 명세 · 데모)
+  - next_action: 설문 화면 디자인이 나오면 `demo.html`만 교체. 서버 `/api/survey/probe` 구현 필요
+  - evidence: Node 상태머신 테스트 통과(검증·되묻기·건너뛰기·원문보존), 브라우저 실동작 확인
+
 ## 막힘
 
 ```markdown

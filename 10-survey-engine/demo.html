@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>D+ 온보딩 설문 엔진 — 동작 데모</title>
+<link rel="stylesheet" href="../09-wireframes/wireframe.css">
+<style>
+  /* 데모 전용 최소 스타일. 실제 디자인이 오면 이 파일은 버린다. */
+  body { padding: 24px; display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .demo-side { max-width: 380px; font: 13px/1.7 system-ui, sans-serif; }
+  .demo-side h1 { font-size: 16px; margin: 0 0 8px; }
+  .demo-side pre { background: #f6f4ef; padding: 10px; border-radius: 6px; overflow: auto; max-height: 340px; font-size: 11px; }
+  .demo-side .warn { background: #fff4d6; padding: 10px; border-radius: 6px; }
+  .field.live { padding: 0; }
+  .field.live textarea, .field.live select {
+    width: 100%; border: 0; background: transparent; font: inherit;
+    padding: 8px 10px; resize: vertical; outline: none;
+  }
+  .field.live textarea { min-height: 92px; }
+  .btn { cursor: pointer; user-select: none; }
+  .fieldrow { margin-bottom: 8px; }
+  .fieldrow > .label { display: block; margin-bottom: 4px; }
+  .err { color: #b3261e; font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame"></div>
+
+<div class="demo-side">
+  <h1>온보딩 설문 엔진 데모</h1>
+  <p>
+    화면(<code>demo.html</code>)과 로직(<code>survey-engine.js</code>)이 분리되어 있습니다.
+    <b>디자인이 나오면 이 파일만 교체하면 됩니다.</b> 엔진은 그대로 씁니다.
+  </p>
+  <div class="warn">
+    지금은 <code>mockLLM</code>(규칙 기반)으로 되묻기를 만듭니다.<br>
+    운영에서는 <code>SurveyEngine.httpLLM('/api/survey/probe')</code>로 바꾸면
+    <code>survey-prompts.md</code>의 Claude 프롬프트가 대신 판단합니다.
+  </div>
+  <p><b>되묻기가 사람마다 다른지 보려면</b> Q4에 이런 답을 각각 넣어보세요:<br>
+    · "이웃한테 미안할 것 같아요"<br>
+    · "일단 혼내야죠"<br>
+    · "몰라요"
+  </p>
+  <h1 style="margin-top:16px">수집 결과 (실시간)</h1>
+  <pre id="out">{}</pre>
+</div>
+
+<script src="survey-engine.js"></script>
+<script>
+(function () {
+  'use strict';
+  var frame = document.getElementById('frame');
+  var out = document.getElementById('out');
+  var survey = null;
+
+  fetch('survey-spec.json')
+    .then(function (r) { return r.json(); })
+    .then(function (spec) {
+      survey = SurveyEngine.create({ spec: spec, llm: SurveyEngine.mockLLM() });
+      render(survey.view());
+    })
+    .catch(function () {
+      frame.innerHTML = '<div class="body"><div class="card">'
+        + '<div class="h3">spec을 불러오지 못했습니다</div>'
+        + '<div class="s">file:// 로 열면 fetch가 차단됩니다. 로컬 서버로 여세요:</div>'
+        + '<div class="mono">python3 -m http.server</div></div></div>';
+    });
+
+  /* ---------- 렌더 ---------- */
+  // 엔진이 주는 view는 4종뿐이다: quant / free / probe / done
+  function render(v) {
+    out.textContent = JSON.stringify(survey.result(), null, 2);
+
+    if (v.type === 'done') return renderDone(v);
+    if (v.type === 'probe') return renderProbe(v);
+    return renderQuestion(v);
+  }
+
+  function bar(v) {
+    var pct = Math.round((v.progress.step / v.progress.total) * 100);
+    return '<div class="sb"><span>9:41</span><span></span><span>100%</span></div>'
+      + '<div class="appbar"><span class="back" data-act="back">←</span>'
+      + '<span class="t">설문</span>'
+      + '<span class="act">' + v.progress.step + '/' + v.progress.total + '</span></div>'
+      + '<div class="gauge sm"><i style="width:' + pct + '%"></i></div>';
+  }
+
+  function evidence(e) {
+    if (!e) return '';
+    return '<div class="evidence"><div class="cap">' + e.cap + '</div>'
+      + '<div class="txt">' + e.txt + '</div>'
+      + '<div class="src">' + e.src + '</div></div>';
+  }
+
+  function renderQuestion(v) {
+    var input = '';
+    if (v.type === 'quant') {
+      input = v.fields.map(function (f) {
+        return '<div class="fieldrow"><span class="label">' + f.label + '</span>'
+          + '<div class="field live"><select data-key="' + f.key + '">'
+          + '<option value="">선택하세요</option>'
+          + f.options.map(function (o) { return '<option>' + o + '</option>'; }).join('')
+          + '</select></div></div>';
+      }).join('');
+    } else {
+      input = '<div class="field live area tall"><textarea id="free" placeholder="'
+        + (v.placeholder || '') + '"></textarea></div>';
+      if (v.examples) {
+        input += '<div class="xs">예: ' + v.examples.join(' / ') + '</div>';
+      }
+    }
+
+    frame.innerHTML = bar(v)
+      + '<div class="body">'
+      +   '<div class="card">'
+      +     '<div class="row between"><div class="h3" style="flex:1">Q' + v.progress.step + '. ' + v.title + '</div>'
+      +       (v.required ? '<span class="badge warn">필수</span>' : '')
+      +     '</div>'
+      +     evidence(v.evidence)
+      +     input
+      +     (v.hint ? '<div class="xs">' + v.hint + '</div>' : '')
+      +     (v.error ? '<div class="err">' + v.error + '</div>' : '')
+      +   '</div>'
+      + '</div>'
+      + '<div class="footer"><div class="row" style="gap:8px">'
+      +   '<div class="btn sec" style="flex:0 0 90px" data-act="back">이전</div>'
+      +   '<div class="btn pri grow" data-act="next">다음</div>'
+      + '</div></div>';
+
+    bind(v);
+  }
+
+  function renderProbe(v) {
+    frame.innerHTML = bar(v)
+      + '<div class="body">'
+      +   '<div class="aibox">'
+      +     '<div class="cap">AI · 되묻기</div>'
+      +     '<div class="s">' + v.text + '</div>'
+      +     '<div class="field live"><textarea id="free" placeholder="한 줄 더 적기 (건너뛰어도 됩니다)"></textarea></div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="footer"><div class="row" style="gap:8px">'
+      +   '<div class="btn sec" style="flex:0 0 90px" data-act="skip">건너뛰기</div>'
+      +   '<div class="btn pri grow" data-act="next">다음</div>'
+      + '</div></div>';
+    bind(v);
+  }
+
+  function renderDone(v) {
+    frame.innerHTML = '<div class="sb"><span>9:41</span><span></span><span>100%</span></div>'
+      + '<div class="appbar"><span class="back"></span><span class="t">AI 분석</span><span class="act"></span></div>'
+      + '<div class="body"><div class="card">'
+      +   '<div class="h3">설문이 끝났습니다</div>'
+      +   '<div class="s">이 결과가 견종 추천 · 보호견 추천 카드 · 참여 방식 추천에 공통으로 쓰입니다 (PRD §4.3).</div>'
+      +   '<div class="xs">되묻기 ' + v.payload.probeCount + '회 · 오른쪽 JSON이 서버로 전달할 payload입니다.</div>'
+      + '</div></div>';
+  }
+
+  /* ---------- 이벤트 ---------- */
+  function bind(v) {
+    frame.querySelectorAll('[data-act]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var act = el.getAttribute('data-act');
+        if (act === 'back') return render(survey.back());
+        if (act === 'skip') return survey.skip().then(render);
+        if (act === 'next') return survey.submit(collect(v)).then(render);
+      });
+    });
+  }
+
+  function collect(v) {
+    if (v.type === 'quant') {
+      var o = {};
+      frame.querySelectorAll('[data-key]').forEach(function (s) { o[s.getAttribute('data-key')] = s.value; });
+      return o;
+    }
+    var t = frame.querySelector('#free');
+    return t ? t.value : '';
+  }
+})();
+</script>
+</body>
+</html>
