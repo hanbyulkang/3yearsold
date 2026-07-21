@@ -43,19 +43,26 @@ Deno.serve(async (req) => {
     }
 
     // 후보 좁히기는 SQL이 한다. 목록 전체를 LLM에 넘기지 않는다.
+    //
+    // traits가 없는 개체는 후보에서 뺀다. 성격 정보 없이 추천하면
+    // "당신은 A라고 하셨고 이 아이는 B입니다"라는 이유를 쓸 근거가 없고,
+    // 모델이 없는 사실을 지어낼 여지가 생긴다 (D-03 창작 금지).
+    const SELECT = "seq, name, animal_type, breed, sex, weight_kg, foster_ok, traits";
     const { fosterOnly } = candidateFilter(analysis.participation.recommended);
-    let q = db.from("shelter_animals")
-      .select("seq, name, animal_type, breed, sex, weight_kg, foster_ok, care_nm, traits")
-      .eq("adopt_status", "입양문의가능")
-      .limit(20);
+
+    let q = db.from("shelter_animals").select(SELECT)
+      .eq("adopt_status", "입양문의가능").not("traits", "is", null).limit(20);
     if (fosterOnly) q = q.eq("foster_ok", true);
 
-    let { data: candidates } = await q;
-    // 임보 가능한 아이가 부족하면(현재 24건 중 2건뿐) 전체 후보로 넓힌다.
+    // 쿼리 오류를 삼키면 "후보 0건"으로 보여 원인을 못 찾는다. 반드시 확인한다.
+    let { data: candidates, error: candErr } = await q;
+    if (candErr) throw candErr;
+
+    // 임보 가능한 아이가 부족하면(현재 24건 중 2건뿐) 임보 조건만 풀고 넓힌다.
     if (fosterOnly && (candidates?.length ?? 0) < 3) {
-      const { data: wider } = await db.from("shelter_animals")
-        .select("seq, name, animal_type, breed, sex, weight_kg, foster_ok, care_nm, traits")
-        .eq("adopt_status", "입양문의가능").limit(20);
+      const { data: wider, error: widerErr } = await db.from("shelter_animals").select(SELECT)
+        .eq("adopt_status", "입양문의가능").not("traits", "is", null).limit(20);
+      if (widerErr) throw widerErr;
       candidates = wider;
     }
     if (!candidates || candidates.length < 3) {

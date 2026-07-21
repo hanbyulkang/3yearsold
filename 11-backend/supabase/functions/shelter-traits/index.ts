@@ -22,15 +22,28 @@ Deno.serve(async (req) => {
   const all = url.searchParams.get("all") === "1";
   const limit = Number(url.searchParams.get("limit") ?? "50");
 
-  let q = db.from("shelter_animals")
-    .select("seq, name, animal_type, breed, sex_raw, weight_kg, birth_ymd, content_raw")
-    .not("content_raw", "is", null)
-    .limit(limit);
-  if (!all) q = q.is("traits", null);
+  const SELECT = "seq, name, animal_type, breed, sex_raw, weight_kg, birth_ymd, content_raw";
 
-  const { data: rows, error } = await q;
-  if (error) return json({ error: error.message }, 500);
-  if (!rows?.length) return json({ processed: 0, message: "대상 없음" });
+  // 추천 대상(입양문의가능)을 먼저 채운다.
+  // recommend는 traits가 있는 개체만 후보로 쓰므로, 순서가 곧 추천 풀을 결정한다.
+  const base = () => {
+    const q = db.from("shelter_animals").select(SELECT).not("content_raw", "is", null);
+    return all ? q : q.is("traits", null);
+  };
+
+  const { data: priority, error: pErr } = await base()
+    .eq("adopt_status", "입양문의가능").limit(limit);
+  if (pErr) return json({ error: pErr.message }, 500);
+
+  let rows = priority ?? [];
+  if (rows.length < limit) {
+    const { data: rest, error: rErr } = await base()
+      .neq("adopt_status", "입양문의가능").limit(limit - rows.length);
+    if (rErr) return json({ error: rErr.message }, 500);
+    rows = [...rows, ...(rest ?? [])];
+  }
+
+  if (!rows.length) return json({ processed: 0, message: "대상 없음" });
 
   const llm = fromEnv((k) => Deno.env.get(k));
   const failures: Array<{ seq: number; reason: string }> = [];

@@ -32,11 +32,30 @@ export async function requireUser(
   return { userId: data.user.id };
 }
 
-/** CRON·내부 호출용. service_role 키를 헤더로 확인한다. */
+/**
+ * CRON·내부 호출용 — service_role 권한 확인.
+ *
+ * 문자열 비교를 쓰지 않는다. Supabase가 프로젝트마다 레거시 JWT(`eyJ…`)와
+ * 신규 시크릿 키(`sb_secret_…`)를 함께 발급하고, 함수에 주입되는 값과
+ * 호출자가 쓰는 값이 다를 수 있기 때문이다.
+ *
+ * 게이트웨이가 이미 서명을 검증한 뒤 넘겨주므로, 여기서는 role 클레임만 본다.
+ */
 export function requireServiceRole(req: Request): Response | null {
-  const key = req.headers.get("apikey") ?? req.headers.get("Authorization")?.replace("Bearer ", "");
-  if (!key || key !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
-    return json({ error: "service_role 권한이 필요합니다" }, 403);
+  const raw = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ??
+    req.headers.get("apikey") ?? "";
+
+  if (raw && raw === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return null;
+
+  // JWT라면 role 클레임을 확인한다
+  const parts = raw.split(".");
+  if (parts.length === 3) {
+    try {
+      const pad = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(pad + "=".repeat((4 - pad.length % 4) % 4)));
+      if (payload?.role === "service_role") return null;
+    } catch { /* 형식 오류는 아래에서 거부된다 */ }
   }
-  return null;
+
+  return json({ error: "service_role 권한이 필요합니다" }, 403);
 }
