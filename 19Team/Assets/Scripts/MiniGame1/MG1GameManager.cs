@@ -91,7 +91,8 @@ namespace MiniGame1
         BrandConfig[] _brands = System.Array.Empty<BrandConfig>();
         int _brandRotation;
         BrandConfig _activeBrand;  // 지금 보드에 나와 있는(나올) 브랜드
-        BrandConfig _seenBrand;    // 이번 판에서 노출된 마지막 브랜드 (결과 배너 대상)
+        BrandConfig _seenBrand;    // 이번 판에서 노출된 마지막 브랜드
+        int _brandBlocksPopped;    // 브랜드 블록 보너스 집계
 
         // UI refs
         GameObject _entryPanel, _playPanel, _resultPanel;
@@ -100,13 +101,14 @@ namespace MiniGame1
         TextMeshProUGUI _movesText, _scoreText, _goalText, _comboText, _coachText;
         GameObject _coachRow;
         Image _feverFill;
+        TextMeshProUGUI _feverLabel;
         CanvasGroup _boardGroup;
         RectTransform _boardRoot;
-        TextMeshProUGUI _resultTitle, _resultSub, _pointsBig, _pointsTotal, _resultCoach;
+        TextMeshProUGUI _resultTitle, _resultSub, _boneBig, _boneTotal, _resultCoach;
         RectTransform _resultSunburst, _resultMedal;
 
         // 홈 씬 연결 지점 — 미니게임은 재화 루프(§4.2)까지만 책임진다
-        public static event System.Action<int> GameFinished;   // 지급된 포인트
+        public static event System.Action<int> GameFinished;   // 지급된 뼈다귀
         public static event System.Action GoHomeRequested;
         Button _retryButton;
         Sprite _brandLogoSprite;
@@ -225,6 +227,7 @@ namespace MiniGame1
             _brandTimer = (demoMode ? 5f : 8f) - 3f; // 시작 후 ~3초면 첫 브랜드 블록 등장
             _activeBrand = null;
             _seenBrand = null;
+            _brandBlocksPopped = 0;
             _movesLeft = demoMode ? DemoMoves : MovesPerGame;
             _goalCollected = 0;
             _goalDone = false;
@@ -236,6 +239,7 @@ namespace MiniGame1
             _boardGroup.blocksRaycasts = true;
             _comboText.text = "";
             SetCoach(""); // 시작 멘트 없음 — 진행 상황이 생기면 코치가 나타난다
+            if (_feverLabel != null) _feverLabel.gameObject.SetActive(false);
 
             float cell = _boardRoot.rect.width / MG1Config.BoardSize;
             _board.PopFxPrefab = popFxPrefab;
@@ -258,6 +262,7 @@ namespace MiniGame1
             int bonus = _activeBrand != null ? _activeBrand.bonusScore : 300;
             _score.AddCascadeStep(step.MatchedBlocks, step.SpecialBlocks, step.BrandBlocks, bonus, cascadeIndex);
             if (step.BrandBlocks > 0 && _activeBrand != null) _seenBrand = _activeBrand;
+            _brandBlocksPopped += step.BrandBlocks;
             // 폭발음: 1·2연쇄는 같은 소리(2번 wav), 3연쇄 이상만 3번
             PlaySfx(cascadeIndex <= 1 ? popClip2 : popClip3, 0.85f);
             if (step.SpecialBlocks > 0 || step.BrandBlocks > 0) PlaySfx(specialClip, 0.6f);
@@ -310,8 +315,11 @@ namespace MiniGame1
         void ShowResult()
         {
             _state = State.Result;
-            int granted = _reward.GrantPointsForScore(_score.Score);
-            int raw = _score.Score / MG1Config.PointsDivisor;
+            // 모은 뼈다귀 블록이 그대로 재화가 된다 (목표 달성 시 ×2, 브랜드 블록 보너스)
+            int earned = _goalCollected * MG1Config.BonePerBlock;
+            if (_goalDone) earned *= MG1Config.ClearMultiplier;
+            earned += _brandBlocksPopped * MG1Config.BrandBoneBonus;
+            int granted = _reward.GrantBones(earned);
 
             _playPanel.SetActive(false);
             _resultPanel.SetActive(true);
@@ -322,13 +330,13 @@ namespace MiniGame1
             _resultTitle.text = _goalDone ? "클리어!" : "결과 집계";
             _resultSub.text = $"점수 {_score.Score:N0} · 이동 {Mathf.Max(0, _movesLeft)}회 남김 · 뼈다귀 {Mathf.Min(_goalCollected, GoalTargetCount)}/{GoalTargetCount}";
 
-            string capNote = granted < raw ? " · 오늘 상한 도달" : "";
-            _pointsTotal.text = $"보유 포인트 {_reward.GetTotalPoints():N0} P{capNote}";
+            string capNote = granted < earned ? " · 오늘 상한 도달" : "";
+            _boneTotal.text = $"보유 뼈다귀 {_reward.GetTotalBones():N0}{capNote}";
 
             // 캐릭터견(단추) 코멘트 — 기부 연결은 CTA가 아니라 이 한 줄이 담당한다
             _resultCoach.text = _goalDone
-                ? "(신나서 폴짝폴짝) 이 포인트로 보호소 친구들 사료를 채워줄 수 있대요!"
-                : "오늘도 수고했어요! 모은 포인트는 보호소 친구들에게 보탬이 돼요.";
+                ? "(신나서 폴짝폴짝) 이 뼈다귀로 보호소 친구들 사료를 채워줄 수 있대요!"
+                : "오늘도 수고했어요! 모은 뼈다귀는 보호소 친구들에게 보탬이 돼요.";
 
             int paws = _reward.GetPaws();
             _retryButton.interactable = paws > 0;
@@ -339,7 +347,7 @@ namespace MiniGame1
             GameFinished?.Invoke(granted); // 홈 씬이 재화 HUD를 갱신하는 지점
         }
 
-        // 보상이 주인공인 연출: 메달 팝인 → 포인트 카운트업 → 축하 불꽃
+        // 보상이 주인공인 연출: 메달 팝인 → 뼈다귀 카운트업 → 축하 불꽃
         IEnumerator ResultSequence(int granted)
         {
             if (_resultMedal != null)
@@ -353,16 +361,16 @@ namespace MiniGame1
                 _resultMedal.localScale = Vector3.one;
             }
 
-            _pointsBig.text = "+0 P";
+            _boneBig.text = "+0";
             yield return new WaitForSeconds(0.12f);
 
             const float dur = 0.7f;
             for (float t = 0; t < dur; t += Time.deltaTime)
             {
-                _pointsBig.text = $"+{Mathf.RoundToInt(Mathf.Lerp(0, granted, t / dur)):N0} P";
+                _boneBig.text = $"+{Mathf.RoundToInt(Mathf.Lerp(0, granted, t / dur)):N0}";
                 yield return null;
             }
-            _pointsBig.text = $"+{granted:N0} P";
+            _boneBig.text = $"+{granted:N0}";
 
             // 숫자가 다 오른 뒤에 터뜨려야 "얻었다"는 순간이 살아난다
             if (fireworksFxPrefab != null)
@@ -382,8 +390,10 @@ namespace MiniGame1
             _scoreText.text = $"{_score.Score:N0}";
             _goalText.text = $"{Mathf.Min(_goalCollected, GoalTargetCount)}<color=#4A3327>/{GoalTargetCount}</color>";
             _feverFill.fillAmount = _score.FeverGauge / MG1Config.FeverMax;
-            // 피버 중에는 게이지가 노랑 → 빨강으로 변한다 (별도 뱃지 없음)
+            // 피버 중에는 게이지가 노랑 → 빨강으로 변하고 "피버!" 라벨이 뜬다
             _feverFill.color = _score.FeverActive ? new Color(1f, 0.32f, 0.26f) : Color.white;
+            if (_feverLabel != null && _feverLabel.gameObject.activeSelf != _score.FeverActive)
+                _feverLabel.gameObject.SetActive(_score.FeverActive);
         }
 
         void SetCoach(string msg)
@@ -547,9 +557,11 @@ namespace MiniGame1
             _feverFill.type = Image.Type.Filled;
             _feverFill.fillMethod = Image.FillMethod.Horizontal;
             _feverFill.fillAmount = 0f;
-            var feverLabel = MakeText(_playPanel.transform, "FeverLabel", "FEVER", 12, FontStyles.Bold, Ink,
-                new Vector2(Half - 28, 262), new Vector2(52, 26));
-            feverLabel.alignment = TextAlignmentOptions.Right;
+            // 피버 라벨은 피버 중에만 보인다 (평소엔 게이지만)
+            _feverLabel = MakeText(_playPanel.transform, "FeverLabel", "피버!", 13, FontStyles.Bold, Accent,
+                new Vector2(Half - 26, 262), new Vector2(52, 26));
+            _feverLabel.alignment = TextAlignmentOptions.Right;
+            _feverLabel.gameObject.SetActive(false);
 
             // 보드
             var boardBg = MakeImage(_playPanel.transform, "BoardBg", Color.white, boardBgArt);
@@ -613,11 +625,14 @@ namespace MiniGame1
                 new Vector2(0, 124), new Vector2(360, 24));
 
             // 보상 카드 — 화면의 주인공
-            var card = MakeImage(_resultPanel.transform, "PointCard", Color.white, endCard);
+            var card = MakeImage(_resultPanel.transform, "BoneCard", Color.white, endCard);
             SetRect(card.rectTransform, new Vector2(0, 44), new Vector2(320, 116));
-            _pointsBig = MakeText(card.transform, "PointsBig", "+0 P", 36, FontStyles.Bold, GoldInk,
-                new Vector2(0, 18), new Vector2(300, 50));
-            _pointsTotal = MakeText(card.transform, "PointsTotal", "", 12, FontStyles.Normal, SubInk,
+            MakeIcon(card.transform, "BoneIcon",
+                blockArts != null && blockArts.Length > 1 && blockArts[1] != null ? blockArts[1] : boneSprite,
+                new Vector2(-66, 18), 40f);
+            _boneBig = MakeText(card.transform, "BoneBig", "+0", 36, FontStyles.Bold, GoldInk,
+                new Vector2(22, 18), new Vector2(220, 50));
+            _boneTotal = MakeText(card.transform, "BoneTotal", "", 12, FontStyles.Normal, SubInk,
                 new Vector2(0, -28), new Vector2(300, 22));
 
             // 캐릭터견(단추) 말풍선 — 기부 연결은 CTA 대신 이 한 줄로

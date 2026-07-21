@@ -19,8 +19,13 @@ namespace MiniGame1
         public const float FeverDuration = 10f;
 
         public const float HintDelaySec = 4f;
-        public const int PointsDivisor = 100;       // 포인트 = floor(점수 / 100)
-        public const int DailyPointCap = 500;       // MG1 일일 상한 (가안)
         public const int MaxPaws = 5;
+
+        // ── 재화 규칙 (MG1)
+        // 모은 뼈다귀 블록이 그대로 재화가 된다. 점수는 재화가 아니라 주간 랭킹용.
+        public const int BonePerBlock = 1;      // 뼈다귀 블록 1개 = 뼈다귀 1
+        public const int ClearMultiplier = 2;   // 목표 달성 시 ×2
+        public const int BrandBoneBonus = 5;    // 브랜드 블록 1개당 +5
+        public const int DailyBoneCap = 200;    // 발바닥 5회 × 40 = 하루 상한
     }
 }

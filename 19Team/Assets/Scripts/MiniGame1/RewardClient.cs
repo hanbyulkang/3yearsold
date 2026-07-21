@@ -8,19 +8,19 @@ namespace MiniGame1
     {
         int GetPaws();
         bool TrySpendPaw();
-        /// <returns>실제 지급된 포인트 (일일 상한 반영)</returns>
-        int GrantPointsForScore(int score);
-        int GetTotalPoints();
+        /// <returns>실제 지급된 뼈다귀 (일일 상한 반영)</returns>
+        int GrantBones(int bones);
+        int GetTotalBones();
     }
 
     // DEMO-MOCK: 해커톤 데모용 로컬 구현 (mini-game-1-prd.md §6.3).
-    // 발바닥·포인트를 PlayerPrefs에 저장한다. 서버 권위 없음 — 데모 이후 교체 대상.
+    // 발바닥·뼈다귀를 PlayerPrefs에 저장한다. 서버 권위 없음 — 데모 이후 교체 대상.
     public class LocalMockRewardClient : IRewardClient
     {
         const string PawKey = "mg1_paws";
-        const string PointKey = "mg1_points_total";
-        const string DailyKey = "mg1_points_daily";
-        const string DailyDateKey = "mg1_points_daily_date";
+        const string BoneKey = "mg1_bones_total";
+        const string DailyKey = "mg1_bones_daily";
+        const string DailyDateKey = "mg1_bones_daily_date";
 
         public int GetPaws()
         {
@@ -37,7 +37,7 @@ namespace MiniGame1
             return true;
         }
 
-        public int GrantPointsForScore(int score)
+        public int GrantBones(int bones)
         {
             string today = DateTime.Now.ToString("yyyy-MM-dd");
             if (PlayerPrefs.GetString(DailyDateKey, "") != today)
@@ -46,15 +46,14 @@ namespace MiniGame1
                 PlayerPrefs.SetInt(DailyKey, 0);
             }
             int daily = PlayerPrefs.GetInt(DailyKey, 0);
-            int raw = score / MG1Config.PointsDivisor;
-            int granted = Mathf.Clamp(MG1Config.DailyPointCap - daily, 0, raw);
+            int granted = Mathf.Clamp(MG1Config.DailyBoneCap - daily, 0, bones);
             PlayerPrefs.SetInt(DailyKey, daily + granted);
-            PlayerPrefs.SetInt(PointKey, PlayerPrefs.GetInt(PointKey, 0) + granted); // DEMO-MOCK: origin=play 태깅은 서버 몫
+            PlayerPrefs.SetInt(BoneKey, PlayerPrefs.GetInt(BoneKey, 0) + granted); // DEMO-MOCK: origin=play 태깅은 서버 몫
             PlayerPrefs.Save();
             return granted;
         }
 
-        public int GetTotalPoints() => PlayerPrefs.GetInt(PointKey, 0);
+        public int GetTotalBones() => PlayerPrefs.GetInt(BoneKey, 0);
 
         // DEMO-MOCK: 테스트용 즉시 충전. 정식 구현에선 시간 회복·육포 충전(Edge Function)으로 대체.
         public void RefillPaws()
