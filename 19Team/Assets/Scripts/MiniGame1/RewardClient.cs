@@ -10,7 +10,6 @@ namespace MiniGame1
         bool TrySpendPaw();
         /// <returns>실제 지급된 포인트 (일일 상한 반영)</returns>
         int GrantPointsForScore(int score);
-        void SaveCoupon(string brandName);
         int GetTotalPoints();
     }
 
@@ -22,7 +21,6 @@ namespace MiniGame1
         const string PointKey = "mg1_points_total";
         const string DailyKey = "mg1_points_daily";
         const string DailyDateKey = "mg1_points_daily_date";
-        const string CouponKey = "mg1_coupons";
 
         public int GetPaws()
         {
@@ -54,12 +52,6 @@ namespace MiniGame1
             PlayerPrefs.SetInt(PointKey, PlayerPrefs.GetInt(PointKey, 0) + granted); // DEMO-MOCK: origin=play 태깅은 서버 몫
             PlayerPrefs.Save();
             return granted;
-        }
-
-        public void SaveCoupon(string brandName)
-        {
-            PlayerPrefs.SetInt(CouponKey, PlayerPrefs.GetInt(CouponKey, 0) + 1); // DEMO-MOCK
-            PlayerPrefs.Save();
         }
 
         public int GetTotalPoints() => PlayerPrefs.GetInt(PointKey, 0);

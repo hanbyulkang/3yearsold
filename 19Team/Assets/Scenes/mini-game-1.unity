@@ -266,7 +266,6 @@ MonoBehaviour:
   feverBarBg: {fileID: 21300000, guid: 3ba91374260c0486c8eac8ee9d5c85fe, type: 3}
   feverBarFill: {fileID: 21300000, guid: 4c60d8474e56f4109a633cf17aab0ce3, type: 3}
   pawArt: {fileID: 21300000, guid: 9ddaab23a48d242eb8023065275fc888, type: 3}
-  couponArt: {fileID: 21300000, guid: 24d90cefec1b54b7db0fdc34807ef01b, type: 3}
   blockArts:
   - {fileID: 21300000, guid: 1c7c6a5d69ce84023ba86ef37f23549a, type: 3}
   - {fileID: 21300000, guid: e40d91e263bb34154bf1d2670b5eae58, type: 3}
@@ -279,6 +278,17 @@ MonoBehaviour:
   bombArt: {fileID: 21300000, guid: b16dabdae6425430a9d19da259649647, type: 3}
   magicArt: {fileID: 21300000, guid: aaa3c97e3edbb4e459b786741345611e, type: 3}
   brandFrameArt: {fileID: 21300000, guid: 75d078516cec344aeb0fd5ba0fa3e448, type: 3}
+  endMedal: {fileID: 21300000, guid: f41338ff661f04587925d49a9cf4f70c, type: 3}
+  endSunburst: {fileID: 21300000, guid: b71a846820b804f63abf36e1edcabcde, type: 3}
+  endGlow: {fileID: 21300000, guid: 50d81d0c7e3e248c9911060db2f9cdc2, type: 3}
+  endCard: {fileID: 21300000, guid: 40f3e4c4ec5b24fad9f365d489619774, type: 3}
+  endBubble: {fileID: 21300000, guid: fbc2fa9593d2e47aeb1a47f723e8c65e, type: 3}
+  endAvatar: {fileID: 21300000, guid: 3d3f380e7fb4146b88e0ca1951312cf8, type: 3}
+  endBtnGold: {fileID: 21300000, guid: d831ccc7c833240bdaac4e6463115f7a, type: 3}
+  endBtnGoldPressed: {fileID: 21300000, guid: 1942a7907c8bb4173ba4f6ad1be34ee2, type: 3}
+  endBtnDark: {fileID: 21300000, guid: 58065057817b343079708d7cb6d39705, type: 3}
+  endBtnGhost: {fileID: 21300000, guid: e8a893be6d5f342f881f12aa94fbb2ea, type: 3}
+  endBanner: {fileID: 21300000, guid: d18f9ebe2a2704977b08b8492464160d, type: 3}
   swapClip: {fileID: 0}
   popClip1: {fileID: 8300000, guid: 1492f6dcb8df142e3ad14c1ad233dafc, type: 3}
   popClip2: {fileID: 8300000, guid: f3478864b0b384e558147c0c3a2b04a0, type: 3}

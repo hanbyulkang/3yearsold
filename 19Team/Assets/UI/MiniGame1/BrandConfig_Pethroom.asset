@@ -16,6 +16,7 @@ MonoBehaviour:
   productName: "\uCF00\uC5B4\uC6A9\uD488"
   partnershipLabel: "\uBAA8\uC758 \uD611\uC5C5"
   logo: {fileID: 21300000, guid: 8e93554ac36a04eb1a4c3c2258c94825, type: 3}
+  storeUrl: https://pethroom.com/
   bonusScore: 300
   dropIntervalSec: 15
   demoDropIntervalSec: 8

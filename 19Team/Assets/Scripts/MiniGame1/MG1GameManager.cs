@@ -38,13 +38,25 @@ namespace MiniGame1
         [SerializeField] Sprite feverBarBg;
         [SerializeField] Sprite feverBarFill;
         [SerializeField] Sprite pawArt;
-        [SerializeField] Sprite couponArt;
         [SerializeField] Sprite[] blockArts = new Sprite[6]; // bowl, bone, ball, chew, leash, squeaky
         [SerializeField] Sprite rocketHArt;
         [SerializeField] Sprite rocketVArt;
         [SerializeField] Sprite bombArt;
         [SerializeField] Sprite magicArt;
         [SerializeField] Sprite brandFrameArt;
+
+        [Header("결과 화면 아트 (Assets/UI/MiniGame1/Ending — minigame-ending 디자인)")]
+        [SerializeField] Sprite endMedal;
+        [SerializeField] Sprite endSunburst;
+        [SerializeField] Sprite endGlow;
+        [SerializeField] Sprite endCard;
+        [SerializeField] Sprite endBubble;
+        [SerializeField] Sprite endAvatar;
+        [SerializeField] Sprite endBtnGold;
+        [SerializeField] Sprite endBtnGoldPressed;
+        [SerializeField] Sprite endBtnDark;
+        [SerializeField] Sprite endBtnGhost;
+        [SerializeField] Sprite endBanner;
 
         [Header("사운드 — 팝 3종은 연쇄 단계별 (Audio/pop_line1~3.wav)")]
         [SerializeField] AudioClip swapClip;
@@ -76,11 +88,10 @@ namespace MiniGame1
         bool _goalDone;
 
         float _brandTimer;
-        int _brandPopped;
         BrandConfig[] _brands = System.Array.Empty<BrandConfig>();
         int _brandRotation;
         BrandConfig _activeBrand;  // 지금 보드에 나와 있는(나올) 브랜드
-        BrandConfig _poppedBrand;  // 이번 판에서 마지막으로 터뜨린 브랜드 (쿠폰 대상)
+        BrandConfig _seenBrand;    // 이번 판에서 노출된 마지막 브랜드 (결과 배너 대상)
 
         // UI refs
         GameObject _entryPanel, _playPanel, _resultPanel;
@@ -88,18 +99,29 @@ namespace MiniGame1
         Button _startButton;
         TextMeshProUGUI _movesText, _scoreText, _goalText, _comboText, _coachText;
         GameObject _coachRow;
-        RectTransform _brandChipsRow;
-        int _brandChipCount;
-        const float ContentHalf = 181f;
         Image _feverFill;
         CanvasGroup _boardGroup;
         RectTransform _boardRoot;
-        TextMeshProUGUI _resultTitle, _resultScore, _resultPoints, _resultGoal, _couponTitle, _donationText;
-        GameObject _couponCard;
-        Button _couponButton, _retryButton;
-        Image _couponLogo;
-        TextMeshProUGUI _couponLabel;
+        TextMeshProUGUI _resultTitle, _resultSub, _pointsBig, _pointsTotal, _storeTitle, _resultCoach;
+        RectTransform _resultSunburst;
+
+        // 기부 화면(E-01)은 홈 씬 담당 — MG1은 이벤트만 노출한다 (와이어프레임 C-03 CTA)
+        public static event System.Action GoDonateRequested;
+        // 자사몰(어필리에이트) 진입 — 홈/커머스 씬이 구독한다 (상위 PRD §7.6)
+        public static event System.Action<string> GoStoreRequested;
+        GameObject _storeBanner;
+        Button _storeButton, _retryButton;
+        Image _storeLogo;
+        TextMeshProUGUI _storeLabel;
         Sprite _brandLogoSprite;
+
+        // minigame-ending 디자인 팔레트
+        static readonly Color TitleInk = new Color(0.353f, 0.275f, 0.196f);   // #5A4632
+        static readonly Color SubInk = new Color(0.541f, 0.478f, 0.384f);     // #8A7A62
+        static readonly Color GoldInk = new Color(0.722f, 0.463f, 0.165f);    // #B8762A
+        static readonly Color DarkInk = new Color(0.416f, 0.345f, 0.247f);    // #6A583F
+        static readonly Color GoldBtnInk = new Color(0.29f, 0.192f, 0.075f);  // #4A3113
+        static readonly Color DarkBtnInk = new Color(1f, 0.937f, 0.824f);     // #FFEFD2
 
         static readonly Color Cream = new Color(0.98f, 0.953f, 0.902f);
         static readonly Color Ink = new Color(0.29f, 0.2f, 0.153f);        // #4A3327 (목표 디자인 브라운)
@@ -172,6 +194,7 @@ namespace MiniGame1
             {
                 // 브랜드 3종 중 랜덤으로 드롭 — 로고 블록이 아이템 사이에 수시로 등장
                 _activeBrand = _brands[Random.Range(0, _brands.Length)];
+                _seenBrand = _activeBrand; // 노출만으로 홍보 성립 — 수집 개념 없음
                 _board.SetBrandLogo(_activeBrand.logo);
                 _model.QueueBrandDrop(); // §3.1: 동시 최대 1개
                 _brandTimer = 0f;
@@ -204,9 +227,8 @@ namespace MiniGame1
             _model = new BoardModel(MG1Config.BoardSize, MG1Config.NormalTypes, new System.Random());
             _score.Reset();
             _brandTimer = (demoMode ? 5f : 8f) - 3f; // 시작 후 ~3초면 첫 브랜드 블록 등장
-            _brandPopped = 0;
             _activeBrand = null;
-            _poppedBrand = null;
+            _seenBrand = null;
             _movesLeft = demoMode ? DemoMoves : MovesPerGame;
             _goalCollected = 0;
             _goalDone = false;
@@ -218,12 +240,6 @@ namespace MiniGame1
             _boardGroup.blocksRaycasts = true;
             _comboText.text = "";
             SetCoach(""); // 시작 멘트 없음 — 진행 상황이 생기면 코치가 나타난다
-            if (_brandChipsRow != null)
-            {
-                for (int i = _brandChipsRow.childCount - 1; i >= 0; i--)
-                    Destroy(_brandChipsRow.GetChild(i).gameObject);
-                _brandChipCount = 0;
-            }
 
             float cell = _boardRoot.rect.width / MG1Config.BoardSize;
             _board.PopFxPrefab = popFxPrefab;
@@ -245,8 +261,7 @@ namespace MiniGame1
             if (_state != State.Playing && _state != State.Ending) return;
             int bonus = _activeBrand != null ? _activeBrand.bonusScore : 300;
             _score.AddCascadeStep(step.MatchedBlocks, step.SpecialBlocks, step.BrandBlocks, bonus, cascadeIndex);
-            _brandPopped += step.BrandBlocks;
-            if (step.BrandBlocks > 0 && _activeBrand != null) _poppedBrand = _activeBrand;
+            if (step.BrandBlocks > 0 && _activeBrand != null) _seenBrand = _activeBrand;
             // 폭발음: 1·2연쇄는 같은 소리(2번 wav), 3연쇄 이상만 3번
             PlaySfx(cascadeIndex <= 1 ? popClip2 : popClip3, 0.85f);
             if (step.SpecialBlocks > 0 || step.BrandBlocks > 0) PlaySfx(specialClip, 0.6f);
@@ -260,8 +275,6 @@ namespace MiniGame1
                 StopCoroutine(nameof(FadeCombo));
                 StartCoroutine(nameof(FadeCombo));
             }
-            // 브랜드 블록 획득은 토스트 대신 하단 누적 칩으로
-            for (int i = 0; i < step.BrandBlocks; i++) AddBrandChip(_poppedBrand);
 
             if (!_goalDone && _goalCollected >= GoalTargetCount)
             {
@@ -282,30 +295,6 @@ namespace MiniGame1
             _comboText.text = "";
         }
 
-        // 하단 브랜드 획득 누적 칩 (로고 미니 카드)
-        void AddBrandChip(BrandConfig b)
-        {
-            if (_brandChipsRow == null || b == null) return;
-            var chip = MakeImage(_brandChipsRow, "Chip" + _brandChipCount, Color.white, null);
-            MG1Skin.ApplyRounded(chip, 8f);
-            SetRect(chip.rectTransform, new Vector2(-ContentHalf + 32 + _brandChipCount * 46, 0), new Vector2(42, 42));
-            var logo = MakeImage(chip.transform, "Logo", Color.white, b.logo);
-            logo.preserveAspect = true;
-            SetRect(logo.rectTransform, Vector2.zero, new Vector2(36, 22));
-            StartCoroutine(PopChip(chip.rectTransform));
-            _brandChipCount++;
-        }
-
-        IEnumerator PopChip(RectTransform rt)
-        {
-            for (float t = 0; t < 0.2f; t += Time.deltaTime)
-            {
-                if (rt == null) yield break;
-                rt.localScale = Vector3.one * Mathf.Lerp(0.2f, 1f, t / 0.2f);
-                yield return null;
-            }
-            if (rt != null) rt.localScale = Vector3.one;
-        }
 
         void OnResolveFinished()
         {
@@ -331,6 +320,7 @@ namespace MiniGame1
             _playPanel.SetActive(false);
             _resultPanel.SetActive(true);
             PlaySfx(resultClip, 0.9f);
+            StartCoroutine(SpinSunburst());
 
             if (fireworksFxPrefab != null)
             {
@@ -343,34 +333,34 @@ namespace MiniGame1
                 Destroy(fx, 4f);
             }
 
-            _resultTitle.text = _goalDone ? "목표 달성!" : "결과 집계";
-            _resultGoal.text = $"뼈다귀 {Mathf.Min(_goalCollected, GoalTargetCount)}/{GoalTargetCount} 수집";
-            _resultScore.text = $"{_score.Score:N0}점";
-            _resultPoints.text = granted < raw
-                ? $"+{granted} 포인트 (오늘 상한 {MG1Config.DailyPointCap} 도달)"
-                : $"+{granted} 포인트";
+            // 와이어프레임 C-03: 클리어!/결과 집계 분기 (실패 연출 없음, §1.2 원칙 2)
+            _resultTitle.text = _goalDone ? "클리어!" : "결과 집계";
+            _resultSub.text = $"점수 {_score.Score:N0} · 이동 {Mathf.Max(0, _movesLeft)}회 남김 · 뼈다귀 {Mathf.Min(_goalCollected, GoalTargetCount)}/{GoalTargetCount}";
 
-            bool coupon = _brandPopped > 0 && _poppedBrand != null;
-            _couponCard.SetActive(coupon);
-            if (coupon)
+            _pointsBig.text = $"+{granted:N0} P";
+            string capNote = granted < raw ? " · 오늘 상한 도달" : "";
+            _pointsTotal.text = $"보유 포인트 {_reward.GetTotalPoints():N0} P{capNote}";
+
+            // 브랜드는 노출 자체가 홍보 — 결과에서는 자사몰(어필리에이트) 진입만 제공
+            var storeBrand = _seenBrand != null ? _seenBrand : (_brands.Length > 0 ? _brands[0] : null);
+            _storeBanner.SetActive(storeBrand != null);
+            if (storeBrand != null)
             {
-                _couponTitle.text = $"{_poppedBrand.brandName} {_poppedBrand.productName} 쿠폰";
-                if (_couponLabel != null) _couponLabel.text = $"({_poppedBrand.partnershipLabel})";
-                if (_couponLogo != null && _poppedBrand.logo != null) _couponLogo.sprite = _poppedBrand.logo;
-                _couponButton.interactable = true;
-                _couponButton.GetComponentInChildren<TextMeshProUGUI>().text = "쿠폰 받기";
+                _storeTitle.text = $"{storeBrand.brandName} 공식몰";
+                if (_storeLabel != null) _storeLabel.text = $"({storeBrand.partnershipLabel})";
+                if (_storeLogo != null && storeBrand.logo != null) _storeLogo.sprite = storeBrand.logo;
+                _storeButton.interactable = true;
             }
 
-            var donationBrand = _poppedBrand != null ? _poppedBrand : (_brands.Length > 0 ? _brands[0] : null);
-            string brand = donationBrand != null ? donationBrand.brandName : "브랜드";
-            string label = donationBrand != null ? donationBrand.partnershipLabel : "모의 협업";
-            // §3.3: 판매 연동 기부 게이지 — 정보 노출 1줄, 수치는 DEMO-MOCK
-            _donationText.text = $"[{label}] {brand} 장난감 342/500개\n목표 달성 시 보호소에 장난감이 전달돼요";
+            // 캐릭터견(단추) 코멘트 — 포인트를 기부로 잇는 멘트 (C-03 aibox)
+            _resultCoach.text = _goalDone
+                ? "(신나서 폴짝폴짝) 이 포인트로 보호소 친구들 사료를 채워줄 수 있대요!"
+                : "오늘도 수고했어요! 모은 포인트는 보호소 친구들에게 보탬이 돼요.";
 
             int paws = _reward.GetPaws();
             _retryButton.interactable = paws > 0;
             _retryButton.GetComponentInChildren<TextMeshProUGUI>().text =
-                paws > 0 ? $"다시 하기 (발바닥 {paws})" : "발바닥이 부족해요";
+                paws > 0 ? $"한 번 더 (발바닥 {paws})" : "발바닥이 부족해요";
         }
 
         void RefreshPlayHud()
@@ -581,11 +571,6 @@ namespace MiniGame1
             _coachRow.SetActive(false);
             // 브랜드 설명 캡션은 제거 — "모의 협업" 라벨은 쿠폰 카드에서 표기 (§3.4)
 
-            // 하단 브랜드 획득 누적 칩 줄 (목표 바 아래)
-            var chipsGo = new GameObject("BrandChips", typeof(RectTransform));
-            chipsGo.transform.SetParent(_playPanel.transform, false);
-            _brandChipsRow = (RectTransform)chipsGo.transform;
-            SetRect(_brandChipsRow, new Vector2(0, -283), new Vector2(W, 44));
 
             // 피버 타임 대각선 리본 배너 (우측 상단, 빨간 배경)
             // 화면 안에 완전히 들어오는 크기·각도 (392px 폭 기준 잘림 없음)
@@ -596,63 +581,139 @@ namespace MiniGame1
         {
             _resultPanel = MakePanel(parent, "ResultPanel");
 
-            var card = MakeCard(_resultPanel.transform, "Card", CardBg, new Vector2(0, 110), new Vector2(340, 320));
+            // ── minigame-ending 디자인 재구성 (와이어프레임 C-03 구조 유지)
+            // 상단 골드 글로우 + 회전 선버스트 + 뼈다귀 메달
+            var glow = MakeImage(_resultPanel.transform, "Glow", Color.white, endGlow);
+            SetRect(glow.rectTransform, new Vector2(0, 288), new Vector2(430, 430));
 
-            MakeIcon(card.transform, "Trophy", trophyIcon, new Vector2(0, 178), 84f);
-            _resultTitle = MakeText(card.transform, "Title", "결과 집계", 22, FontStyles.Bold, Ink,
-                new Vector2(0, 112), new Vector2(300, 36));
-            _resultGoal = MakeText(card.transform, "Goal", "", 16, FontStyles.Normal, Ink,
-                new Vector2(0, 76), new Vector2(300, 30));
-            _resultScore = MakeText(card.transform, "Score", "0점", 40, FontStyles.Bold, Ink,
-                new Vector2(0, 24), new Vector2(300, 60));
-            _resultPoints = MakeText(card.transform, "Points", "", 20, FontStyles.Bold, Accent,
-                new Vector2(0, -28), new Vector2(300, 34));
-            // §1.2 원칙 2: 낮은 점수여도 실패 연출 없음 — 항상 획득만 보여준다
-            _donationText = MakeText(card.transform, "Donation", "", 13, FontStyles.Normal,
-                new Color(0.29f, 0.2f, 0.153f, 0.7f), new Vector2(0, -105), new Vector2(300, 60));
+            var sun = MakeImage(_resultPanel.transform, "Sunburst", Color.white, endSunburst);
+            SetRect(sun.rectTransform, new Vector2(0, 286), new Vector2(158, 158));
+            _resultSunburst = sun.rectTransform;
 
-            // 조건부 토글 요소라 그림자까지 홀더로 묶는다
-            var couponHolder = new GameObject("CouponCard", typeof(RectTransform));
-            couponHolder.transform.SetParent(_resultPanel.transform, false);
-            SetRect((RectTransform)couponHolder.transform, new Vector2(0, -125), new Vector2(340, 130));
-            var couponBg = MakeImage(couponHolder.transform, "Bg", Color.white, couponArt);
-            if (couponArt == null)
-            {
-                MakeShadow(couponHolder.transform, Vector2.zero, new Vector2(340, 130));
-                couponBg.color = new Color(1f, 0.96f, 0.88f);
-                MG1Skin.ApplyRounded(couponBg, 5f);
-            }
-            Stretch(couponBg.rectTransform);
-            _couponCard = couponHolder;
+            var medal = MakeImage(_resultPanel.transform, "Medal", Color.white, endMedal);
+            medal.preserveAspect = true;
+            SetRect(medal.rectTransform, new Vector2(0, 286), new Vector2(102, 108));
 
-            // 쿠폰 내부: 좌열(로고+라벨) · 우열(제목+버튼), 열 경계 -20
+            _resultTitle = MakeText(_resultPanel.transform, "Title", "클리어!", 36, FontStyles.Bold, TitleInk,
+                new Vector2(0, 202), new Vector2(340, 48));
+            _resultSub = MakeText(_resultPanel.transform, "Sub", "", 13, FontStyles.Normal, SubInk,
+                new Vector2(0, 167), new Vector2(360, 24));
+
+            // 보상 카드
+            var card = MakeImage(_resultPanel.transform, "PointCard", Color.white, endCard);
+            SetRect(card.rectTransform, new Vector2(0, 98), new Vector2(320, 100));
+            _pointsBig = MakeText(card.transform, "PointsBig", "+0 P", 30, FontStyles.Bold, GoldInk,
+                new Vector2(0, 14), new Vector2(300, 44));
+            _pointsTotal = MakeText(card.transform, "PointsTotal", "", 12, FontStyles.Normal, SubInk,
+                new Vector2(0, -24), new Vector2(300, 22));
+
+            // 브랜드 자사몰 배너 — 수집·쿠폰 없이 어필리에이트 진입만 (상위 PRD §7.3)
+            var bannerHolder = new GameObject("StoreBanner", typeof(RectTransform));
+            bannerHolder.transform.SetParent(_resultPanel.transform, false);
+            SetRect((RectTransform)bannerHolder.transform, new Vector2(0, -3), new Vector2(330, 86));
+            var bannerBg = MakeImage(bannerHolder.transform, "Bg", Color.white, endBanner);
+            Stretch(bannerBg.rectTransform);
+            _storeBanner = bannerHolder;
+
             if (_brandLogoSprite != null)
             {
-                _couponLogo = MakeImage(_couponCard.transform, "Logo", Color.white, _brandLogoSprite);
-                _couponLogo.preserveAspect = true;
-                SetRect(_couponLogo.rectTransform, new Vector2(-95, 22), new Vector2(120, 34));
+                _storeLogo = MakeImage(_storeBanner.transform, "Logo", Color.white, _brandLogoSprite);
+                _storeLogo.preserveAspect = true;
+                SetRect(_storeLogo.rectTransform, new Vector2(-88, 12), new Vector2(104, 26));
             }
-            _couponLabel = MakeText(_couponCard.transform, "CouponLabel", "(모의 협업)", 11, FontStyles.Normal,
-                new Color(0.29f, 0.2f, 0.153f, 0.55f), new Vector2(-95, -30), new Vector2(120, 22));
-            _couponTitle = MakeText(_couponCard.transform, "CouponTitle", "", 15, FontStyles.Bold, Ink,
-                new Vector2(70, 22), new Vector2(175, 50));
-            _couponTitle.alignment = TextAlignmentOptions.Left;
-            _couponButton = MakeArtButton(_couponCard.transform, "CouponBtn", "쿠폰 받기", Color.white,
-                new Vector2(90, -30), new Vector2(130, 40), btnPrimary, btnPrimaryPressed, null);
-            _couponButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 15;
-            _couponButton.onClick.AddListener(() =>
+            _storeLabel = MakeText(_storeBanner.transform, "StoreLabel", "(모의 협업)", 10, FontStyles.Normal,
+                new Color(SubInk.r, SubInk.g, SubInk.b, 0.8f), new Vector2(-88, -18), new Vector2(104, 18));
+            _storeTitle = MakeText(_storeBanner.transform, "StoreTitle", "", 12, FontStyles.Normal, SubInk,
+                new Vector2(78, 20), new Vector2(150, 20));
+            _storeButton = MakeEndingButton(_storeBanner.transform, "StoreBtn", "상점 보러가기", GoldBtnInk,
+                new Vector2(78, -12), new Vector2(150, 38), endBtnGold, endBtnGoldPressed, null);
+            _storeButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 14;
+            _storeButton.onClick.AddListener(() =>
             {
-                _reward.SaveCoupon(brandConfig != null ? brandConfig.brandName : "브랜드");
-                _couponButton.interactable = false;
-                _couponButton.GetComponentInChildren<TextMeshProUGUI>().text = "받았어요!";
+                var b = _seenBrand != null ? _seenBrand : (_brands.Length > 0 ? _brands[0] : null);
+                string url = b != null ? b.storeUrl : "";
+                GoStoreRequested?.Invoke(url); // 커머스 씬이 구독 (없으면 아래 폴백)
+                // WebGL에서는 새 탭으로 열린다 — 반드시 클릭 컨텍스트에서 호출 (§7.6 팝업 차단)
+                if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
+                else _resultCoach.text = "자사몰 링크는 커머스 씬에서 연결될 예정이에요!";
             });
 
-            _retryButton = MakeArtButton(_resultPanel.transform, "RetryBtn", "다시 하기", Color.white,
-                new Vector2(0, -245), new Vector2(260, 58), btnPrimary, btnPrimaryPressed, StartGame);
-            var homeBtn = MakeArtButton(_resultPanel.transform, "HomeBtn", "마당으로", Ink,
-                new Vector2(0, -315), new Vector2(260, 50), btnSecondary, null, null);
+            // 캐릭터견(단추) 말풍선 — 점선 아바타 + 점선 버블
+            var avatar = MakeImage(_resultPanel.transform, "CoachAvatar", Color.white, endAvatar);
+            SetRect(avatar.rectTransform, new Vector2(-160, -82), new Vector2(52, 52));
+            MakeIcon(avatar.transform, "Face", dogFace, Vector2.zero, 38f);
+
+            var bubble = MakeImage(_resultPanel.transform, "CoachBubble", Color.white, endBubble);
+            SetRect(bubble.rectTransform, new Vector2(24, -100), new Vector2(252, 84));
+            var cap = MakeText(bubble.transform, "Cap", "단추", 12, FontStyles.Bold, GoldInk,
+                new Vector2(-90, 24), new Vector2(60, 18));
+            cap.alignment = TextAlignmentOptions.Left;
+            _resultCoach = MakeText(bubble.transform, "Msg", "", 12f, FontStyles.Normal, DarkInk,
+                new Vector2(8, -10), new Vector2(196, 46));
+            _resultCoach.alignment = TextAlignmentOptions.TopLeft;
+
+            // CTA — 기부(골드) / 한 번 더(다크) / 허브로(점선)
+            var donateBtn = MakeEndingButton(_resultPanel.transform, "DonateBtn", "사료 기부하러 가기", GoldBtnInk,
+                new Vector2(0, -218), new Vector2(320, 58), endBtnGold, endBtnGoldPressed, null);
+            donateBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 19;
+            donateBtn.onClick.AddListener(() =>
+            {
+                GoDonateRequested?.Invoke(); // 홈 씬(E-01 기부)이 구독하는 연결 지점
+                _resultCoach.text = "기부 화면은 홈 씬에서 연결될 예정이에요!";
+            });
+
+            _retryButton = MakeEndingButton(_resultPanel.transform, "RetryBtn", "한 번 더", DarkBtnInk,
+                new Vector2(-82, -290), new Vector2(154, 52), endBtnDark, null, StartGame);
+            _retryButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 16;
+            var homeBtn = MakeEndingButton(_resultPanel.transform, "HomeBtn", "허브로", SubInk,
+                new Vector2(82, -290), new Vector2(154, 52), endBtnGhost, null, null);
+            homeBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 16;
             homeBtn.onClick.AddListener(ShowEntry); // 홈 씬 연결은 인터페이스만 노출 (§5)
         }
+
+        // 결과 화면 전용 버튼 — 아트를 원본 비율 그대로(Simple) 쓴다
+        Button MakeEndingButton(Transform parent, string name, string label, Color fg,
+            Vector2 pos, Vector2 size, Sprite art, Sprite pressed, UnityEngine.Events.UnityAction onClick)
+        {
+            Image img;
+            if (art != null)
+            {
+                img = MakeImage(parent, name, Color.white, art);
+            }
+            else
+            {
+                MakeShadow(parent, pos, size);
+                img = MakeImage(parent, name, Accent, null);
+                MG1Skin.ApplyRounded(img, 5f);
+            }
+            img.raycastTarget = true;
+            SetRect(img.rectTransform, pos, size);
+            var btn = img.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            if (pressed != null)
+            {
+                btn.transition = Selectable.Transition.SpriteSwap;
+                var ss = btn.spriteState;
+                ss.pressedSprite = pressed;
+                ss.disabledSprite = art;
+                btn.spriteState = ss;
+            }
+            if (onClick != null) btn.onClick.AddListener(onClick);
+            // 3D 버튼이라 라벨을 살짝 위로 (아래쪽 그림자 두께 보정)
+            MakeText(img.transform, "Label", label, 19, FontStyles.Bold, fg, new Vector2(0, 3f), size);
+            return btn;
+        }
+
+        IEnumerator SpinSunburst()
+        {
+            while (_resultPanel != null && _resultPanel.activeSelf)
+            {
+                if (_resultSunburst != null)
+                    _resultSunburst.localRotation = Quaternion.Euler(0, 0, -Time.time * 15f);
+                yield return null;
+            }
+        }
+
 
         // ---- UI 헬퍼 ----
 

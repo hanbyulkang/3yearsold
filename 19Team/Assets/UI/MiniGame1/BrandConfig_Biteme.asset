@@ -16,6 +16,7 @@ MonoBehaviour:
   productName: "\uAC15\uC544\uC9C0 \uC7A5\uB09C\uAC10"
   partnershipLabel: "\uBAA8\uC758 \uD611\uC5C5"
   logo: {fileID: 21300000, guid: 6947b34ec8397463e9e09ac800e643bf, type: 3}
+  storeUrl: https://www.biteme.co.kr/shop/main
   bonusScore: 300
   dropIntervalSec: 15
   demoDropIntervalSec: 8

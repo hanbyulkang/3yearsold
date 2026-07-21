@@ -11,6 +11,8 @@ namespace MiniGame1
         // 협업 계약 전에는 반드시 노출한다 (§3.4 정직성 규칙)
         public string partnershipLabel = "모의 협업";
         public Sprite logo;
+        // 자사몰(어필리에이트) 링크 — 결과 화면 배너에서 새 탭으로 연다 (상위 PRD §7.6)
+        public string storeUrl = "";
         public int bonusScore = 300;
         public float dropIntervalSec = 15f;
         public float demoDropIntervalSec = 8f;

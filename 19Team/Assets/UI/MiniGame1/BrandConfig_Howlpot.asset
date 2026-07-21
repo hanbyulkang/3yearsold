@@ -16,6 +16,7 @@ MonoBehaviour:
   productName: "\uC0B0\uCC45\uC6A9\uD488"
   partnershipLabel: "\uBAA8\uC758 \uD611\uC5C5"
   logo: {fileID: 21300000, guid: 21a7db027dc8543038d5adeb50fa0b1a, type: 3}
+  storeUrl: https://howlpot.com/
   bonusScore: 300
   dropIntervalSec: 15
   demoDropIntervalSec: 8
