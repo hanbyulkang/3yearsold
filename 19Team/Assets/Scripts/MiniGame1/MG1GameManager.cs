@@ -102,17 +102,13 @@ namespace MiniGame1
         Image _feverFill;
         CanvasGroup _boardGroup;
         RectTransform _boardRoot;
-        TextMeshProUGUI _resultTitle, _resultSub, _pointsBig, _pointsTotal, _storeTitle, _resultCoach;
-        RectTransform _resultSunburst;
+        TextMeshProUGUI _resultTitle, _resultSub, _pointsBig, _pointsTotal, _resultCoach;
+        RectTransform _resultSunburst, _resultMedal;
 
-        // 기부 화면(E-01)은 홈 씬 담당 — MG1은 이벤트만 노출한다 (와이어프레임 C-03 CTA)
-        public static event System.Action GoDonateRequested;
-        // 자사몰(어필리에이트) 진입 — 홈/커머스 씬이 구독한다 (상위 PRD §7.6)
-        public static event System.Action<string> GoStoreRequested;
-        GameObject _storeBanner;
-        Button _storeButton, _retryButton;
-        Image _storeLogo;
-        TextMeshProUGUI _storeLabel;
+        // 홈 씬 연결 지점 — 미니게임은 재화 루프(§4.2)까지만 책임진다
+        public static event System.Action<int> GameFinished;   // 지급된 포인트
+        public static event System.Action GoHomeRequested;
+        Button _retryButton;
         Sprite _brandLogoSprite;
 
         // minigame-ending 디자인 팔레트
@@ -322,37 +318,14 @@ namespace MiniGame1
             PlaySfx(resultClip, 0.9f);
             StartCoroutine(SpinSunburst());
 
-            if (fireworksFxPrefab != null)
-            {
-                // 결과 축하 1회 — 점수와 무관하게 항상 (§1.2 원칙 2: 실패 연출 없음)
-                Vector3 pos = _resultPanel.transform.position;
-                var cam = Camera.main;
-                if (cam != null) pos += (cam.transform.position - pos).normalized * 2f;
-                var fx = Instantiate(fireworksFxPrefab, pos, Quaternion.identity);
-                fx.transform.localScale = Vector3.one * 1.2f;
-                Destroy(fx, 4f);
-            }
-
-            // 와이어프레임 C-03: 클리어!/결과 집계 분기 (실패 연출 없음, §1.2 원칙 2)
+            // 클리어!/결과 집계 분기 (실패 연출 없음, §1.2 원칙 2)
             _resultTitle.text = _goalDone ? "클리어!" : "결과 집계";
             _resultSub.text = $"점수 {_score.Score:N0} · 이동 {Mathf.Max(0, _movesLeft)}회 남김 · 뼈다귀 {Mathf.Min(_goalCollected, GoalTargetCount)}/{GoalTargetCount}";
 
-            _pointsBig.text = $"+{granted:N0} P";
             string capNote = granted < raw ? " · 오늘 상한 도달" : "";
             _pointsTotal.text = $"보유 포인트 {_reward.GetTotalPoints():N0} P{capNote}";
 
-            // 브랜드는 노출 자체가 홍보 — 결과에서는 자사몰(어필리에이트) 진입만 제공
-            var storeBrand = _seenBrand != null ? _seenBrand : (_brands.Length > 0 ? _brands[0] : null);
-            _storeBanner.SetActive(storeBrand != null);
-            if (storeBrand != null)
-            {
-                _storeTitle.text = $"{storeBrand.brandName} 공식몰";
-                if (_storeLabel != null) _storeLabel.text = $"({storeBrand.partnershipLabel})";
-                if (_storeLogo != null && storeBrand.logo != null) _storeLogo.sprite = storeBrand.logo;
-                _storeButton.interactable = true;
-            }
-
-            // 캐릭터견(단추) 코멘트 — 포인트를 기부로 잇는 멘트 (C-03 aibox)
+            // 캐릭터견(단추) 코멘트 — 기부 연결은 CTA가 아니라 이 한 줄이 담당한다
             _resultCoach.text = _goalDone
                 ? "(신나서 폴짝폴짝) 이 포인트로 보호소 친구들 사료를 채워줄 수 있대요!"
                 : "오늘도 수고했어요! 모은 포인트는 보호소 친구들에게 보탬이 돼요.";
@@ -361,6 +334,46 @@ namespace MiniGame1
             _retryButton.interactable = paws > 0;
             _retryButton.GetComponentInChildren<TextMeshProUGUI>().text =
                 paws > 0 ? $"한 번 더 (발바닥 {paws})" : "발바닥이 부족해요";
+
+            StartCoroutine(ResultSequence(granted));
+            GameFinished?.Invoke(granted); // 홈 씬이 재화 HUD를 갱신하는 지점
+        }
+
+        // 보상이 주인공인 연출: 메달 팝인 → 포인트 카운트업 → 축하 불꽃
+        IEnumerator ResultSequence(int granted)
+        {
+            if (_resultMedal != null)
+            {
+                for (float t = 0; t < 0.32f; t += Time.deltaTime)
+                {
+                    float k = Mathf.Sin((t / 0.32f) * Mathf.PI * 0.5f);
+                    _resultMedal.localScale = Vector3.one * Mathf.Lerp(0.35f, 1.06f, k);
+                    yield return null;
+                }
+                _resultMedal.localScale = Vector3.one;
+            }
+
+            _pointsBig.text = "+0 P";
+            yield return new WaitForSeconds(0.12f);
+
+            const float dur = 0.7f;
+            for (float t = 0; t < dur; t += Time.deltaTime)
+            {
+                _pointsBig.text = $"+{Mathf.RoundToInt(Mathf.Lerp(0, granted, t / dur)):N0} P";
+                yield return null;
+            }
+            _pointsBig.text = $"+{granted:N0} P";
+
+            // 숫자가 다 오른 뒤에 터뜨려야 "얻었다"는 순간이 살아난다
+            if (fireworksFxPrefab != null)
+            {
+                Vector3 pos = _resultPanel.transform.position;
+                var cam = Camera.main;
+                if (cam != null) pos += (cam.transform.position - pos).normalized * 2f;
+                var fx = Instantiate(fireworksFxPrefab, pos, Quaternion.identity);
+                fx.transform.localScale = Vector3.one * 1.2f;
+                Destroy(fx, 4f);
+            }
         }
 
         void RefreshPlayHud()
@@ -581,70 +594,39 @@ namespace MiniGame1
         {
             _resultPanel = MakePanel(parent, "ResultPanel");
 
-            // ── minigame-ending 디자인 재구성 (와이어프레임 C-03 구조 유지)
-            // 상단 골드 글로우 + 회전 선버스트 + 뼈다귀 메달
+            // ── minigame-ending 디자인. 보상이 주인공이므로 CTA는 2개만 둔다.
             var glow = MakeImage(_resultPanel.transform, "Glow", Color.white, endGlow);
-            SetRect(glow.rectTransform, new Vector2(0, 288), new Vector2(430, 430));
+            SetRect(glow.rectTransform, new Vector2(0, 252), new Vector2(440, 440));
 
             var sun = MakeImage(_resultPanel.transform, "Sunburst", Color.white, endSunburst);
-            SetRect(sun.rectTransform, new Vector2(0, 286), new Vector2(158, 158));
+            SetRect(sun.rectTransform, new Vector2(0, 250), new Vector2(172, 172));
             _resultSunburst = sun.rectTransform;
 
             var medal = MakeImage(_resultPanel.transform, "Medal", Color.white, endMedal);
             medal.preserveAspect = true;
-            SetRect(medal.rectTransform, new Vector2(0, 286), new Vector2(102, 108));
+            SetRect(medal.rectTransform, new Vector2(0, 250), new Vector2(112, 118));
+            _resultMedal = medal.rectTransform;
 
-            _resultTitle = MakeText(_resultPanel.transform, "Title", "클리어!", 36, FontStyles.Bold, TitleInk,
-                new Vector2(0, 202), new Vector2(340, 48));
+            _resultTitle = MakeText(_resultPanel.transform, "Title", "클리어!", 38, FontStyles.Bold, TitleInk,
+                new Vector2(0, 160), new Vector2(340, 50));
             _resultSub = MakeText(_resultPanel.transform, "Sub", "", 13, FontStyles.Normal, SubInk,
-                new Vector2(0, 167), new Vector2(360, 24));
+                new Vector2(0, 124), new Vector2(360, 24));
 
-            // 보상 카드
+            // 보상 카드 — 화면의 주인공
             var card = MakeImage(_resultPanel.transform, "PointCard", Color.white, endCard);
-            SetRect(card.rectTransform, new Vector2(0, 98), new Vector2(320, 100));
-            _pointsBig = MakeText(card.transform, "PointsBig", "+0 P", 30, FontStyles.Bold, GoldInk,
-                new Vector2(0, 14), new Vector2(300, 44));
+            SetRect(card.rectTransform, new Vector2(0, 44), new Vector2(320, 116));
+            _pointsBig = MakeText(card.transform, "PointsBig", "+0 P", 36, FontStyles.Bold, GoldInk,
+                new Vector2(0, 18), new Vector2(300, 50));
             _pointsTotal = MakeText(card.transform, "PointsTotal", "", 12, FontStyles.Normal, SubInk,
-                new Vector2(0, -24), new Vector2(300, 22));
+                new Vector2(0, -28), new Vector2(300, 22));
 
-            // 브랜드 자사몰 배너 — 수집·쿠폰 없이 어필리에이트 진입만 (상위 PRD §7.3)
-            var bannerHolder = new GameObject("StoreBanner", typeof(RectTransform));
-            bannerHolder.transform.SetParent(_resultPanel.transform, false);
-            SetRect((RectTransform)bannerHolder.transform, new Vector2(0, -3), new Vector2(330, 86));
-            var bannerBg = MakeImage(bannerHolder.transform, "Bg", Color.white, endBanner);
-            Stretch(bannerBg.rectTransform);
-            _storeBanner = bannerHolder;
-
-            if (_brandLogoSprite != null)
-            {
-                _storeLogo = MakeImage(_storeBanner.transform, "Logo", Color.white, _brandLogoSprite);
-                _storeLogo.preserveAspect = true;
-                SetRect(_storeLogo.rectTransform, new Vector2(-88, 12), new Vector2(104, 26));
-            }
-            _storeLabel = MakeText(_storeBanner.transform, "StoreLabel", "(모의 협업)", 10, FontStyles.Normal,
-                new Color(SubInk.r, SubInk.g, SubInk.b, 0.8f), new Vector2(-88, -18), new Vector2(104, 18));
-            _storeTitle = MakeText(_storeBanner.transform, "StoreTitle", "", 12, FontStyles.Normal, SubInk,
-                new Vector2(78, 20), new Vector2(150, 20));
-            _storeButton = MakeEndingButton(_storeBanner.transform, "StoreBtn", "상점 보러가기", GoldBtnInk,
-                new Vector2(78, -12), new Vector2(150, 38), endBtnGold, endBtnGoldPressed, null);
-            _storeButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 14;
-            _storeButton.onClick.AddListener(() =>
-            {
-                var b = _seenBrand != null ? _seenBrand : (_brands.Length > 0 ? _brands[0] : null);
-                string url = b != null ? b.storeUrl : "";
-                GoStoreRequested?.Invoke(url); // 커머스 씬이 구독 (없으면 아래 폴백)
-                // WebGL에서는 새 탭으로 열린다 — 반드시 클릭 컨텍스트에서 호출 (§7.6 팝업 차단)
-                if (!string.IsNullOrEmpty(url)) Application.OpenURL(url);
-                else _resultCoach.text = "자사몰 링크는 커머스 씬에서 연결될 예정이에요!";
-            });
-
-            // 캐릭터견(단추) 말풍선 — 점선 아바타 + 점선 버블
+            // 캐릭터견(단추) 말풍선 — 기부 연결은 CTA 대신 이 한 줄로
             var avatar = MakeImage(_resultPanel.transform, "CoachAvatar", Color.white, endAvatar);
-            SetRect(avatar.rectTransform, new Vector2(-160, -82), new Vector2(52, 52));
+            SetRect(avatar.rectTransform, new Vector2(-160, -52), new Vector2(52, 52));
             MakeIcon(avatar.transform, "Face", dogFace, Vector2.zero, 38f);
 
             var bubble = MakeImage(_resultPanel.transform, "CoachBubble", Color.white, endBubble);
-            SetRect(bubble.rectTransform, new Vector2(24, -100), new Vector2(252, 84));
+            SetRect(bubble.rectTransform, new Vector2(24, -70), new Vector2(252, 84));
             var cap = MakeText(bubble.transform, "Cap", "단추", 12, FontStyles.Bold, GoldInk,
                 new Vector2(-90, 24), new Vector2(60, 18));
             cap.alignment = TextAlignmentOptions.Left;
@@ -652,23 +634,19 @@ namespace MiniGame1
                 new Vector2(8, -10), new Vector2(196, 46));
             _resultCoach.alignment = TextAlignmentOptions.TopLeft;
 
-            // CTA — 기부(골드) / 한 번 더(다크) / 허브로(점선)
-            var donateBtn = MakeEndingButton(_resultPanel.transform, "DonateBtn", "사료 기부하러 가기", GoldBtnInk,
-                new Vector2(0, -218), new Vector2(320, 58), endBtnGold, endBtnGoldPressed, null);
-            donateBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 19;
-            donateBtn.onClick.AddListener(() =>
-            {
-                GoDonateRequested?.Invoke(); // 홈 씬(E-01 기부)이 구독하는 연결 지점
-                _resultCoach.text = "기부 화면은 홈 씬에서 연결될 예정이에요!";
-            });
+            // CTA 2개 — 한 번 더(주) / 홈으로(보조)
+            _retryButton = MakeEndingButton(_resultPanel.transform, "RetryBtn", "한 번 더", GoldBtnInk,
+                new Vector2(0, -206), new Vector2(320, 58), endBtnGold, endBtnGoldPressed, StartGame);
+            _retryButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 19;
 
-            _retryButton = MakeEndingButton(_resultPanel.transform, "RetryBtn", "한 번 더", DarkBtnInk,
-                new Vector2(-82, -290), new Vector2(154, 52), endBtnDark, null, StartGame);
-            _retryButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 16;
-            var homeBtn = MakeEndingButton(_resultPanel.transform, "HomeBtn", "허브로", SubInk,
-                new Vector2(82, -290), new Vector2(154, 52), endBtnGhost, null, null);
-            homeBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 16;
-            homeBtn.onClick.AddListener(ShowEntry); // 홈 씬 연결은 인터페이스만 노출 (§5)
+            var homeBtn = MakeEndingButton(_resultPanel.transform, "HomeBtn", "홈으로", SubInk,
+                new Vector2(0, -278), new Vector2(320, 52), endBtnGhost, null, null);
+            homeBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 17;
+            homeBtn.onClick.AddListener(() =>
+            {
+                GoHomeRequested?.Invoke(); // 홈 씬이 구독. 미구독이면 아래 폴백
+                ShowEntry();
+            });
         }
 
         // 결과 화면 전용 버튼 — 아트를 원본 비율 그대로(Simple) 쓴다
