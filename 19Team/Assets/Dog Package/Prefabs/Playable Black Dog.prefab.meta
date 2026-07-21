@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a0c9d6bf0e217a043aa9d069691a1b40
+timeCreated: 1498666958
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Prefabs/Playable Black Dog.prefab
+  uploadId: 187314

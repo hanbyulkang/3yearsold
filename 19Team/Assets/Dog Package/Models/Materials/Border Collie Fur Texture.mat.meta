@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 6ef1c8880337ef84e8768c4afa82f2fb
+timeCreated: 1498327633
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Models/Materials/Border Collie Fur Texture.mat
+  uploadId: 187314

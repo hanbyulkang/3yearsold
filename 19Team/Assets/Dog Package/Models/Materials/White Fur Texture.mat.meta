@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: df9ba9c41bc0f1049869b0f21846aaa1
+timeCreated: 1498496264
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Models/Materials/White Fur Texture.mat
+  uploadId: 187314

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: b5595aeea4db0e240b64eb17d8991f25
+timeCreated: 1498498640
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Models/Materials/Black Fur Texture.mat
+  uploadId: 187314

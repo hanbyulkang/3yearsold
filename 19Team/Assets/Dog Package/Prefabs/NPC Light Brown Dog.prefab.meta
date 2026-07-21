@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 0f23f08b7c0c0b34cbd36a6db6a50bf3
+timeCreated: 1498576941
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Prefabs/NPC Light Brown Dog.prefab
+  uploadId: 187314

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 94fdf216dbdb47d428b1a5e6dda374e4
+timeCreated: 1498662398
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: -1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Prefabs/Demo Camera/Camera.prefab
+  uploadId: 187314

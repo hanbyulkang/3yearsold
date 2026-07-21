@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 5721d88f2360c8c4d86909d557fc9bfe
+timeCreated: 1498577092
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Prefabs/NPC White Dog.prefab
+  uploadId: 187314

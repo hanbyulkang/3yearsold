@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/private/tmp/claude-501/-Users-pinous-19Team/38f8dcc6-ad6a-4b0e-8070-be8b4f218e73/scratchpad/mat_backup\")",
+      "Bash(cp \"/Users/pinous/19Team/Assets/Dog Package/Models/Materials/\"*.mat \"/private/tmp/claude-501/-Users-pinous-19Team/38f8dcc6-ad6a-4b0e-8070-be8b4f218e73/scratchpad/mat_backup/\")",
+      "Bash(python3 convert_urp.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(rm -rf mat_backup_lit)",
+      "Bash(python3 convert_simplelit.py)",
+      "Bash(python3 -)",
+      "Bash(mcs -target:library -nostdlib -noconfig -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/UnityReferenceAssemblies/unity-4.8-api/mscorlib.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/UnityReferenceAssemblies/unity-4.8-api/System.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/UnityReferenceAssemblies/unity-4.8-api/System.Core.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/UnityReferenceAssemblies/unity-4.8-api/Facades/netstandard.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine/UnityEngine.CoreModule.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine/UnityEngine.PhysicsModule.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine/UnityEngine.AnimationModule.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine/UnityEditor.CoreModule.dll -r:/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/Managed/UnityEngine/UnityEngine.IMGUIModule.dll -out:/private/tmp/claude-501/-Users-pinous-19Team/38f8dcc6-ad6a-4b0e-8070-be8b4f218e73/scratchpad/check.dll Assets/Scripts/DogWanderAI.cs 'Assets/Dog Package/Scripts/Extension.cs' Assets/Editor/DogWanderSetup.)"
+    ]
+  }
+}

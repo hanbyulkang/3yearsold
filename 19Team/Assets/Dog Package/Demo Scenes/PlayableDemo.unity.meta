@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e04aa01b6b09e324c864a24c80ca611d
+timeCreated: 1498666628
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 94281
+  packageName: Animated Dogs Package
+  packageVersion: 1.0
+  assetPath: Assets/Dog Package/Demo Scenes/PlayableDemo.unity
+  uploadId: 187314
