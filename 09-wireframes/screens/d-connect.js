@@ -227,11 +227,11 @@ S.push({
     <div class="body">
       <div class="s">여기 답변이 견종·보호견·참여 추천에 그대로 쓰여요. 여건이 바뀌면 고쳐주세요.</div>
       <div class="card flat">
-        <div class="li"><div class="grow"><div class="xs">Q2 주거</div><div class="s">원룸 · 혼자</div></div><span class="btn sm">수정</span></div>
-        <div class="li"><div class="grow"><div class="xs">Q3 함께할 시간</div><div class="s">2~4시간</div></div><span class="btn sm">수정</span></div>
-        <div class="li"><div class="grow"><div class="xs">Q4 월 지출</div><div class="s">5~10만원</div></div><span class="btn sm">수정</span></div>
-        <div class="li"><div class="grow"><div class="xs">Q5 행동 문제가 생기면</div><div class="s">"왜 짖는지 먼저 찾아볼 것 같아요…"</div></div><span class="btn sm">수정</span></div>
-        <div class="li"><div class="grow"><div class="xs">Q8 원하는 하루</div><div class="s">"퇴근하고 같이 산책하는 하루"</div></div><span class="btn sm">수정</span></div>
+        <div class="li"><div class="grow"><div class="xs">Q1 기본 여건</div><div class="s">28세 · 원룸 · 혼자</div></div><span class="btn sm">수정</span></div>
+        <div class="li"><div class="grow"><div class="xs">Q2 함께할 시간</div><div class="s">2~4시간</div></div><span class="btn sm">수정</span></div>
+        <div class="li"><div class="grow"><div class="xs">Q3 월 지출</div><div class="s">5~10만원</div></div><span class="btn sm">수정</span></div>
+        <div class="li"><div class="grow"><div class="xs">Q4 행동 문제가 생기면</div><div class="s">"왜 짖는지 먼저 찾아볼 것 같아요…"</div></div><span class="btn sm">수정</span></div>
+        <div class="li"><div class="grow"><div class="xs">Q5 원하는 하루</div><div class="s">"퇴근하고 같이 산책하는 하루"</div></div><span class="btn sm">수정</span></div>
       </div>
       <div class="xs">수정하면 추천이 새로 계산돼요</div>
     </div>

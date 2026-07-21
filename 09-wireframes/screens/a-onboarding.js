@@ -35,15 +35,15 @@ S.push({
   no: 'A-02',
   group: 'A. 온보딩',
   prd: '§4.3',
-  title: '설문 — 정량 문항 (Q1~Q4, Q6, Q9~Q10)',
-  purpose: '문항 옆에 근거 카드가 붙는 것이 이 설문의 정체성. 한 화면에 문항 1~2개.',
+  title: '설문 — 정량 문항 (Q1~Q3)',
+  purpose: '총 5문항. 문항 옆에 근거 카드가 붙는 것이 이 설문의 정체성.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">3/11</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">2/5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:27%"></i></div>
+      <div class="gauge sm"><i style="width:40%"></i></div>
       <div class="card">
-        <div class="h3">Q3. 하루 중 강아지와 함께 있을 수 있는 시간은?</div>
+        <div class="h3">Q2. 하루 중 강아지와 함께 있을 수 있는 시간은?</div>
         <div class="evidence">
           <div class="cap">왜 묻나요?</div>
           <div class="txt">파양 고려 이유 3위가 '예상보다 많은 시간'(25.7%)이었어요</div>
@@ -57,7 +57,7 @@ S.push({
         </div>
       </div>
       <div class="card">
-        <div class="h3">Q4. 월 지출로 감당 가능한 범위는?</div>
+        <div class="h3">Q3. 월 지출로 감당 가능한 범위는?</div>
         <div class="evidence">
           <div class="cap">왜 묻나요?</div>
           <div class="txt">파양 고려 이유 2위가 '예상보다 큰 지출'(35.2%)이었어요</div>
@@ -88,16 +88,16 @@ S.push({
   no: 'A-03',
   group: 'A. 온보딩',
   prd: '§4.3',
-  title: '설문 — 필수 자유 서술 (Q5·Q8·Q11)',
+  title: '설문 — 자유 서술 (Q4·Q5)',
   purpose: '자유 서술이 추천의 주 재료. 짧으면 AI가 1회 되묻는다.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">5/11</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">설문</span><span class="act">4/5</span></div>
     <div class="body">
-      <div class="gauge sm"><i style="width:45%"></i></div>
+      <div class="gauge sm"><i style="width:80%"></i></div>
       <div class="card">
         <div class="row between">
-          <div class="h3" style="flex:1">Q5. 강아지가 밤새 짖거나 물건을 망가뜨린다면 어떻게 하실 것 같으세요?</div>
+          <div class="h3" style="flex:1">Q4. 강아지가 밤새 짖거나 물건을 망가뜨린다면 어떻게 하실 것 같으세요?</div>
           <span class="badge warn">필수</span>
         </div>
         <div class="evidence">
