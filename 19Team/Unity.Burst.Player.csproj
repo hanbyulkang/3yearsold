@@ -338,7 +338,7 @@
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/PlaybackEngines/MacStandaloneSupport/Variations/mono/Managed/UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst.Unsafe">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.burst@6bb9aca3ef38/Unity.Burst.Unsafe.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.burst@6bb9aca3ef38/Unity.Burst.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/NetStandard/ref/2.1.0/netstandard.dll</HintPath>

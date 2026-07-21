@@ -520,7 +520,7 @@
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst.Unsafe">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.burst@6bb9aca3ef38/Unity.Burst.Unsafe.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.burst@6bb9aca3ef38/Unity.Burst.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.iOS.Extensions.Xcode">
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>

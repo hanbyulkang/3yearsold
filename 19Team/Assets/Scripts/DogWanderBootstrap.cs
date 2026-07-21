@@ -12,6 +12,10 @@ public static class DogWanderBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void SetupSceneDog()
     {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (!activeScene.IsValid() || !activeScene.name.Equals("Suntail Village", StringComparison.OrdinalIgnoreCase))
+            return;
+
         Transform fence = FindNamedTransform("Fence");
         BoxCollider area = fence != null ? BuildAreaFromFence(fence) : null;
 

@@ -13,6 +13,7 @@ public class DogHeartInteraction : MonoBehaviour
     [SerializeField] private RectTransform _dogHeart;
     [SerializeField] private Button _dogHeartButton;
     [SerializeField] private Animator _dogAnimator;
+    [SerializeField] private MissionUIController _missionController;
 
     [Header("Timing")]
     [Tooltip("Random minimum/maximum delay before the heart appears.")]
@@ -71,6 +72,9 @@ public class DogHeartInteraction : MonoBehaviour
 
     public void Initialize(Animator dogAnimator)
     {
+        if (!IsActualDogAnimator(dogAnimator))
+            dogAnimator = ResolveDogAnimator();
+
         _dogAnimator = dogAnimator;
         _dogAI = dogAnimator != null ? dogAnimator.GetComponent<DogWanderAI>() : null;
         _dogRoot = dogAnimator != null ? FindDogRoot(dogAnimator.transform) : null;
@@ -79,6 +83,28 @@ public class DogHeartInteraction : MonoBehaviour
             : Array.Empty<ParticleSystem>();
         EnsureRaycastTarget();
         UpdateHeadPosition();
+    }
+
+    private bool IsActualDogAnimator(Animator candidate)
+    {
+        if (candidate == null || candidate.transform is RectTransform)
+            return false;
+        if (_dogHeart != null && (candidate.transform == _dogHeart || candidate.transform.IsChildOf(_dogHeart)))
+            return false;
+        RuntimeAnimatorController controller = candidate.runtimeAnimatorController;
+        return controller != null && controller.name.IndexOf("DogAnimator", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private Animator ResolveDogAnimator()
+    {
+        Animator[] animators = UnityEngine.Object.FindObjectsByType<Animator>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Animator candidate in animators)
+            if (IsActualDogAnimator(candidate))
+                return candidate;
+
+        Debug.LogError("[DogHeart] A real Dog Animator using DogAnimatorController was not found.", this);
+        return null;
     }
 
     private void Awake()
@@ -160,6 +186,8 @@ public class DogHeartInteraction : MonoBehaviour
 
         PlayDogParticles();
         PlayBoneReward();
+        if (_missionController != null)
+            _missionController.RegisterPetOrPlay();
 
         HideAndReschedule();
     }
@@ -220,7 +248,33 @@ public class DogHeartInteraction : MonoBehaviour
         }
     }
 
-    private void PlayBoneReward()
+    public void PlayBoneReward()
+    {
+        PlayBoneRewardAt(_rect.position);
+    }
+
+    /// <summary>Spawns the bone reward from a world object such as the food plate.</summary>
+    public void PlayBoneRewardFromWorld(Vector3 worldPosition)
+    {
+        RectTransform layer = _rewardLayer != null
+            ? _rewardLayer
+            : (_canvas != null ? (RectTransform)_canvas.transform : null);
+        if (layer == null)
+            return;
+
+        Camera projectionCamera = _camera != null ? _camera : Camera.main;
+        if (projectionCamera == null)
+            return;
+
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(projectionCamera, worldPosition);
+        Camera uiCamera = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? _canvas.worldCamera
+            : null;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(layer, screenPoint, uiCamera, out Vector3 uiPosition))
+            PlayBoneRewardAt(uiPosition);
+    }
+
+    private void PlayBoneRewardAt(Vector3 startPosition)
     {
         if (_boneIconSource == null || _boneIconSource.sprite == null || _boneTarget == null)
         {
@@ -238,17 +292,17 @@ public class DogHeartInteraction : MonoBehaviour
         int max = Mathf.Max(_boneRewardCount.x, _boneRewardCount.y);
         int count = UnityEngine.Random.Range(Mathf.Max(1, min), Mathf.Max(1, max) + 1);
         for (int i = 0; i < count; i++)
-            StartCoroutine(FlyBoneIcon(layer, i * 0.055f));
+            StartCoroutine(FlyBoneIcon(layer, startPosition, i * 0.055f));
     }
 
-    private IEnumerator FlyBoneIcon(RectTransform layer, float delay)
+    private IEnumerator FlyBoneIcon(RectTransform layer, Vector3 startPosition, float delay)
     {
         GameObject iconObject = new GameObject("Flying Bone Reward", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         RectTransform iconRect = (RectTransform)iconObject.transform;
         iconRect.SetParent(layer, false);
         iconRect.SetAsLastSibling();
         iconRect.sizeDelta = _boneIconSize;
-        iconRect.position = _rect.position;
+        iconRect.position = startPosition;
 
         Image icon = iconObject.GetComponent<Image>();
         icon.sprite = _boneIconSource.sprite;

@@ -51,6 +51,7 @@
     <Compile Include="Assets/Modern UI Pack/Scripts/Slider/SliderManager.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Notification/NotificationManager.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerSwitch.cs" />
+    <Compile Include="Assets/Scripts/SurveyReferenceUI.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Context Menu/ContextMenuSubMenu.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Toggle/CustomToggle.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Dropdown/DropdownMultiSelect.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerHSelector.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Rendering/Ripple.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Layout Group/RadialLayoutGroupEditor.cs" />
+    <Compile Include="Assets/Scripts/DogFoodInteraction.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerProgressBar.cs" />
     <Compile Include="Assets/Raygeas/Suntail Village/Assets/Scripts/Interactive.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Icon/AnimatedIconHandler.cs" />
@@ -79,20 +81,22 @@
     <Compile Include="Assets/Modern UI Pack/Scripts/Switch/SwitchManagerEditor.cs" />
     <Compile Include="Assets/Raygeas/Suntail Village/Assets/Scripts/AudioZoneControl.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Core/MUIPInternalTools.cs" />
+    <Compile Include="Assets/Scripts/MissionDataSet.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Demo/DemoElementSway.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Slider/RadialSliderEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Dropdown/CustomDropdown.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/ListView/ListViewRow.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Slider/RangeMinSlider.cs" />
     <Compile Include="Assets/Dog Package/Scripts/NonPlayableDemo.cs" />
+    <Compile Include="Assets/Scripts/SurveyFlowController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerCustom.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/ListView/ListViewEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerModalWindow.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Horizontal Selector/HorizontalSelector.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Dropdown/DropdownMultiSelectEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerToggle.cs" />
-    <Compile Include="Assets/Modern UI Pack/Scripts/Context Menu/ContextMenuContent.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Input Field/CustomInputField.cs" />
+    <Compile Include="Assets/Modern UI Pack/Scripts/Context Menu/ContextMenuContent.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Tooltip/TooltipManagerEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Slider/RangeMaxSlider.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Rendering/UIGradientEditor.cs" />
@@ -109,23 +113,28 @@
     <Compile Include="Assets/Modern UI Pack/Scripts/Demo/LaunchURL.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Charts/PieChart.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Demo/DemoListShadow.cs" />
+    <Compile Include="Assets/Scripts/MissionUIController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Notification/NotificationManagerEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Demo/DemoElementSwayParent.cs" />
+    <Compile Include="Assets/Scripts/DetailTabController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/ListView/ListView.cs" />
     <Compile Include="Assets/TutorialInfo/Scripts/Readme.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerInputField.cs" />
     <Compile Include="Assets/Dog Package/Scripts/Demo Camera/FreeLookCam.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Button/ButtonManager.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerDropdownItem.cs" />
+    <Compile Include="Assets/Scripts/SurveyOpenAIAnalysis.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Icon/IconManagerEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerScrollbar.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerWindowManager.cs" />
     <Compile Include="Assets/Dog Package/Scripts/DogCharacterController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Notification/NotificationStacking.cs" />
-    <Compile Include="Assets/Modern UI Pack/Scripts/Dropdown/CustomDropdownEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Progress Bar/ProgressBarEditor.cs" />
+    <Compile Include="Assets/Modern UI Pack/Scripts/Dropdown/CustomDropdownEditor.cs" />
+    <Compile Include="Assets/Scripts/DetailPanelAnimator.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Slider/RangeSlider.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerProgressBarLoop.cs" />
+    <Compile Include="Assets/Scripts/DogPoopInteraction.cs" />
     <Compile Include="Assets/Scripts/DogWanderAI.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Context Menu/ContextMenuContentEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerEditor.cs" />
@@ -134,6 +143,7 @@
     <Compile Include="Assets/Scripts/DogWanderBootstrap.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManager.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Progress Bar/ProgressBar.cs" />
+    <Compile Include="Assets/Scripts/DecorationPlacementDataSet.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Layout Group/RadialLayoutGroup.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerSliderEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Button/ButtonManagerEditor.cs" />
@@ -141,6 +151,7 @@
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerPieChart.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerContextMenu.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerAnimatedIcon.cs" />
+    <Compile Include="Assets/Scripts/DecorationPlacementController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Icon/IconManager.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Layout Group/LayoutGroupFix.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Rendering/UIGradient.cs" />
@@ -148,6 +159,7 @@
     <Compile Include="Assets/Raygeas/Suntail Village/Assets/Scripts/PlayerController.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Window/WindowManager.cs" />
     <Compile Include="Assets/Scripts/DogHeartInteraction.cs" />
+    <Compile Include="Assets/Scripts/BottomNavigationController.cs" />
     <Compile Include="Assets/Raygeas/Suntail Village/Assets/Scripts/LightCulling.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/Window/WindowManagerEditor.cs" />
     <Compile Include="Assets/Modern UI Pack/Scripts/UI Manager/UIManagerNotification.cs" />
@@ -391,19 +403,19 @@
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/PlaybackEngines/MacStandaloneSupport/Variations/mono/Managed/UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.LowLevel.ILSupport/Unity.Collections.LowLevel.ILSupport.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.LowLevel.ILSupport/Unity.Collections.LowLevel.ILSupport.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.ext.nunit@d8c07649098d/net40/unity-custom/nunit.framework.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.ext.nunit@d8c07649098d/net40/unity-custom/nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Hashing">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.Tests/System.IO.Hashing/System.IO.Hashing.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.Tests/System.IO.Hashing/System.IO.Hashing.dll</HintPath>
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.visualscripting@8bed5ad90189/Runtime/VisualScripting.Flow/Dependencies/NCalc/Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.visualscripting@8bed5ad90189/Runtime/VisualScripting.Flow/Dependencies/NCalc/Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>/Users/pinous/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.Tests/System.Runtime.CompilerServices.Unsafe/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>/Users/pinous/Documents/GitHub/3yearsold/19Team/Library/PackageCache/com.unity.collections@12999e356c23/Unity.Collections.Tests/System.Runtime.CompilerServices.Unsafe/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>/Applications/Unity/Hub/Editor/6000.3.13f1/Unity.app/Contents/Resources/Scripting/NetStandard/ref/2.1.0/netstandard.dll</HintPath>

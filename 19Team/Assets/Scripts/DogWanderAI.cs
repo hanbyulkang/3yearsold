@@ -1,4 +1,6 @@
 using System.Collections;
+using System;
+using Random = UnityEngine.Random;
 using UnityEngine;
 using Extension;
 
@@ -80,6 +82,9 @@ public class DogWanderAI : MonoBehaviour
     private readonly RaycastHit[] _hits = new RaycastHit[8];
     private float _fenceAvoidCooldown;
     private Coroutine _happyRoutine;
+    private Coroutine _poopRoutine;
+    private bool _specialAction;
+    public bool IsPerformingSpecialAction => _specialAction;
 
     /// <summary>Runtime/editor setup hook used by the automatic scene bootstrap.</summary>
     public void SetWanderArea(BoxCollider area)
@@ -89,9 +94,114 @@ public class DogWanderAI : MonoBehaviour
 
     public void PlayHappyReaction()
     {
+        if (_specialAction)
+            return;
         if (_happyRoutine != null)
             StopCoroutine(_happyRoutine);
         _happyRoutine = StartCoroutine(HappyReactionRoutine());
+    }
+
+    public bool PerformPoop(float sittingSeconds, Action<Vector3> onFinished)
+    {
+        if (_specialAction || _poopRoutine != null)
+            return false;
+        _poopRoutine = StartCoroutine(PoopRoutine(Mathf.Max(1f, sittingSeconds), onFinished));
+        return true;
+    }
+
+    private IEnumerator PoopRoutine(float sittingSeconds, Action<Vector3> onFinished)
+    {
+        BeginSpecialAction();
+        EnterIdle();
+        Halt();
+        _animator.SetBool(AnimationParameters.IsWalking, false);
+        _animator.SetBool(AnimationParameters.IsRunning, false);
+        _animator.Play(AnimationNames.SitDown, 0, 0f);
+        yield return new WaitForSeconds(sittingSeconds);
+
+        Vector3 poopPosition = transform.position - transform.forward * 0.45f;
+        _animator.Play(AnimationNames.GetUpFromSit, 0, 0f);
+        yield return new WaitForSeconds(0.9f);
+        onFinished?.Invoke(poopPosition);
+
+        _poopRoutine = null;
+        EndSpecialAction();
+    }
+
+    public bool PerformFeed(Transform plate, float stopDistance, float eatingSeconds, Action onFinished)
+    {
+        if (plate == null || _specialAction)
+            return false;
+        StartCoroutine(FeedRoutine(plate, Mathf.Max(0.25f, stopDistance), Mathf.Max(0.5f, eatingSeconds), onFinished));
+        return true;
+    }
+
+    private IEnumerator FeedRoutine(Transform plate, float stopDistance, float eatingSeconds, Action onFinished)
+    {
+        BeginSpecialAction();
+        _animator.SetBool(AnimationParameters.IsWalking, false);
+        _animator.SetBool(AnimationParameters.IsRunning, true);
+        _animator.CrossFade(AnimationNames.Run, 0.15f, 0, 0f);
+        float timeout = 12f;
+        while (plate != null && timeout > 0f)
+        {
+            Vector3 target = plate.position;
+            Vector3 delta = target - _rigidbody.position;
+            delta.y = 0f;
+            if (delta.magnitude <= stopDistance) break;
+
+            Quaternion facing = Quaternion.LookRotation(delta.normalized, Vector3.up);
+            _rigidbody.MoveRotation(Quaternion.RotateTowards(_rigidbody.rotation, facing, _turnSpeed * Time.fixedDeltaTime));
+            _rigidbody.MovePosition(_rigidbody.position + delta.normalized * _runSpeed * Time.fixedDeltaTime);
+            timeout -= Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        Halt();
+        _animator.SetBool(AnimationParameters.IsRunning, false);
+        if (plate != null)
+        {
+            Vector3 look = plate.position - transform.position;
+            look.y = 0f;
+            if (look.sqrMagnitude > 0.001f) _rigidbody.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
+        }
+        _animator.CrossFade(AnimationNames.Bite, 0.15f, 0, 0f);
+
+        // Pause near the lowered-head part of Bite so eating reads as a held pose,
+        // then resume the clip to lift the head naturally.
+        float lowerHeadTime = Mathf.Min(0.45f, eatingSeconds * 0.25f);
+        yield return new WaitForSeconds(lowerHeadTime);
+        _animator.speed = 0f;
+        yield return new WaitForSeconds(Mathf.Max(0.35f, eatingSeconds - lowerHeadTime - 0.45f));
+        _animator.speed = 1f;
+        yield return new WaitForSeconds(0.45f);
+        onFinished?.Invoke();
+        EndSpecialAction(true);
+    }
+
+    private void BeginSpecialAction()
+    {
+        _specialAction = true;
+        if (_happyRoutine != null) { StopCoroutine(_happyRoutine); _happyRoutine = null; }
+        EnterIdle();
+        Halt();
+        _animator.SetBool(AnimationParameters.IsWalking, false);
+        _animator.SetBool(AnimationParameters.IsRunning, false);
+        _animator.ResetTrigger(AnimationParameters.Bark);
+        _animator.ResetTrigger(AnimationParameters.Sit);
+        _animator.ResetTrigger(AnimationParameters.LayDown);
+        _animator.ResetTrigger(AnimationParameters.Jump);
+        _animator.ResetTrigger(AnimationParameters.GetUp);
+    }
+
+    private void EndSpecialAction(bool moveImmediately = false)
+    {
+        _animator.CrossFade(AnimationNames.Idle, 0.2f, 0, 0f);
+        _specialAction = false;
+        if (moveImmediately && TryPickDestination())
+            EnterMoving();
+        else
+            EnterIdle();
     }
 
     private IEnumerator HappyReactionRoutine()
@@ -133,6 +243,9 @@ public class DogWanderAI : MonoBehaviour
     {
         _fenceAvoidCooldown -= Time.deltaTime;
 
+        if (_specialAction)
+            return;
+
         switch (_state)
         {
             case State.Idle:
@@ -151,7 +264,7 @@ public class DogWanderAI : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_state != State.Moving)
+        if (_specialAction || _state != State.Moving)
         {
             Halt();
             return;
