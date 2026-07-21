@@ -42,6 +42,8 @@ supabase/
     0004_auth.sql        auth.users 연동 — 가입 시 프로필 자동 생성
     0005_account_deletion.sql  탈퇴 시 원장 익명 보존 (G-01)
     0006_breeds.sql      견종 화이트리스트 + 고정 견종 (A-09, D-021)
+    0007_breeds_table.sql      견종 마스터 10종 + 사진·라이선스
+    0008_fix_attribution.sql   출처 표기 플래그 반전 수정 + 동기화 트리거
   seed.sql               config — 밸런스 상수는 전부 여기 (클라 복제 금지)
   functions/
     _shared/shelter.ts   vPetInfo 정규화·CONT 섹션 분리
@@ -119,6 +121,8 @@ psql "$DB_URL" -f supabase/seed.sql
 | **Edge Function 5종 배포** | survey-analyze · survey-probe · recommend · shelter-sync · shelter-traits |
 | **프로덕션 데모 경로** | 가입 → 설문 → AI 분석 → 보호견 추천까지 배포된 함수로 완주 |
 | **보호견 성격 구조화** | 17/24 생성 (입양문의가능 11건 전건 완료) |
+| **견종 마스터** | 10종 + 사진 (Storage `breeds` 버킷, 전건 HTTP 200) |
+| **A 온보딩 경로** | 가입 → 설문 → AI 분석 → 견종 3개(사진·성격·출처) 완주 |
 
 로컬 검증은 Postgres 16, 운영은 17이므로 **원격에서 무결성 테스트를 다시 돌렸습니다.**
 
@@ -136,7 +140,22 @@ append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바
 
 ---
 
-## 5. 구현하며 발견한 것
+## 5. 견종 사진 — 라이선스
+
+Wikimedia Commons에서 **상업적 이용이 허용되는 라이선스만** 골라 받아 Supabase Storage(public 버킷 `breeds`)에 올렸습니다. 외부 링크를 그대로 쓰면 원본 삭제·핫링크 차단 시 화면이 깨집니다.
+
+| 라이선스 | 종 | 출처 표기 |
+|---|---|---|
+| CC0 · Public domain | 4 | 불필요 |
+| CC BY 2.0/3.0/4.0 · CC BY-SA 3.0 | 6 | **의무** |
+
+`attribution_required`가 true인 견종은 **화면에 작가명과 라이선스를 함께 노출해야 합니다.** `survey-analyze` 응답의 `breeds[].attribution`에 담겨 나갑니다.
+
+이 값은 손으로 넣지 않고 `image_license`에서 트리거로 파생됩니다 (0008). 처음 0007에서 플래그를 거꾸로 넣었다가 잡혔고, 같은 실수가 반복되지 않도록 파생값으로 바꿨습니다.
+
+---
+
+## 6. 구현하며 발견한 것
 
 **`[성격]` 헤더가 없는 레코드가 있습니다** (seq 508 '미요'). 성격 항목이 `[보호 센터]` 뒤에 헤더 없이 나열돼 있어, 헤더 기반 파싱이 실패했습니다. 항목 라벨(`사람 친화력`, `에너지 레벨` 등)로 찾는 폴백을 넣어 24건 전부 추출됩니다. — 픽스처가 아니라 실데이터로 테스트했기에 잡힌 결함입니다.
 
@@ -144,7 +163,7 @@ append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바
 
 ---
 
-## 6. 아직 안 한 것
+## 7. 아직 안 한 것
 
 - **레벨 곡선·방치 하락** — config에 상수만 있고 함수 미구현
 - **미니게임 서버 검증** — `game_sessions` 테이블만 있고 재계산 로직 미구현 (C-02)
@@ -153,7 +172,7 @@ append-only 예외는 **이 한 가지뿐**입니다. `user_id`를 `null`로 바
 - **CRON 미등록** — `shelter-sync`·`shelter-traits` 주기 실행 스케줄 필요 (함수는 배포됨)
 - **Claude 어댑터 미구현** — 키 확보 시 `_shared/llm.ts`의 `anthropic()`만 채우면 된다
 
-## 7. 주의
+## 8. 주의
 
 - **인증키는 이 저장소에 없습니다.** `.env.local`(gitignore)에만 두고, 팀원은 각자 발급받습니다.
 - 로컬 검증은 Docker 없이 돌도록 만들었습니다. `supabase start`를 쓸 수 있는 환경이면 `00_local_auth_stub.sql`은 불필요합니다.
