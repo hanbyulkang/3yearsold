@@ -41,8 +41,8 @@ public static class SurveyOpenAIAnalysisAutoWire
         so.FindProperty("_first").objectReferenceValue = first;
         so.FindProperty("_find").objectReferenceValue = find;
         so.FindProperty("_dog").objectReferenceValue = dog;
-        SerializedProperty model = so.FindProperty("_model");
-        if (model.stringValue == "gpt-5.6-luna") model.stringValue = "gpt-4.1-mini";
+        // 모델·API 키 필드는 제거됐다. LLM 호출이 Edge Function으로 넘어가면서
+        // 모델 선택은 서버 환경변수(LLM_MODEL)가 정한다 — 클라가 정하지 않는다.
         so.ApplyModifiedPropertiesWithoutUndo();
 
         if (first != null) first.SetActive(true);
