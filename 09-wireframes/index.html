@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D+ (디플러스) — 전체 화면 와이어프레임</title>
+<link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+
+<div class="doc" id="doc" data-view="gallery" data-notes="on">
+
+  <!-- ================= 좌측 화면 목록 ================= -->
+  <aside class="nav">
+    <h1>D+ 와이어프레임</h1>
+    <div class="sub">
+      AI 반려견 육성 × 보호견 참여 추천 플랫폼<br>
+      PRD v1.1 기준 · 프레임 393×852
+    </div>
+    <input class="nav-search" id="search" type="text" placeholder="화면 검색 (이름·번호·PRD절)">
+    <div id="navList"></div>
+  </aside>
+
+  <!-- ================= 본문 ================= -->
+  <main class="main">
+
+    <div class="toolbar">
+      <span class="t-title">보기</span>
+      <button class="tgl" id="viewGallery" aria-pressed="true">갤러리</button>
+      <button class="tgl" id="viewSingle" aria-pressed="false">단일 화면</button>
+      <span style="width:10px"></span>
+      <span class="t-title">주석</span>
+      <button class="tgl" id="notesToggle" aria-pressed="true">개발 주석 표시</button>
+      <span style="width:10px"></span>
+      <span class="t-title">그룹</span>
+      <span id="groupChips" class="row wrap" style="gap:6px"></span>
+      <span class="grow"></span>
+      <span class="s" id="count"></span>
+    </div>
+
+    <section class="intro">
+      <h2>D+ 화면 와이어프레임 (37화면, PRD v1.1 기준)</h2>
+      <ul>
+        <li>프레임 <code>393×852</code> 모바일 세로. 보호견 정보는 공공 API 동기화 — 보호소용 화면은 없다.</li>
+        <li><b>노란 박스</b> = 개발 주석(상단 토글로 숨김) · <b>보라 점선</b> = LLM 생성 영역 · <b>빨간 박스</b> = 준법·정직성 고지.</li>
+        <li>용어: "유기견" 금칙 → <b>보호견</b>. 재화는 발바닥·포인트·육포 3종.</li>
+      </ul>
+      <p style="margin-bottom:0">
+        <b>해커톤 데모 경로(§2)</b>:
+        A-02 설문 → A-04 분석 → A-05 견종 3택 → A-06 성격 → B-01 마당 →
+        C-02 3매치 → C-03 보상 → D-02 보호견 추천 → D-04 참여 방식 → F-03 커머스.
+      </p>
+    </section>
+
+    <div class="grid" id="grid"></div>
+
+    <p class="s" id="empty" style="display:none">조건에 맞는 화면이 없습니다.</p>
+  </main>
+</div>
+
+<!-- 화면 정의 (그룹별 모듈) -->
+<script>window.SCREENS = [];</script>
+<script src="screens/a-onboarding.js"></script>
+<script src="screens/b-care.js"></script>
+<script src="screens/c-game.js"></script>
+<script src="screens/d-connect.js"></script>
+<script src="screens/e-donation.js"></script>
+<script src="screens/f-commerce.js"></script>
+<script src="screens/g-account.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
