@@ -64,6 +64,15 @@
   - next_action: 설문 화면 디자인이 나오면 `demo.html`만 교체. 서버 `/api/survey/probe` 구현 필요
   - evidence: Node 상태머신 테스트 통과(검증·되묻기·건너뛰기·원문보존), 브라우저 실동작 확인
 
+- [x] 백엔드 P0 — 스키마·경제 무결성·RLS·보호견 동기화
+  - id: backend-p0
+  - owner: Claude (hanbyulkang 세션)
+  - status: verified
+  - input: PRD §4·§5, 와이어프레임 개발 주석 36건, D-019
+  - output: `11-backend/` (마이그레이션 3 · 시드 · Edge Function · 테스트 5종)
+  - next_action: Supabase 프로젝트 연결 후 배포. survey-analyze·game-submit 핸들러와 LLM 연동 구현
+  - evidence: 단언 40건 통과 — 경제 무결성 13 · RLS 공격 11 · 파서 10 · 실 API 전 구간 6 (`./tests/run.sh`)
+
 ## 막힘
 
 ```markdown

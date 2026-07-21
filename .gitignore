@@ -23,3 +23,6 @@
 
 # Large local evidence; keep only the index in the shared Vault
 08-evidence/attachments/
+
+# Supabase CLI 로컬 상태 (링크된 프로젝트 정보·버전 캐시)
+11-backend/supabase/.temp/
