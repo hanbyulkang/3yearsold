@@ -152,6 +152,7 @@ public sealed class DogFoodInteraction : MonoBehaviour
             _boneRewardSource.PlayBoneRewardFromWorld(rewardOrigin);
         if (_missionController != null)
             _missionController.RegisterFeed();
+        PlayerLevelStore.AddExperience(10);
         HideImmediately();
         _timer = float.PositiveInfinity;
         if (!_feedQueued)
@@ -170,6 +171,7 @@ public sealed class DogFoodInteraction : MonoBehaviour
             yield return null;
         while (!_dog.PerformFeed(_plate, _approachDistance, _eatingSeconds, null))
             yield return null;
+        HomeAudioManager.PlayEat();
         _feedQueued = false;
         ScheduleNextMeal();
     }

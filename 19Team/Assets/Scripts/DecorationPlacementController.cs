@@ -27,7 +27,12 @@ public sealed class DecorationPlacementController : MonoBehaviour
     [SerializeField] private float _rayDistance = 500f;
     [SerializeField] private Color _previewEmission = new Color(0.05f, 0.75f, 1f, 1f);
     [SerializeField] private float _emissionIntensity = 4f;
-    [SerializeField] private float _buildFadeDuration = 0.8f;
+    [SerializeField] private float _placementFlashMultiplier = 2.5f;
+    [SerializeField] private float _placementFlashHold = 0.12f;
+    [SerializeField] private float _buildFadeDuration = 1.4f;
+
+    private const string DecorationResetVersionKey = "decoration_save_reset_version";
+    private const int DecorationResetVersion = 1;
 
     private Camera _camera;
     private GameObject _preview;
@@ -41,6 +46,13 @@ public sealed class DecorationPlacementController : MonoBehaviour
     {
         _camera = Camera.main;
         if (_dataSet == null) return;
+        if (PlayerPrefs.GetInt(DecorationResetVersionKey, 0) < DecorationResetVersion)
+        {
+            _dataSet.ClearSavedState();
+            PlayerPrefs.SetInt(DecorationResetVersionKey, DecorationResetVersion);
+            PlayerPrefs.Save();
+            Debug.Log("[Decoration] Saved placements were reset.");
+        }
         _dataSet.Load();
         for (int i = 0; i < _items.Length; i++)
         {
@@ -116,7 +128,11 @@ public sealed class DecorationPlacementController : MonoBehaviour
         _placingIndex = -1;
         foreach (Collider collider in placed.GetComponentsInChildren<Collider>(true)) collider.enabled = true;
         _dataSet.SetApplied(index, placed.transform.position, placed.transform.rotation);
-        StartCoroutine(FinishBuildEffect(placed));
+        Renderer[] renderers = _previewRenderers;
+        Material[][] originals = _originalMaterials;
+        _previewRenderers = null;
+        _originalMaterials = null;
+        StartCoroutine(FinishBuildEffect(placed, renderers, originals));
         RefreshButtons();
     }
 
@@ -139,20 +155,37 @@ public sealed class DecorationPlacementController : MonoBehaviour
         }
     }
 
-    private IEnumerator FinishBuildEffect(GameObject placed)
+    private IEnumerator FinishBuildEffect(GameObject placed, Renderer[] renderers, Material[][] originals)
     {
+        if (placed == null || renderers == null || originals == null) yield break;
+
+        float peakIntensity = _emissionIntensity * Mathf.Max(1f, _placementFlashMultiplier);
+        SetEmissionIntensity(renderers, peakIntensity);
+        if (_placementFlashHold > 0f)
+            yield return new WaitForSeconds(_placementFlashHold);
+
         float elapsed = 0f;
         while (elapsed < _buildFadeDuration)
         {
             elapsed += Time.deltaTime;
-            float intensity = Mathf.Lerp(_emissionIntensity, 0f, Mathf.Clamp01(elapsed / _buildFadeDuration));
-            foreach (Renderer renderer in _previewRenderers)
-                foreach (Material material in renderer.materials)
-                    if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", _previewEmission * intensity);
+            float t = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, _buildFadeDuration));
+            float eased = t * t * (3f - 2f * t);
+            SetEmissionIntensity(renderers, Mathf.Lerp(peakIntensity, 0f, eased));
             yield return null;
         }
-        for (int r = 0; r < _previewRenderers.Length; r++)
-            if (_previewRenderers[r] != null) _previewRenderers[r].sharedMaterials = _originalMaterials[r];
+        for (int r = 0; r < renderers.Length; r++)
+            if (renderers[r] != null) renderers[r].sharedMaterials = originals[r];
+    }
+
+    private void SetEmissionIntensity(Renderer[] renderers, float intensity)
+    {
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null) continue;
+            foreach (Material material in renderer.materials)
+                if (material.HasProperty("_EmissionColor"))
+                    material.SetColor("_EmissionColor", _previewEmission * intensity);
+        }
     }
 
     private void RestorePlacedObjects()

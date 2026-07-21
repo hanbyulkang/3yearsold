@@ -17,24 +17,18 @@ namespace MiniGame1
     // 발바닥·뼈다귀를 PlayerPrefs에 저장한다. 서버 권위 없음 — 데모 이후 교체 대상.
     public class LocalMockRewardClient : IRewardClient
     {
-        const string PawKey = "mg1_paws";
-        const string BoneKey = "mg1_bones_total";
         const string DailyKey = "mg1_bones_daily";
         const string DailyDateKey = "mg1_bones_daily_date";
 
         public int GetPaws()
         {
-            if (!PlayerPrefs.HasKey(PawKey)) PlayerPrefs.SetInt(PawKey, MG1Config.MaxPaws);
-            return PlayerPrefs.GetInt(PawKey);
+            return GameCurrencyStore.GetPaws();
         }
 
         public bool TrySpendPaw()
         {
-            int paws = GetPaws();
-            if (paws <= 0) return false;
-            PlayerPrefs.SetInt(PawKey, paws - 1); // DEMO-MOCK: 시간 회복 없음
-            PlayerPrefs.Save();
-            return true;
+            if (GameCurrencyStore.ConsumeEntryReservation()) return true;
+            return GameCurrencyStore.TrySpendPaw();
         }
 
         public int GrantBones(int bones)
@@ -48,18 +42,17 @@ namespace MiniGame1
             int daily = PlayerPrefs.GetInt(DailyKey, 0);
             int granted = Mathf.Clamp(MG1Config.DailyBoneCap - daily, 0, bones);
             PlayerPrefs.SetInt(DailyKey, daily + granted);
-            PlayerPrefs.SetInt(BoneKey, PlayerPrefs.GetInt(BoneKey, 0) + granted); // DEMO-MOCK: origin=play 태깅은 서버 몫
+            GameCurrencyStore.AddBones(granted);
             PlayerPrefs.Save();
             return granted;
         }
 
-        public int GetTotalBones() => PlayerPrefs.GetInt(BoneKey, 0);
+        public int GetTotalBones() => GameCurrencyStore.GetBones();
 
         // DEMO-MOCK: 테스트용 즉시 충전. 정식 구현에선 시간 회복·육포 충전(Edge Function)으로 대체.
         public void RefillPaws()
         {
-            PlayerPrefs.SetInt(PawKey, MG1Config.MaxPaws);
-            PlayerPrefs.Save();
+            GameCurrencyStore.SetPaws(MG1Config.MaxPaws);
         }
     }
 }

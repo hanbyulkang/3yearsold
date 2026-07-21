@@ -297,6 +297,7 @@ MonoBehaviour:
   feverClip: {fileID: 0}
   resultClip: {fileID: 0}
   bgmClip: {fileID: 8300000, guid: 8ad8490c8423b4746ae1f1169f8767c2, type: 3}
+  missionDataSet: {fileID: 11400000, guid: 3c444b69829614792a85b6d94b544e09, type: 2}
 --- !u!4 &566982333
 Transform:
   m_ObjectHideFlags: 0

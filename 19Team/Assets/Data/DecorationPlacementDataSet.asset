@@ -16,9 +16,9 @@ MonoBehaviour:
   _items:
   - id: apple_box
     applied: 1
-    position: {x: -4.186203, y: -2.7031193, z: 9.974266}
+    position: {x: -3.802414, y: -2.7031193, z: 15.338989}
     eulerAngles: {x: 0, y: 0, z: 0}
   - id: well
     applied: 1
-    position: {x: -2.7305984, y: -2.7031193, z: 16.023819}
+    position: {x: -3.6606293, y: -2.7031193, z: 11.411774}
     eulerAngles: {x: 0, y: 0, z: 0}

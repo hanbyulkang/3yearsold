@@ -132,6 +132,7 @@ public class DogHeartInteraction : MonoBehaviour
         _camera = Camera.main;
         _dogHeartButton.onClick.AddListener(OnHeartClicked);
         Initialize(_dogAnimator);
+        _boneCount = GameCurrencyStore.GetBones();
         RefreshBoneText();
         RefreshMeatText();
         RefreshHearts();
@@ -185,9 +186,11 @@ public class DogHeartInteraction : MonoBehaviour
             _dogAnimator.SetTrigger("Jump");
 
         PlayDogParticles();
+        HomeAudioManager.PlayHappy();
         PlayBoneReward();
         if (_missionController != null)
             _missionController.RegisterPetOrPlay();
+        PlayerLevelStore.AddExperience(10);
 
         HideAndReschedule();
     }
@@ -350,13 +353,14 @@ public class DogHeartInteraction : MonoBehaviour
             yield return null;
         }
 
+        HomeAudioManager.PlayBone();
         Destroy(iconObject);
         AddBoneReward(1);
     }
 
     private void AddBoneReward(int amount)
     {
-        _boneCount += amount;
+        _boneCount = GameCurrencyStore.AddBones(amount);
         RefreshBoneText();
         _onBoneCountChanged?.Invoke(_boneCount);
     }
@@ -365,6 +369,7 @@ public class DogHeartInteraction : MonoBehaviour
     public void SetBoneCount(int value)
     {
         _boneCount = Mathf.Max(0, value);
+        GameCurrencyStore.SetBones(_boneCount);
         RefreshBoneText();
     }
 

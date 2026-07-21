@@ -28,7 +28,10 @@ public sealed class DecorationPlacementDataSet : ScriptableObject
     {
         foreach (ItemState item in _items)
         {
-            item.applied = PlayerPrefs.GetInt(Key(item, "Applied"), item.applied ? 1 : 0) == 1;
+            // A missing save key must always mean "not placed". Using the
+            // serialized asset value here resurrected old editor placements
+            // immediately after PlayerPrefs had been cleared.
+            item.applied = PlayerPrefs.GetInt(Key(item, "Applied"), 0) == 1;
             if (!item.applied) continue;
             item.position = new Vector3(
                 PlayerPrefs.GetFloat(Key(item, "X"), item.position.x),
@@ -53,6 +56,21 @@ public sealed class DecorationPlacementDataSet : ScriptableObject
         PlayerPrefs.SetFloat(Key(item, "Z"), position.z);
         PlayerPrefs.SetFloat(Key(item, "RY"), item.eulerAngles.y);
         PlayerPrefs.Save();
+    }
+
+    public void ClearSavedState()
+    {
+        foreach (ItemState item in _items)
+        {
+            PlayerPrefs.DeleteKey(Key(item, "Applied"));
+            PlayerPrefs.DeleteKey(Key(item, "X"));
+            PlayerPrefs.DeleteKey(Key(item, "Y"));
+            PlayerPrefs.DeleteKey(Key(item, "Z"));
+            PlayerPrefs.DeleteKey(Key(item, "RY"));
+            item.applied = false;
+            item.position = Vector3.zero;
+            item.eulerAngles = Vector3.zero;
+        }
     }
 
     private string Key(ItemState item, string suffix) => _saveKey + "." + item.id + "." + suffix;

@@ -174,7 +174,6 @@ public class DogWanderAI : MonoBehaviour
         _animator.speed = 0f;
         yield return new WaitForSeconds(Mathf.Max(0.35f, eatingSeconds - lowerHeadTime - 0.45f));
         _animator.speed = 1f;
-        yield return new WaitForSeconds(0.45f);
         onFinished?.Invoke();
         EndSpecialAction(true);
     }
@@ -196,12 +195,16 @@ public class DogWanderAI : MonoBehaviour
 
     private void EndSpecialAction(bool moveImmediately = false)
     {
-        _animator.CrossFade(AnimationNames.Idle, 0.2f, 0, 0f);
         _specialAction = false;
         if (moveImmediately && TryPickDestination())
+        {
             EnterMoving();
-        else
-            EnterIdle();
+            _animator.CrossFade(_isRunning ? AnimationNames.Run : AnimationNames.Walk, 0.1f, 0, 0f);
+            return;
+        }
+
+        _animator.CrossFade(AnimationNames.Idle, 0.2f, 0, 0f);
+        EnterIdle();
     }
 
     private IEnumerator HappyReactionRoutine()

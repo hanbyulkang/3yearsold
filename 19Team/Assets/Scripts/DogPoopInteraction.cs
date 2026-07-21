@@ -174,6 +174,7 @@ public sealed class DogPoopInteraction : MonoBehaviour
 
         if (_boneRewardSource != null) _boneRewardSource.PlayBoneRewardFromWorld(rewardOrigin);
         if (_missionController != null) _missionController.RegisterCleanPoop();
+        PlayerLevelStore.AddExperience(10);
 
         _activePoop = null;
         HideUI();

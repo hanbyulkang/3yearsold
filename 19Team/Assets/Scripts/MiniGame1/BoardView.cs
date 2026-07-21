@@ -203,8 +203,16 @@ namespace MiniGame1
                 if (cam != null) pos += (cam.transform.position - pos).normalized * 1.5f;
                 var fx = Instantiate(PopFxPrefab, pos, Quaternion.identity);
                 fx.transform.localScale = Vector3.one * 0.6f;
+                ReduceCameraShake(fx);
                 Destroy(fx, 3f);
             }
+        }
+
+        static void ReduceCameraShake(GameObject effectObject)
+        {
+            CartoonFX.CFXR_Effect effect = effectObject.GetComponent<CartoonFX.CFXR_Effect>();
+            if (effect?.cameraShake == null) return;
+            effect.cameraShake.shakeStrength *= 0.25f;
         }
 
         // ---- 애니메이션 유틸 ----

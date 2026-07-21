@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace MiniGame1
@@ -67,6 +68,9 @@ namespace MiniGame1
         [SerializeField] AudioClip feverClip;
         [SerializeField] AudioClip resultClip;
         [SerializeField] AudioClip bgmClip; // match-3.wav 도착 시 여기 연결
+
+        [Header("미션 연동")]
+        [SerializeField] MissionDataSet missionDataSet;
         AudioSource _audio;
         AudioSource _bgm;
 
@@ -84,6 +88,8 @@ namespace MiniGame1
         const int MovesPerGame = 20;
         const int DemoMoves = 10;
         int _movesLeft;
+        float _timeLeft;
+        float _playDuration = MG1Config.PlayTime;
         int _goalCollected;
         bool _goalDone;
 
@@ -99,6 +105,8 @@ namespace MiniGame1
         TextMeshProUGUI _pawText, _entryNotice;
         Button _startButton;
         TextMeshProUGUI _movesText, _scoreText, _goalText, _comboText, _coachText;
+        Slider _timeSlider;
+        Image _timeFillImage;
         GameObject _coachRow;
         Image _feverFill;
         TextMeshProUGUI _feverLabel;
@@ -189,6 +197,12 @@ namespace MiniGame1
             if (_score == null || _model == null) return; // 에디터 도메인 리로드 등으로 상태가 날아간 경우 방어
 
             _score.Tick(Time.deltaTime);
+            _timeLeft = Mathf.Max(0f, _timeLeft - Time.deltaTime);
+            if (_timeLeft <= 0f)
+            {
+                EndBecauseTimeExpired();
+                return;
+            }
 
             _brandTimer += Time.deltaTime;
             float interval = demoMode ? 5f : 8f;
@@ -213,7 +227,7 @@ namespace MiniGame1
             _entryPanel.SetActive(true);
             _playPanel.SetActive(false);
             _resultPanel.SetActive(false);
-            int paws = _reward.GetPaws();
+            int paws = GameCurrencyStore.GetPaws();
             _pawText.text = $"발바닥 {paws} / {MG1Config.MaxPaws}";
             bool canPlay = paws > 0;
             _startButton.interactable = canPlay;
@@ -224,7 +238,17 @@ namespace MiniGame1
 
         void StartGame()
         {
-            if (!_reward.TrySpendPaw()) { ShowEntry(); return; }
+            bool alreadyPaidAtEntry = GameCurrencyStore.ConsumeEntryReservation();
+            if (!alreadyPaidAtEntry && !GameCurrencyStore.TrySpendPaw()) { ShowEntry(); return; }
+
+            // 실제 한 판이 시작된 시점에 미니게임 미션 진행도를 저장한다.
+            // 마을 씬으로 돌아오면 MissionUIController가 같은 데이터셋의
+            // PlayerPrefs 진행도를 읽어 완료 UI와 Count를 즉시 갱신한다.
+            if (missionDataSet != null)
+            {
+                missionDataSet.LoadSavedState();
+                missionDataSet.AddProgress(MissionAction.MiniGame);
+            }
 
             _model = new BoardModel(MG1Config.BoardSize, MG1Config.NormalTypes, new System.Random());
             _score.Reset();
@@ -233,6 +257,8 @@ namespace MiniGame1
             _seenBrand = null;
             _brandBlocksPopped = 0;
             _movesLeft = demoMode ? DemoMoves : MovesPerGame;
+            _playDuration = demoMode ? MG1Config.DemoPlayTime : MG1Config.PlayTime;
+            _timeLeft = _playDuration;
             _goalCollected = 0;
             _goalDone = false;
 
@@ -316,8 +342,20 @@ namespace MiniGame1
             }
         }
 
+        void EndBecauseTimeExpired()
+        {
+            if (_state != State.Playing) return;
+            _timeLeft = 0f;
+            _state = State.Ending;
+            _boardGroup.interactable = false;
+            _boardGroup.blocksRaycasts = false;
+            RefreshPlayHud();
+            if (_board == null || !_board.IsResolving) ShowResult();
+        }
+
         void ShowResult()
         {
+            if (_state == State.Result) return;
             _state = State.Result;
             // 모은 뼈다귀 블록이 그대로 재화가 된다 (목표 달성 시 ×2, 브랜드 블록 보너스)
             int earned = _goalCollected * MG1Config.BonePerBlock;
@@ -342,12 +380,13 @@ namespace MiniGame1
                 ? "(신나서 폴짝폴짝) 이 뼈다귀로 보호소 친구들 사료를 채워줄 수 있대요!"
                 : "오늘도 수고했어요! 모은 뼈다귀는 보호소 친구들에게 보탬이 돼요.";
 
-            int paws = _reward.GetPaws();
+            int paws = GameCurrencyStore.GetPaws();
             _retryButton.interactable = paws > 0;
             _retryButton.GetComponentInChildren<TextMeshProUGUI>().text =
                 paws > 0 ? $"한 번 더 (발바닥 {paws})" : "발바닥이 부족해요";
 
             StartCoroutine(ResultSequence(granted));
+            PlayerLevelStore.AddExperience(30);
             GameFinished?.Invoke(granted); // 홈 씬이 재화 HUD를 갱신하는 지점
         }
 
@@ -384,13 +423,23 @@ namespace MiniGame1
                 if (cam != null) pos += (cam.transform.position - pos).normalized * 2f;
                 var fx = Instantiate(fireworksFxPrefab, pos, Quaternion.identity);
                 fx.transform.localScale = Vector3.one * 1.2f;
+                var effect = fx.GetComponent<CartoonFX.CFXR_Effect>();
+                if (effect?.cameraShake != null) effect.cameraShake.shakeStrength *= 0.25f;
                 Destroy(fx, 4f);
             }
         }
 
         void RefreshPlayHud()
         {
-            _movesText.text = _movesLeft.ToString();
+            int displayedSeconds = Mathf.CeilToInt(_timeLeft);
+            _movesText.text = displayedSeconds.ToString();
+            if (_timeSlider != null)
+            {
+                _timeSlider.maxValue = Mathf.Max(1f, _playDuration);
+                _timeSlider.SetValueWithoutNotify(displayedSeconds);
+            }
+            if (_timeFillImage != null)
+                _timeFillImage.fillAmount = displayedSeconds / Mathf.Max(1f, _playDuration);
             _scoreText.text = $"{_score.Score:N0}";
             _goalText.text = $"{Mathf.Min(_goalCollected, GoalTargetCount)}<color=#4A3327>/{GoalTargetCount}</color>";
             _feverFill.fillAmount = _score.FeverGauge / MG1Config.FeverMax;
@@ -458,12 +507,14 @@ namespace MiniGame1
         void BuildEntryPanel(Transform parent)
         {
             _entryPanel = MakePanel(parent, "EntryPanel");
+            // 시작 화면의 구성과 간격은 유지한 채 전체 묶음을 아래로 이동한다.
+            ((RectTransform)_entryPanel.transform).anchoredPosition = new Vector2(0f, -70f);
 
-            MakeIcon(_entryPanel.transform, "DogFace", dogFace, new Vector2(0, 330), 130f);
+            MakeIcon(_entryPanel.transform, "DogFace", dogFace, new Vector2(0, 290), 130f);
             MakeText(_entryPanel.transform, "Title", "3매치", 36, FontStyles.Bold, Ink,
-                new Vector2(0, 240), new Vector2(340, 60));
+                new Vector2(0, 200), new Vector2(340, 60));
             MakeText(_entryPanel.transform, "Subtitle", $"이동 {MovesPerGame}번 안에 뼈다귀 {GoalTargetCount}개를 모아보세요!", 16, FontStyles.Normal, Ink,
-                new Vector2(0, 190), new Vector2(360, 30));
+                new Vector2(0, 155), new Vector2(360, 30));
 
             var pawCard = MakeCard(_entryPanel.transform, "PawCard", CardBg, new Vector2(0, 80), new Vector2(240, 70));
             MakeIcon(pawCard.transform, "PawIcon", pawIcon, new Vector2(-80, 0), 44f);
@@ -476,27 +527,7 @@ namespace MiniGame1
             _startButton = MakeArtButton(_entryPanel.transform, "StartButton", "시작하기", Color.white,
                 new Vector2(0, -70), new Vector2(260, 64), btnPrimary, btnPrimaryPressed, StartGame);
 
-            var demoBtn = MakeArtButton(_entryPanel.transform, "DemoToggle", DemoLabel(), Ink,
-                new Vector2(0, -150), new Vector2(220, 44), btnSecondary, null, null);
-            demoBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 14;
-            demoBtn.onClick.AddListener(() =>
-            {
-                demoMode = !demoMode;
-                demoBtn.GetComponentInChildren<TextMeshProUGUI>().text = DemoLabel();
-            });
-
-            // DEMO-MOCK: 테스트·무대 시연용 즉시 충전 (정식: 시간 회복·육포 충전)
-            var refillBtn = MakeArtButton(_entryPanel.transform, "RefillBtn", "발바닥 충전 (테스트용)", Ink,
-                new Vector2(0, -210), new Vector2(220, 44), btnSecondary, null, null);
-            refillBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 14;
-            refillBtn.onClick.AddListener(() =>
-            {
-                if (_reward is LocalMockRewardClient mock) mock.RefillPaws();
-                ShowEntry();
-            });
         }
-
-        string DemoLabel() => demoMode ? $"데모 모드 켜짐 (이동 {DemoMoves})" : $"데모 모드 꺼짐 (이동 {MovesPerGame})";
 
         void BuildPlayPanel(Transform parent)
         {
@@ -517,7 +548,7 @@ namespace MiniGame1
             closeBtn.targetGraphic = closeImg;
             MakeText(closeImg.transform, "Label", "X", 20, FontStyles.Bold, new Color(0.29f, 0.2f, 0.153f, 0.75f),
                 Vector2.zero, new Vector2(44, 44));
-            closeBtn.onClick.AddListener(ShowEntry);
+            closeBtn.onClick.AddListener(ReturnToVillage);
 
             // 상단 헤더 (다크 브라운 바): 타이틀 · 이동/점수 칩 — X 제외한 나머지 폭
             float headerW = W - 44f - 8f;           // 310
@@ -535,9 +566,30 @@ namespace MiniGame1
             _scoreText.alignment = TextAlignmentOptions.Right;
 
             var movesChip = MakeChip(header.transform, "MovesChip", new Vector2(headerHalf - Pad - 100 - 8 - 42, 0), new Vector2(84, 36));
-            MakeText(movesChip.transform, "Label", "이동", 13, FontStyles.Normal, Ink, new Vector2(-42 + 10 + 15, 0), new Vector2(30, 30)).alignment = TextAlignmentOptions.Left;
-            _movesText = MakeText(movesChip.transform, "Value", "20", 17, FontStyles.Bold, Gold, new Vector2(42 - 10 - 15, 0), new Vector2(30, 30));
+            MakeText(movesChip.transform, "Label", "시간", 13, FontStyles.Normal, Ink, new Vector2(-42 + 10 + 15, 0), new Vector2(30, 30)).alignment = TextAlignmentOptions.Left;
+            _movesText = MakeText(movesChip.transform, "Value", "60", 17, FontStyles.Bold, Gold, new Vector2(42 - 10 - 15, 0), new Vector2(30, 30));
             _movesText.alignment = TextAlignmentOptions.Right;
+            var timeBar = MakeImage(movesChip.transform, "TimeSlider", new Color(0.18f, 0.13f, 0.1f, 0.28f), null);
+            MG1Skin.ApplyRounded(timeBar, 8f);
+            SetRect(timeBar.rectTransform, new Vector2(0, -14), new Vector2(64, 5));
+            var timeFill = MakeImage(timeBar.transform, "Fill", Gold, null);
+            MG1Skin.ApplyRounded(timeFill, 8f);
+            Stretch(timeFill.rectTransform);
+            timeFill.type = Image.Type.Filled;
+            timeFill.fillMethod = Image.FillMethod.Horizontal;
+            timeFill.fillOrigin = 0;
+            timeFill.fillAmount = 1f;
+            _timeFillImage = timeFill;
+            timeFill.raycastTarget = false;
+            _timeSlider = timeBar.gameObject.AddComponent<Slider>();
+            _timeSlider.transition = Selectable.Transition.None;
+            _timeSlider.interactable = false;
+            _timeSlider.direction = Slider.Direction.LeftToRight;
+            _timeSlider.fillRect = null;
+            _timeSlider.targetGraphic = timeBar;
+            _timeSlider.minValue = 0f;
+            _timeSlider.maxValue = MG1Config.PlayTime;
+            _timeSlider.SetValueWithoutNotify(MG1Config.PlayTime);
 
             // 목표 바: 보드 아래 하단 배치 (라벨 일반 굵기, 카운트만 강조)
             var goalCard = MakeCard(_playPanel.transform, "GoalCard", CardBg, new Vector2(0, -230), new Vector2(W, 50), 4f);
@@ -664,8 +716,13 @@ namespace MiniGame1
             homeBtn.onClick.AddListener(() =>
             {
                 GoHomeRequested?.Invoke(); // 홈 씬이 구독. 미구독이면 아래 폴백
-                ShowEntry();
+                ReturnToVillage();
             });
+        }
+
+        void ReturnToVillage()
+        {
+            SceneManager.LoadScene("Suntail Village");
         }
 
         // 결과 화면 전용 버튼 — 아트를 원본 비율 그대로(Simple) 쓴다

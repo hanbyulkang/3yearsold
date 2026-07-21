@@ -9,7 +9,9 @@ public class MissionPngImporter : AssetPostprocessor
         bool isBowlPng = assetPath == "Assets/UI/block_bowl.png";
         bool isPoopPng = assetPath == "Assets/Poop/icon_poop.png";
         bool isInventoryDecoratePng = assetPath.StartsWith("Assets/UI/Inventory/svg-decorate/") && assetPath.EndsWith(".png");
-        if (!isMissionPng && !isBowlPng && !isPoopPng && !isInventoryDecoratePng)
+        bool isRankingPng = assetPath.StartsWith("Assets/UI/Ranking/") && assetPath.EndsWith(".png");
+        bool isGamePng = assetPath.StartsWith("Assets/UI/Game/") && assetPath.EndsWith(".png");
+        if (!isMissionPng && !isBowlPng && !isPoopPng && !isInventoryDecoratePng && !isRankingPng && !isGamePng)
             return;
 
         TextureImporter importer = (TextureImporter)assetImporter;

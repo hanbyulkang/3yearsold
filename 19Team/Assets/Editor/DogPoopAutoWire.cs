@@ -27,6 +27,12 @@ public static class DogPoopAutoWire
     [MenuItem("Tools/Suntail Village/Wire Dog Poop System")]
     public static void Wire()
     {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (!activeScene.IsValid() ||
+            (!activeScene.name.Equals("Suntail Village", StringComparison.OrdinalIgnoreCase) &&
+             !activeScene.path.Equals(TargetScenePath, StringComparison.OrdinalIgnoreCase)))
+            return;
+
         RectTransform dogPoop = FindExact("DogPoop") as RectTransform;
         Transform poop = FindWorldExact("Poop");
         Transform dogRoot = FindWorldExact("Dog");
@@ -85,7 +91,6 @@ public static class DogPoopAutoWire
         {
             EditorUtility.SetDirty(controller);
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            Scene activeScene = SceneManager.GetActiveScene();
             string savePath = activeScene.path.StartsWith("Temp/", StringComparison.OrdinalIgnoreCase)
                 ? TargetScenePath
                 : activeScene.path;

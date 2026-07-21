@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// A complete, self-contained 2048 mini-game UI for the minigame02 scene.
@@ -135,43 +136,44 @@ public sealed class MiniGame2048 : MonoBehaviour
 
         RectTransform root = canvas.GetComponent<RectTransform>();
         CreateImage("Background", root, new Color32(241, 244, 252, 255), Vector2.zero, Vector2.one);
-        CreateRoundedPanel("TopGlow", root, new Color32(226, 231, 250, 255), new Vector2(0.5f, 0.92f), new Vector2(0.92f, 0.23f), 26f);
+        RectTransform contentRoot = CreateSafeArea(root);
+        CreateRoundedPanel("TopGlow", contentRoot, new Color32(226, 231, 250, 255), new Vector2(0.5f, 0.9f), new Vector2(0.92f, 0.18f), 26f);
 
-        Text eyebrow = CreateText("Eyebrow", root, "PAWS & PUZZLES  /  MINI GAME", 22, Muted, TextAnchor.MiddleLeft);
-        SetRect(eyebrow.rectTransform, new Vector2(0.08f, 0.945f), new Vector2(0.92f, 0.98f));
-        Text title = CreateText("Title", root, "2048\nPaw Edition", 64, Ink, TextAnchor.MiddleLeft);
+        Text eyebrow = CreateText("Eyebrow", contentRoot, "PAWS & PUZZLES  /  MINI GAME", 22, Muted, TextAnchor.MiddleLeft);
+        SetRect(eyebrow.rectTransform, new Vector2(0.08f, 0.935f), new Vector2(0.92f, 0.97f));
+        Text title = CreateText("Title", contentRoot, "2048\nPaw Edition", 64, Ink, TextAnchor.MiddleLeft);
         title.fontStyle = FontStyle.Bold;
-        SetRect(title.rectTransform, new Vector2(0.08f, 0.82f), new Vector2(0.72f, 0.94f));
+        SetRect(title.rectTransform, new Vector2(0.08f, 0.81f), new Vector2(0.62f, 0.93f));
 
-        Text subtitle = CreateText("Subtitle", root, "작은 한 수가 큰 꼬리 흔들기를 만들어요", 25, Muted, TextAnchor.MiddleLeft);
-        SetRect(subtitle.rectTransform, new Vector2(0.08f, 0.785f), new Vector2(0.82f, 0.83f));
+        Text subtitle = CreateText("Subtitle", contentRoot, "작은 한 수가 큰 꼬리 흔들기를 만들어요", 25, Muted, TextAnchor.MiddleLeft);
+        SetRect(subtitle.rectTransform, new Vector2(0.08f, 0.765f), new Vector2(0.92f, 0.81f));
 
-        CreateScoreCard(root, "SCORE", new Vector2(0.68f, 0.885f), out scoreText);
-        CreateScoreCard(root, "BEST", new Vector2(0.86f, 0.885f), out bestText);
+        CreateScoreCard(contentRoot, "SCORE", new Vector2(0.69f, 0.865f), out scoreText);
+        CreateScoreCard(contentRoot, "BEST", new Vector2(0.86f, 0.865f), out bestText);
 
         boardRoot = new GameObject("2048 Board", typeof(RectTransform)).transform;
-        boardRoot.SetParent(root, false);
+        boardRoot.SetParent(contentRoot, false);
         RectTransform boardRect = boardRoot as RectTransform;
-        SetRect(boardRect, new Vector2(0.075f, 0.325f), new Vector2(0.925f, 0.765f));
+        SetRect(boardRect, new Vector2(0.075f, 0.31f), new Vector2(0.925f, 0.73f));
         CreateRoundedPanel("BoardSurface", boardRoot, BoardColor, new Vector2(0.5f, 0.5f), Vector2.one, 28f);
         BuildBoardSlots(boardRoot);
 
-        Text hint = CreateText("Hint", root, "DRAG THE BOARD TO MOVE", 20, Muted, TextAnchor.MiddleCenter);
+        Text hint = CreateText("Hint", contentRoot, "DRAG THE BOARD TO MOVE", 20, Muted, TextAnchor.MiddleCenter);
         hint.fontStyle = FontStyle.Bold;
-        SetRect(hint.rectTransform, new Vector2(0.15f, 0.275f), new Vector2(0.85f, 0.31f));
-        statusText = CreateText("Status", root, "합쳐서 더 큰 숫자를 만들어 보세요!", 24, Purple, TextAnchor.MiddleCenter);
+        SetRect(hint.rectTransform, new Vector2(0.15f, 0.265f), new Vector2(0.85f, 0.3f));
+        statusText = CreateText("Status", contentRoot, "합쳐서 더 큰 숫자를 만들어 보세요!", 24, Purple, TextAnchor.MiddleCenter);
         statusText.fontStyle = FontStyle.Bold;
-        SetRect(statusText.rectTransform, new Vector2(0.12f, 0.215f), new Vector2(0.88f, 0.27f));
+        SetRect(statusText.rectTransform, new Vector2(0.08f, 0.205f), new Vector2(0.92f, 0.26f));
 
-        Button undo = CreateButton(root, "↶  UNDO", new Vector2(0.12f, 0.12f), new Vector2(0.36f, 0.19f), Purple);
-        undo.onClick.AddListener(Undo);
-        Button hintButton = CreateButton(root, "✦  HINT", new Vector2(0.38f, 0.12f), new Vector2(0.62f, 0.19f), new Color32(75, 91, 143, 255));
+        Button home = CreateButton(contentRoot, "⌂  HOME", new Vector2(0.08f, 0.105f), new Vector2(0.35f, 0.18f), Purple);
+        home.onClick.AddListener(() => SceneManager.LoadScene("Suntail Village"));
+        Button hintButton = CreateButton(contentRoot, "✦  HINT", new Vector2(0.365f, 0.105f), new Vector2(0.635f, 0.18f), new Color32(75, 91, 143, 255));
         hintButton.onClick.AddListener(ShowHint);
-        Button newGame = CreateButton(root, "NEW GAME", new Vector2(0.64f, 0.12f), new Vector2(0.88f, 0.19f), Orange);
+        Button newGame = CreateButton(contentRoot, "NEW GAME", new Vector2(0.65f, 0.105f), new Vector2(0.92f, 0.18f), Orange);
         newGame.onClick.AddListener(NewGame);
 
-        Text footer = CreateText("Footer", root, "DRAG THE BOARD  •  MERGE THE PAWS  •  REACH 2048", 17, Muted, TextAnchor.MiddleCenter);
-        SetRect(footer.rectTransform, new Vector2(0.1f, 0.06f), new Vector2(0.9f, 0.095f));
+        Text footer = CreateText("Footer", contentRoot, "DRAG THE BOARD  •  MERGE THE PAWS  •  REACH 2048", 17, Muted, TextAnchor.MiddleCenter);
+        SetRect(footer.rectTransform, new Vector2(0.06f, 0.045f), new Vector2(0.94f, 0.085f));
     }
 
     private void BuildBoardSlots(Transform parent)
@@ -242,8 +244,8 @@ public sealed class MiniGame2048 : MonoBehaviour
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
         obj.transform.SetParent(parent, false);
         RectTransform rect = obj.GetComponent<RectTransform>();
-        rect.anchorMin = anchor; rect.anchorMax = anchor; rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = Vector2.zero; rect.offsetMin = new Vector2(-size.x * 500f, -size.y * 500f); rect.offsetMax = new Vector2(size.x * 500f, size.y * 500f);
+        rect.anchorMin = anchor - size * 0.5f; rect.anchorMax = anchor + size * 0.5f; rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = Vector2.zero; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
         Image image = obj.GetComponent<Image>(); image.color = color; image.raycastTarget = true;
         return obj;
     }
@@ -258,11 +260,24 @@ public sealed class MiniGame2048 : MonoBehaviour
     private Text CreateText(string name, Transform parent, string content, int size, Color color, TextAnchor anchor)
     {
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Text)); obj.transform.SetParent(parent, false);
-        Text text = obj.GetComponent<Text>(); text.text = content; text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.fontSize = size; text.color = color; text.alignment = anchor; text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Overflow; text.raycastTarget = false; return text;
+        Text text = obj.GetComponent<Text>(); text.text = content; text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.fontSize = size; text.resizeTextForBestFit = true; text.resizeTextMinSize = Mathf.Max(10, size / 2); text.resizeTextMaxSize = size; text.color = color; text.alignment = anchor; text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Truncate; text.raycastTarget = false; return text;
     }
 
     private static void SetRect(RectTransform rect, Vector2 min, Vector2 max)
     { rect.anchorMin = min; rect.anchorMax = max; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero; rect.pivot = new Vector2(0.5f, 0.5f); }
+
+    private static RectTransform CreateSafeArea(RectTransform parent)
+    {
+        GameObject safe = new GameObject("Safe Area", typeof(RectTransform));
+        safe.transform.SetParent(parent, false);
+        RectTransform rect = safe.GetComponent<RectTransform>();
+        Rect area = Screen.safeArea;
+        rect.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
+        rect.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
+        rect.offsetMin = new Vector2(24f, 18f);
+        rect.offsetMax = new Vector2(-24f, -18f);
+        return rect;
+    }
 
     private void NewGame()
     {
@@ -285,22 +300,23 @@ public sealed class MiniGame2048 : MonoBehaviour
         if (!CanMove(direction)) { statusText.text = "그 방향으로는 움직일 수 없어요"; return; }
         SaveUndo();
         bool[,] merged = new bool[Size, Size];
-        bool horizontal = direction.x != 0;
-        int outerStart = direction.y > 0 || direction.x > 0 ? Size - 1 : 0;
-        int outerEnd = direction.y > 0 || direction.x > 0 ? -1 : Size;
-        int outerStep = direction.y > 0 || direction.x > 0 ? -1 : 1;
+        Vector2Int gridDirection = new Vector2Int(direction.x, -direction.y);
+        bool horizontal = gridDirection.x != 0;
+        int outerStart = gridDirection.y > 0 || gridDirection.x > 0 ? Size - 1 : 0;
+        int outerEnd = gridDirection.y > 0 || gridDirection.x > 0 ? -1 : Size;
+        int outerStep = gridDirection.y > 0 || gridDirection.x > 0 ? -1 : 1;
         for (int outer = outerStart; outer != outerEnd; outer += outerStep)
         {
-            int innerStart = direction.y > 0 || direction.x > 0 ? Size - 1 : 0;
-            int innerEnd = direction.y > 0 || direction.x > 0 ? -1 : Size;
-            int innerStep = direction.y > 0 || direction.x > 0 ? -1 : 1;
+            int innerStart = gridDirection.y > 0 || gridDirection.x > 0 ? Size - 1 : 0;
+            int innerEnd = gridDirection.y > 0 || gridDirection.x > 0 ? -1 : Size;
+            int innerStep = gridDirection.y > 0 || gridDirection.x > 0 ? -1 : 1;
             for (int inner = innerStart; inner != innerEnd; inner += innerStep)
             {
                 int row = horizontal ? outer : inner, col = horizontal ? inner : outer; int value = board[row, col]; if (value == 0) continue;
                 int r = row, c = col;
                 while (true)
                 {
-                    int nr = r + direction.y, nc = c + direction.x; if (nr < 0 || nr >= Size || nc < 0 || nc >= Size || (board[nr, nc] != 0 && board[nr, nc] != value)) break;
+                    int nr = r + gridDirection.y, nc = c + gridDirection.x; if (nr < 0 || nr >= Size || nc < 0 || nc >= Size || (board[nr, nc] != 0 && board[nr, nc] != value)) break;
                     if (board[nr, nc] == value && !merged[nr, nc]) { board[nr, nc] *= 2; score += board[nr, nc]; merged[nr, nc] = true; board[r, c] = 0; break; }
                     if (board[nr, nc] == 0) { board[nr, nc] = board[r, c]; board[r, c] = 0; r = nr; c = nc; } else break;
                 }
@@ -343,8 +359,9 @@ public sealed class MiniGame2048 : MonoBehaviour
 
     private bool CanMove(Vector2Int direction)
     {
+        Vector2Int gridDirection = new Vector2Int(direction.x, -direction.y);
         int[,] copy = new int[Size, Size]; Array.Copy(board, copy, board.Length); bool moved = false;
-        for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++) if (board[r, c] != 0) { int nr = r + direction.y, nc = c + direction.x; if (nr >= 0 && nr < Size && nc >= 0 && nc < Size && (board[nr, nc] == 0 || board[nr, nc] == board[r, c])) moved = true; }
+        for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++) if (board[r, c] != 0) { int nr = r + gridDirection.y, nc = c + gridDirection.x; if (nr >= 0 && nr < Size && nc >= 0 && nc < Size && (board[nr, nc] == 0 || board[nr, nc] == board[r, c])) moved = true; }
         Array.Copy(copy, board, board.Length); return moved;
     }
 
