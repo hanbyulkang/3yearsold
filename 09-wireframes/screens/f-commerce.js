@@ -7,10 +7,10 @@ S.push({
   group: 'F. 커머스',
   prd: '§7.2',
   title: '상점 홈',
-  purpose: '스킨(육포) / 실물 세트(실결제) / 쿠폰(포인트) 3분류. 뽑기 없음.',
+  purpose: '스킨(육포) / 실물 세트(실결제) / 쿠폰(뼈다귀) 3분류. 뽑기 없음.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="t">상점</span><div class="hud"><span class="cur">P 12,680</span><span class="cur">육포 12</span></div></div>
+    <div class="appbar"><span class="t">상점</span><div class="hud"><span class="cur">🦴 12,680</span><span class="cur">육포 12</span></div></div>
     <div class="body">
       <div class="row" style="gap:6px">
         <span class="chip on">스킨</span><span class="chip">실물 옷+스킨</span><span class="chip">쿠폰 교환</span>
@@ -36,7 +36,7 @@ S.push({
         <div class="card grow center">
           <div class="img" style="height:80px"><span>스킨</span></div>
           <div class="h3">기본 반다나</div>
-          <div class="s">1,500 P</div>
+          <div class="s">1,500 🦴</div>
         </div>
       </div>
       <div class="xs">모든 상품은 확정 구매예요 — 뽑기·랜덤박스는 없어요</div>
@@ -44,7 +44,7 @@ S.push({
   `,
   notes: [
     '확률형 아이템 없음(§4.5·§7.4) — 기획에서도 추가 금지.',
-    '일부 기본 스킨은 포인트 구매 가능(§5.4), 프리미엄은 육포.'
+    '일부 기본 스킨은 뼈다귀 구매 가능(§5.4), 프리미엄은 육포.'
   ]
 });
 
@@ -93,7 +93,7 @@ S.push({
       <div class="img" style="height:160px"><span>실물 옷 + 착용 스킨</span></div>
       <div class="card">
         <div class="row between"><span class="h2">겨울 패딩 세트</span><span class="h2">39,000원</span></div>
-        <div class="s">실물 옷 배송 + 같은 디자인 스킨 + 3,900 P 적립</div>
+        <div class="s">실물 옷 배송 + 같은 디자인 스킨 + 3,900 🦴 적립</div>
       </div>
       <div class="card">
         <div class="h3">500벌 팔리면, 보호소에 방한용품 100세트</div>
@@ -181,7 +181,7 @@ S.push({
   notes: [
     '미성년 판정 = 가입 생년월일. 동의 절차는 결제 직전 별도 플로우(본인인증 포함) — 이 화면에서 분기.',
     '월 한도는 서버 강제(클라 표시용 아님). 한도 초과 시 결제 버튼 비활성.',
-    '육포→포인트 1:100(가안)·육포→발바닥 전환 UI는 각 사용 지점(C-04 등)에 위치, 역방향 없음(§5.2).'
+    '육포→뼈다귀 1:100(가안)·육포→발바닥 전환 UI는 각 사용 지점(C-04 등)에 위치, 역방향 없음(§5.2).'
   ]
 });
 

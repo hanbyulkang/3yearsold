@@ -164,7 +164,7 @@ S.push({
       </div>
       <div class="card">
         <div class="h3">후원</div>
-        <div class="s">포인트나 물품으로 지금 바로 참여할 수 있어요</div>
+        <div class="s">뼈다귀나 물품으로 지금 바로 참여할 수 있어요</div>
       </div>
       <div class="card">
         <div class="h3">임시보호</div>

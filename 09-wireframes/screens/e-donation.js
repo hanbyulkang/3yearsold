@@ -7,10 +7,10 @@ S.push({
   group: 'E. 후원',
   prd: '§6.1 · §5.4',
   title: '후원 홈 — 공동 창고 · 사료 기부',
-  purpose: '포인트를 공동 창고에 적립. 게이지는 모금액이 아니라 참여량.',
+  purpose: '뼈다귀를 공동 창고에 적립. 게이지는 모금액이 아니라 참여량.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="t">후원</span><div class="hud"><span class="cur">P 12,680</span></div></div>
+    <div class="appbar"><span class="t">후원</span><div class="hud"><span class="cur">🦴 12,680</span></div></div>
     <div class="body">
       <div class="card">
         <div class="row between"><span class="h2">이번 달 공동 창고</span><span class="badge">참여량 집계</span></div>
@@ -19,14 +19,14 @@ S.push({
           <span class="s">전체 참여 68%</span>
           <span class="s">달성 시 사료 200kg 기부</span>
         </div>
-        <div class="s">내 기여: 3,400 P</div>
+        <div class="s">내 기여: 3,400 🦴</div>
       </div>
       <div class="card">
         <div class="h3">사료 기부하기</div>
         <div class="row" style="gap:6px">
-          <span class="chip">500 P</span><span class="chip on">1,000 P</span><span class="chip">3,000 P</span>
+          <span class="chip">500 🦴</span><span class="chip on">1,000 🦴</span><span class="chip">3,000 🦴</span>
         </div>
-        <div class="btn pri wide">1,000 P 기부</div>
+        <div class="btn pri wide">1,000 🦴 기부</div>
       </div>
       <div class="honest">모의 기부 — 데모 빌드에서는 실물이 발송되지 않아요</div>
       <div class="row" style="gap:8px">
@@ -55,10 +55,10 @@ S.push({
   group: 'E. 후원',
   prd: '§5.4 · §6.5',
   title: '지정 후원',
-  purpose: '특정 보호소·보호견에 포인트 배분.',
+  purpose: '특정 보호소·보호견에 뼈다귀 배분.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">지정 후원</span><div class="hud"><span class="cur">P 12,680</span></div></div>
+    <div class="appbar"><span class="back">←</span><span class="t">지정 후원</span><div class="hud"><span class="cur">🦴 12,680</span></div></div>
     <div class="body">
       <div class="card sel">
         <div class="row top">
@@ -79,17 +79,17 @@ S.push({
         </div>
       </div>
       <div class="col">
-        <div class="label">배분할 포인트</div>
-        <div class="field">2,000 P</div>
+        <div class="label">배분할 뼈다귀</div>
+        <div class="field">2,000 🦴</div>
       </div>
       <div class="xs">배분처가 몰리지 않게 같은 보호소에 연속으로 배분되지 않아요 (순환 배분)</div>
     </div>
     <div class="footer">
-      <div class="btn pri wide">보리에게 2,000 P 배분</div>
+      <div class="btn pri wide">보리에게 2,000 🦴 배분</div>
     </div>
   `,
   notes: [
-    '포인트는 재원이 아니라 분배 의사 — 집행액은 판매·과금 재원에서 순환 배분 규칙으로 산정(§6.1, §6.5).',
+    '뼈다귀는 재원이 아니라 분배 의사 — 집행액은 판매·과금 재원에서 순환 배분 규칙으로 산정(§6.1, §6.5).',
     '배분 트랜잭션은 Edge Function + 원장(§5.5).'
   ]
 });

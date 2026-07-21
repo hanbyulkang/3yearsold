@@ -21,7 +21,7 @@ S.push({
           </div>
         </div>
         <div class="row" style="gap:6px">
-          <span class="cur">🐾 3/5</span><span class="cur">P 12,680</span><span class="cur">육포 12</span>
+          <span class="cur">🐾 3/5</span><span class="cur">🦴 12,680</span><span class="cur">육포 12</span>
         </div>
       </div>
       <div class="card flat">
@@ -29,7 +29,7 @@ S.push({
         <div class="xs">후원 → <b>봉사</b> → 임시보호 → 입양 · 어느 단계에 있어도 괜찮아요</div>
       </div>
       <div class="card flat">
-        <div class="li"><div class="grow s">포인트 내역</div><span class="xs" data-goto="g02-ledger">›</span></div>
+        <div class="li"><div class="grow s">뼈다귀 내역</div><span class="xs" data-goto="g02-ledger">›</span></div>
         <div class="li"><div class="grow s">내 참여 기록 (후원·봉사·구매)</div><span class="xs">›</span></div>
         <div class="li"><div class="grow s">내 설문 수정</div><span class="xs" data-goto="d06-survey-edit">›</span></div>
         <div class="li"><div class="grow s">알림 설정</div><span class="xs" data-goto="g03-settings">›</span></div>
@@ -55,11 +55,11 @@ S.push({
   no: 'G-02',
   group: 'G. 내정보',
   prd: '§5.5',
-  title: '포인트 내역',
+  title: '뼈다귀 내역',
   purpose: '원장 조회. 항목마다 출처(origin) 표시.',
   html: `
     <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
-    <div class="appbar"><span class="back">←</span><span class="t">포인트 내역</span><span class="act">잔액 12,680 P</span></div>
+    <div class="appbar"><span class="back">←</span><span class="t">뼈다귀 내역</span><span class="act">잔액 12,680 🦴</span></div>
     <div class="body">
       <div class="row" style="gap:5px">
         <span class="chip on">전체</span><span class="chip">획득</span><span class="chip">사용</span>
