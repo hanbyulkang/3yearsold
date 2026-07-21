@@ -31,8 +31,41 @@ S.push({
 });
 
 S.push({
-  id: 'a02-q1',
+  id: 'a02-survey-intro',
   no: 'A-02',
+  group: 'A. 온보딩',
+  prd: '§4.4 · §1.2',
+  title: '설문 전 안내 — 편한 마음으로',
+  purpose: '설문이 입양 심사가 아님을 알려 부담을 내려놓게 한다.',
+  html: `
+    <div class="sb"><span>9:41</span><span></span><span>100%</span></div>
+    <div class="body" style="justify-content:center;gap:16px">
+      <div class="img" style="height:130px"><span>편안한 일러스트</span></div>
+      <div class="center col" style="gap:8px">
+        <div class="h1">편한 마음으로<br>답해주세요</div>
+        <div class="p">
+          이 설문은 입양 심사가 아니에요.<br>
+          입양하지 않아도 괜찮아요 — 후원, 봉사, 지켜보기까지<br>
+          <b>당신에게 맞는 참여 방법</b>을 찾기 위한 질문이에요.
+        </div>
+      </div>
+      <div class="box fill center">
+        <div class="s">다섯 문항이면 돼요. 답은 언제든 고칠 수 있어요.</div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="btn pri wide" data-goto="a03-q1">시작하기</div>
+    </div>
+  `,
+  notes: [
+    '§4.4 톤 — 어느 단계에 머물러도 실패가 아니다. 입양 압박 카피 금지.',
+    '한 페이지 한 메시지 — 설문 규칙·문항 구성 설명은 여기 넣지 않는다.'
+  ]
+});
+
+S.push({
+  id: 'a03-q1',
+  no: 'A-03',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: '설문 Q1 — 기본 여건',
@@ -59,7 +92,7 @@ S.push({
       </div>
     </div>
     <div class="footer">
-      <div class="btn pri wide" data-goto="a03-q2">다음</div>
+      <div class="btn pri wide" data-goto="a04-q2">다음</div>
     </div>
   `,
   notes: [
@@ -70,8 +103,8 @@ S.push({
 });
 
 S.push({
-  id: 'a03-q2',
-  no: 'A-03',
+  id: 'a04-q2',
+  no: 'A-04',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: '설문 Q2 — 함께할 시간',
@@ -96,8 +129,8 @@ S.push({
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px" data-goto="a02-q1">이전</div>
-        <div class="btn pri grow" data-goto="a04-q3">다음</div>
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a03-q1">이전</div>
+        <div class="btn pri grow" data-goto="a05-q3">다음</div>
       </div>
     </div>
   `,
@@ -107,8 +140,8 @@ S.push({
 });
 
 S.push({
-  id: 'a04-q3',
-  no: 'A-04',
+  id: 'a05-q3',
+  no: 'A-05',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: '설문 Q3 — 월 지출',
@@ -133,8 +166,8 @@ S.push({
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px" data-goto="a03-q2">이전</div>
-        <div class="btn pri grow" data-goto="a05-q4">다음</div>
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a04-q2">이전</div>
+        <div class="btn pri grow" data-goto="a06-q4">다음</div>
       </div>
     </div>
   `,
@@ -144,8 +177,8 @@ S.push({
 });
 
 S.push({
-  id: 'a05-q4',
-  no: 'A-05',
+  id: 'a06-q4',
+  no: 'A-06',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: '설문 Q4 — 행동 문제 (필수 서술)',
@@ -174,8 +207,8 @@ S.push({
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px" data-goto="a04-q3">이전</div>
-        <div class="btn pri grow" data-goto="a06-q5">다음</div>
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a05-q3">이전</div>
+        <div class="btn pri grow" data-goto="a07-q5">다음</div>
       </div>
     </div>
   `,
@@ -187,8 +220,8 @@ S.push({
 });
 
 S.push({
-  id: 'a06-q5',
-  no: 'A-06',
+  id: 'a07-q5',
+  no: 'A-07',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: '설문 Q5 — 원하는 하루 (필수 서술)',
@@ -210,8 +243,8 @@ S.push({
     </div>
     <div class="footer">
       <div class="row" style="gap:8px">
-        <div class="btn sec" style="flex:0 0 90px" data-goto="a05-q4">이전</div>
-        <div class="btn pri grow" data-goto="a07-analyzing">제출하고 분석 받기</div>
+        <div class="btn sec" style="flex:0 0 90px" data-goto="a06-q4">이전</div>
+        <div class="btn pri grow" data-goto="a08-analyzing">제출하고 분석 받기</div>
       </div>
     </div>
   `,
@@ -222,8 +255,8 @@ S.push({
 });
 
 S.push({
-  id: 'a07-analyzing',
-  no: 'A-07',
+  id: 'a08-analyzing',
+  no: 'A-08',
   group: 'A. 온보딩',
   prd: '§4.3',
   title: 'AI 분석 (로딩)',
@@ -254,8 +287,8 @@ S.push({
 });
 
 S.push({
-  id: 'a08-breed-3',
-  no: 'A-08',
+  id: 'a09-breed-3',
+  no: 'A-09',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '견종 3개 추천 · 선택',
@@ -305,7 +338,7 @@ S.push({
       </div>
     </div>
     <div class="footer">
-      <div class="btn pri wide" data-goto="a09-persona">시바견으로 시작하기</div>
+      <div class="btn pri wide" data-goto="a10-persona">시바견으로 시작하기</div>
       <div class="btn gho wide">다시 추천받기</div>
     </div>
   `,
@@ -316,8 +349,8 @@ S.push({
 });
 
 S.push({
-  id: 'a09-persona',
-  no: 'A-09',
+  id: 'a10-persona',
+  no: 'A-10',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '성격 설정 · 이름 짓기',
@@ -349,7 +382,7 @@ S.push({
       </div>
     </div>
     <div class="footer">
-      <div class="btn pri wide" data-goto="a10-created">이 성격으로 만들기</div>
+      <div class="btn pri wide" data-goto="a11-created">이 성격으로 만들기</div>
     </div>
   `,
   notes: [
@@ -359,8 +392,8 @@ S.push({
 });
 
 S.push({
-  id: 'a10-created',
-  no: 'A-10',
+  id: 'a11-created',
+  no: 'A-11',
   group: 'A. 온보딩',
   prd: '§4.1',
   title: '캐릭터견 첫 만남',
