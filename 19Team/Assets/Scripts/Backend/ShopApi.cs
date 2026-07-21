@@ -90,5 +90,89 @@ namespace Backend
             try { return JsonUtility.FromJson<BuyResult>(raw); }
             catch { return new BuyResult { message = raw }; }
         }
+
+        // ---------- F-05 육포 충전 ----------
+
+        [Serializable]
+        public class JerkyPack
+        {
+            public string sku;
+            public int jerky;
+            public int krw;
+            public string bonus_note;
+            public bool best;
+            public int sort_order;
+
+            /// <summary>카드 두 번째 줄. 보너스가 없으면 강조 문구로 대신한다.</summary>
+            public string SubLabel =>
+                !string.IsNullOrEmpty(bonus_note) ? bonus_note
+                : best ? "가장 많이 고르는 구성" : "기본 구성";
+        }
+
+        [Serializable] class PackList { public JerkyPack[] items; }
+        [Serializable] class TopupBody { public string p_sku; }
+
+        /// <summary>이번 달 결제 한도. 서버가 강제하는 값이며 클라는 표시만 한다.</summary>
+        [Serializable]
+        public class PaymentLimit
+        {
+            public int cap;
+            public int spent;
+            public int remaining;
+            public int percent;
+        }
+
+        [Serializable]
+        public class TopupResult
+        {
+            public bool ok;
+            public string sku;
+            public int jerky;
+            public int krw;
+            public bool mock;
+            public string message;       // 실패 시 서버 오류 (한도 초과 등)
+            public bool Ok => ok && string.IsNullOrEmpty(message);
+        }
+
+        /// <summary>충전 패키지 카탈로그. 가격은 서버 값만 쓴다.</summary>
+        public static async Task<JerkyPack[]> GetPacks()
+        {
+            var raw = await SupabaseClient.GetRaw(
+                "jerky_packs?active=eq.true&order=sort_order&select=sku,jerky,krw,bonus_note,best,sort_order");
+            if (string.IsNullOrEmpty(raw)) return Array.Empty<JerkyPack>();
+            try { return JsonUtility.FromJson<PackList>("{\"items\":" + raw + "}").items ?? Array.Empty<JerkyPack>(); }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Shop] 충전 상품 파싱 실패: {e.Message}");
+                return Array.Empty<JerkyPack>();
+            }
+        }
+
+        /// <summary>결제 한도 조회. 실패하면 null — 화면은 "불러오는 중"으로 둔다.</summary>
+        public static async Task<PaymentLimit> GetLimit()
+        {
+            var raw = await SupabaseClient.RpcRaw("my_payment_limit");
+            if (string.IsNullOrEmpty(raw) || raw == "null") return null;
+            try { return JsonUtility.FromJson<PaymentLimit>(raw); }
+            catch { return null; }
+        }
+
+        /// <summary>
+        /// 충전 (모의 결제). 가격은 보내지 않는다 — sku만 보내고 서버 카탈로그가 정한다.
+        /// 한도 초과는 서버가 거부하고 그 메시지가 그대로 올라온다.
+        /// </summary>
+        public static async Task<TopupResult> PurchaseJerky(string sku)
+        {
+            var raw = await SupabaseClient.RpcRaw("purchase_jerky",
+                JsonUtility.ToJson(new TopupBody { p_sku = sku }));
+            if (string.IsNullOrEmpty(raw)) return new TopupResult { message = "네트워크 오류" };
+            try
+            {
+                var r = JsonUtility.FromJson<TopupResult>(raw);
+                if (!r.ok && string.IsNullOrEmpty(r.message)) r.message = "충전에 실패했어요";
+                return r;
+            }
+            catch { return new TopupResult { message = raw }; }
+        }
     }
 }
