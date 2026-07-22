@@ -261,6 +261,15 @@ MonoBehaviour:
   limitGaugeTrackSprite: {fileID: 21300000, guid: 0e1360f1ab7e41608d59f62339d3db51, type: 3}
   limitGaugeFillSprite: {fileID: 21300000, guid: 4a41c63a2c0c479888b812642322af88, type: 3}
   jerkyTileSprite: {fileID: 21300000, guid: 8887cad9b1894b828d27d6de9b9e2984, type: 3}
+  itemArt:
+  - sku: skin-raincoat
+    sprite: {fileID: 21300000, guid: 56162f6e302e4710bfc7c9895d3011c0, type: 3}
+  - sku: set-winter
+    sprite: {fileID: 21300000, guid: ccc126e6b7244bbd8ca99bdfc12908b6, type: 3}
+  - sku: skin-scarf
+    sprite: {fileID: 21300000, guid: f51004c3dfa74ac6908436de1a049b87, type: 3}
+  - sku: skin-cap
+    sprite: {fileID: 21300000, guid: d3cb48a29eec492faa05a4304e40dbbc, type: 3}
 --- !u!4 &1873423961
 Transform:
   m_ObjectHideFlags: 0
