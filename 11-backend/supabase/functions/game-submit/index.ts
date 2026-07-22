@@ -7,10 +7,13 @@
  * 클라가 보낸 점수는 참고값일 뿐이다. 세션의 시드로 처음부터 다시 돌려
  * 서버가 계산한 값만 신뢰하고, 두 값이 다르면 지급하지 않는다.
  */
-import { json, admin, requireUser } from "../_shared/http.ts";
+import { json, admin, requireUser, preflight } from "../_shared/http.ts";
 import { replay, pointsFor, type Move } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   const db = admin();
   const auth = await requireUser(req, db);
   if (auth instanceof Response) return auth;

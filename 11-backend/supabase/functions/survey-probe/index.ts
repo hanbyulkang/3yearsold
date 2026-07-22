@@ -7,7 +7,7 @@
  * 중요: 되묻기는 부가 기능이다. 실패해도 설문을 막지 않는다.
  *       그래서 오류 상황에서도 200 + probe:null 로 응답한다.
  */
-import { json, admin, requireUser } from "../_shared/http.ts";
+import { json, admin, requireUser, preflight } from "../_shared/http.ts";
 import { fromEnv } from "../_shared/llm.ts";
 
 const SYSTEM = `당신은 보호견 입양·참여 플랫폼의 온보딩 상담자입니다.
@@ -40,6 +40,9 @@ const SYSTEM = `당신은 보호견 입양·참여 플랫폼의 온보딩 상담
 {"probe": "되물을 한 문장" 또는 null, "reason": "판단 근거 한 줄(로그용)"}`;
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   const db = admin();
   const auth = await requireUser(req, db);
   if (auth instanceof Response) return auth;

@@ -25,6 +25,17 @@ public sealed class MarketFlow : MonoBehaviour
     public Sprite boneGoldSprite;
     public Sprite jerkySprite;
 
+    [System.Serializable]
+    public class ItemArt
+    {
+        public string sku;
+        public Sprite sprite;
+    }
+
+    [Header("상품 이미지 (sku ↔ 아트)")]
+    [Tooltip("서버 카탈로그의 sku와 짝지어 카드·미리보기에 쓴다. 없으면 카드가 비어 보인다.")]
+    public ItemArt[] itemArt = System.Array.Empty<ItemArt>();
+
     [Header("F-05 육포 충전")]
     public Sprite packCardSprite;
     public Sprite packCardBestSprite;
@@ -85,6 +96,15 @@ public sealed class MarketFlow : MonoBehaviour
         _owned = await Backend.ShopApi.GetOwned();
         _notice = null;
         ShowSkinPurchased();
+    }
+
+    /// <summary>sku에 짝지어진 상품 아트. 없으면 null — 카드는 그대로 그려진다.</summary>
+    private Sprite ArtFor(string sku)
+    {
+        if (string.IsNullOrEmpty(sku) || itemArt == null) return null;
+        foreach (ItemArt entry in itemArt)
+            if (entry != null && entry.sku == sku) return entry.sprite;
+        return null;
     }
 
     private void ShowSkinFor(Backend.ShopApi.Skin item)
@@ -247,12 +267,13 @@ public sealed class MarketFlow : MonoBehaviour
                 {
                     var captured = item;
                     CreateProductCard(screenRoot, x, y, item.KindLabel, item.title, price, false,
-                        owned ? (UnityEngine.Events.UnityAction)null : delegate { ShowSkinFor(captured); });
+                        owned ? (UnityEngine.Events.UnityAction)null : delegate { ShowSkinFor(captured); },
+                        ArtFor(item.sku));
                 }
                 else
                 {
                     // 실물 결제 상품은 자사몰 플로우로 (F-03) — 서버 구매 대상이 아니다
-                    CreateProductCard(screenRoot, x, y, item.KindLabel, item.title, price, true, ShowSet);
+                    CreateProductCard(screenRoot, x, y, item.KindLabel, item.title, price, true, ShowSet, ArtFor(item.sku));
                 }
             }
         }
@@ -266,10 +287,10 @@ public sealed class MarketFlow : MonoBehaviour
         {
             // 오프라인 폴백 — 서버를 못 읽어도 화면은 깨지지 않는다.
             // 목업이라도 전부 눌리게 둔다. 눌리지 않는 카드는 고장으로 읽힌다.
-            CreateProductCard(screenRoot, 24f, 216f, "스킨", "노란 우비", "육포 8", false, ShowSkin);
-            CreateProductCard(screenRoot, 355f, 216f, "세트", "겨울 패딩 세트", "39,000원", true, ShowSet);
-            CreateProductCard(screenRoot, 24f, 526f, "스킨", "체크 목도리", "육포 5", false, ShowSkin);
-            CreateProductCard(screenRoot, 355f, 526f, "스킨", "기본 반다나", "P 1,500", false, ShowSkin);
+            CreateProductCard(screenRoot, 24f, 216f, "스킨", "노란 우비", "육포 8", false, ShowSkin, ArtFor("skin-raincoat"));
+            CreateProductCard(screenRoot, 355f, 216f, "세트", "겨울 패딩 세트", "39,000원", true, ShowSet, ArtFor("set-winter"));
+            CreateProductCard(screenRoot, 24f, 526f, "스킨", "체크 목도리", "육포 5", false, ShowSkin, ArtFor("skin-scarf"));
+            CreateProductCard(screenRoot, 355f, 526f, "스킨", "노란 캡모자", "육포 6", false, ShowSkin, ArtFor("skin-cap"));
         }
 
         CreateText(screenRoot, "모든 상품은 확정 구매예요 — 뽑기·랜덤박스는 없어요", 14f, Muted, TextAnchor.MiddleCenter, 24f, 846f, 638f, 34f);
@@ -285,7 +306,8 @@ public sealed class MarketFlow : MonoBehaviour
             ? _selected.description : "비 오는 날 마당 연출이 바뀌어요";
 
         CreateHeader(screenRoot, title, true, ShowShop);
-        CreatePreview(screenRoot, 24f, 156f, 638f, 370f, "단추 착용 미리보기");
+        CreatePreview(screenRoot, 24f, 156f, 638f, 370f, "단추 착용 미리보기",
+            ArtFor(_selected != null ? _selected.sku : "skin-raincoat"));
         CreatePanelWithText(screenRoot, title, price, desc, 24f, 552f, 638f, 132f, White, Border);
         CreateInfoBox(screenRoot, "이 구매액의 10%는 공동 창고에 적립되어 보호소 기부에 쓰여요", 24f, 708f, 638f, 94f, donateBannerSprite);
         CreatePrimaryButton(screenRoot, $"{price}로 구매", 24f, 924f, 638f, 82f, delegate { Purchase(); });
@@ -295,7 +317,7 @@ public sealed class MarketFlow : MonoBehaviour
     private void BuildSet()
     {
         CreateHeader(screenRoot, "겨울 패딩 세트", true, ShowShop);
-        CreatePreview(screenRoot, 24f, 156f, 638f, 300f, "실물 옷 + 착용 스킨");
+        CreatePreview(screenRoot, 24f, 156f, 638f, 300f, "실물 옷 + 착용 스킨", ArtFor("set-winter"));
         CreatePanelWithText(screenRoot, "겨울 패딩 세트", "39,000원", "실물 옷 배송 + 같은 디자인 스킨 + 3,900 P 적립", 24f, 482f, 638f, 132f, White, Border);
 
         GameObject gaugeCard = CreateSpritePanel("Donation Gauge", screenRoot, 24f, 640f, 638f, 190f, gaugeCardSprite, new Color32(255, 248, 218, 255));
@@ -333,7 +355,7 @@ public sealed class MarketFlow : MonoBehaviour
 
     private void CreateHeader(Transform parent, string title, bool back, UnityEngine.Events.UnityAction backAction = null)
     {
-        GameObject header = CreatePanel("Header", parent, 24f, 24f, 638f, 96f, Brown);
+        GameObject header = CreateSpritePanel("Header", parent, 24f, 24f, 638f, 96f, productCardSprite, Brown, Brown);
         if (back)
         {
             CreateButton(header.transform, "←", 16f, 18f, 18f, 50f, 58f, SoftGold, BrownDark, backAction);
@@ -378,12 +400,16 @@ public sealed class MarketFlow : MonoBehaviour
         ShowShop();
     }
 
-private void CreateProductCard(Transform parent, float x, float y, string kind, string title, string price, bool donation, UnityEngine.Events.UnityAction action)
+private void CreateProductCard(Transform parent, float x, float y, string kind, string title, string price, bool donation, UnityEngine.Events.UnityAction action, Sprite art = null)
     {
         Sprite frame = donation ? productCardDonateSprite : productCardSprite;
         GameObject card = CreateSpritePanel(title, parent, x, y, 307f, 286f, frame, White);
-        GameObject kindBadge = CreateSpritePanel("Kind", card.transform, 108f, 42f, 91f, 32f, statusPillWaitSprite, Cream);
+        // 분류 배지는 왼쪽 위 모서리로. 가운데에 두면 상품 그림과 겹친다.
+        GameObject kindBadge = CreateSpritePanel("Kind", card.transform, 18f, 16f, 91f, 32f, statusPillWaitSprite, Cream);
         CreateText(kindBadge.transform, kind, 14f, GoldDark, TextAnchor.MiddleCenter, 2f, 1f, 87f, 30f);
+        // 배지(끝 48)와 제목(시작 164) 사이의 칸에만 그림을 넣는다. preserveAspect가
+        // 이 칸 안에 맞춰 축소하므로 카드 밖으로 넘치지 않는다.
+        if (art != null) CreateSpriteIcon(card.transform, art, 48f, 54f, 211f, 104f);
         CreateText(card.transform, title, 20f, Ink, TextAnchor.MiddleCenter, 18f, 164f, 271f, 34f);
         CreateText(card.transform, price, 17f, GoldDark, TextAnchor.MiddleCenter, donation ? 18f : 18f, 216f, donation ? 150f : 271f, 30f);
         if (donation) CreateBadge(card.transform, "기부 연동", 190f, 216f, 99f, 32f, Green);
@@ -398,9 +424,18 @@ private void CreateProductCard(Transform parent, float x, float y, string kind, 
     }
 
 
-private void CreatePreview(Transform parent, float x, float y, float width, float height, string label)
+private void CreatePreview(Transform parent, float x, float y, float width, float height, string label, Sprite art = null)
     {
         GameObject preview = CreateSpritePanel("Preview", parent, x, y, width, height, previewFrameSprite, new Color32(176, 123, 79, 24));
+
+        // 그림이 있으면 그림이 미리보기다. 자리표시 라벨은 그림이 없을 때만 띄운다.
+        if (art != null)
+        {
+            const float Pad = 32f;
+            CreateSpriteIcon(preview.transform, art, Pad, Pad, width - Pad * 2f, height - Pad * 2f);
+            return;
+        }
+
         float labelWidth = Mathf.Min(320f, width - 80f);
         GameObject labelPanel = CreateSpritePanel("Preview Label", preview.transform, (width - labelWidth) * 0.5f, height * 0.5f - 24f, labelWidth, 48f, jerkyTileSprite, Cream);
         CreateText(labelPanel.transform, label, 16f, GoldDark, TextAnchor.MiddleCenter, 8f, 5f, labelWidth - 16f, 38f);
@@ -470,10 +505,16 @@ private void CreateInfoBox(Transform parent, string text, float x, float y, floa
     /// </summary>
     private Button CreateButton(Transform parent, string label, float fontSize, float x, float y, float width, float height, Color fill, Color textColor, UnityEngine.Events.UnityAction action)
     {
-        bool useArt = priceButtonSprite != null && (fill == Gold || fill == SoftGold);
-        GameObject buttonObject = useArt
+        // 금색 계열은 price-button, 나머지는 흰 라운드 카드에 색을 곱해 쓴다.
+        // 선택된 버튼만 자산을 쓰면 미선택 버튼이 각진 사각형으로 남아 튄다.
+        bool goldArt = priceButtonSprite != null && (fill == Gold || fill == SoftGold);
+        bool cardArt = !goldArt && productCardSprite != null;
+        bool useArt = goldArt || cardArt;
+        GameObject buttonObject = goldArt
             ? CreateSpritePanel(label + " Button", parent, x, y, width, height, priceButtonSprite, fill)
-            : CreatePanel(label + " Button", parent, x, y, width, height, fill, Border);
+            : cardArt
+                ? CreateSpritePanel(label + " Button", parent, x, y, width, height, productCardSprite, fill, fill)
+                : CreatePanel(label + " Button", parent, x, y, width, height, fill, Border);
 
         Button button = buttonObject.AddComponent<Button>();
         Image buttonImage = buttonObject.GetComponent<Image>();
@@ -481,7 +522,7 @@ private void CreateInfoBox(Transform parent, string text, float x, float y, floa
         button.targetGraphic = buttonImage;
 
         // 자산을 쓸 땐 색을 곱하지 않는다. 흰색이 원본 그라데이션이다.
-        Color baseColor = useArt ? Color.white : fill;
+        Color baseColor = goldArt ? Color.white : fill;
         ColorBlock colors = button.colors;
         colors.normalColor = baseColor;
         colors.highlightedColor = Color.Lerp(baseColor, Color.white, 0.12f);
@@ -501,14 +542,15 @@ private void CreateInfoBox(Transform parent, string text, float x, float y, floa
     /// 모서리와 그림자가 함께 늘어나 뭉개진다. 9-슬라이스 테두리가 있는
     /// 자산은 Sliced로 그려 모서리를 원본 픽셀 그대로 유지한다.
     /// </summary>
-    private GameObject CreateSpritePanel(string name, Transform parent, float x, float y, float width, float height, Sprite sprite, Color fallback)
+    private GameObject CreateSpritePanel(string name, Transform parent, float x, float y, float width, float height, Sprite sprite, Color fallback, Color? tint = null)
     {
         GameObject objectToCreate = CreatePanel(name, parent, x, y, width, height, fallback);
         Image image = objectToCreate.GetComponent<Image>();
         image.sprite = sprite;
         image.type = sprite != null && sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
         image.preserveAspect = false;
-        image.color = sprite == null ? fallback : Color.white;
+        // 자산은 흰 라운드 카드 한 장뿐이다. 다른 색이 필요하면 곱해서 재사용한다.
+        image.color = sprite == null ? fallback : (tint ?? Color.white);
         return objectToCreate;
     }
 
