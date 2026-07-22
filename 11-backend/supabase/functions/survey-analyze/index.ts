@@ -10,10 +10,14 @@
  *    설문은 이미 문항 단위로 저장돼 있으므로, 분석 실패는 재시도로 해결된다.
  */
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { json, preflight } from "../_shared/http.ts";
 import { fromEnv, LlmError } from "../_shared/llm.ts";
 import { buildMessages, validate, AnalysisInvalid, type Breed } from "../_shared/analysis.ts";
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   const auth = req.headers.get("Authorization") ?? "";
   if (!auth.startsWith("Bearer ")) return json({ error: "인증이 필요합니다" }, 401);
 
@@ -124,10 +128,3 @@ Deno.serve(async (req) => {
     return json({ error: String(e) }, 500);
   }
 });
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
