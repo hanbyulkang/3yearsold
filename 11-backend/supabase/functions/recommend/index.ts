@@ -7,7 +7,7 @@
  * 추천 이유는 사용자별로 생성해 recommendations에 저장한다.
  * 같은 보호견이라도 사람마다 다른 이유를 받는다.
  */
-import { json, admin, requireUser } from "../_shared/http.ts";
+import { json, admin, requireUser, preflight } from "../_shared/http.ts";
 import { fromEnv } from "../_shared/llm.ts";
 import {
   buildRecommendMessages, validateRecommendations, candidateFilter,
@@ -16,6 +16,9 @@ import {
 import type { Analysis } from "../_shared/analysis.ts";
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   const db = admin();
   const auth = await requireUser(req, db);
   if (auth instanceof Response) return auth;

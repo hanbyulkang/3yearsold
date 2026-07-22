@@ -7,10 +7,13 @@
  * 응답의 seed로 클라가 보드를 그리고, 같은 시드로 서버가 나중에 재계산한다.
  * 클라와 서버가 _shared/game.ts의 같은 PRNG를 써야 한다.
  */
-import { json, admin, requireUser } from "../_shared/http.ts";
+import { json, admin, requireUser, preflight } from "../_shared/http.ts";
 import { COLS, ROWS, COLORS, MAX_MOVES } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   const db = admin();
   const auth = await requireUser(req, db);
   if (auth instanceof Response) return auth;
