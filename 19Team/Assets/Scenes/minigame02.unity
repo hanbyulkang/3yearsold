@@ -337,10 +337,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd4f3d4abd20243008e8305f5e363307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiniGame2048
-  pawSprite: {fileID: 21300000, guid: 73b4b03cb04d943779da367cdb7356a5, type: 3}
-  boneSprite: {fileID: 21300000, guid: 3449d7c95324b4d599c44dc99722e433, type: 3}
-  jerkySprite: {fileID: 21300000, guid: 2e6a33c1bf61e4ea292e371f5434d571, type: 3}
-  dogSprite: {fileID: 21300000, guid: ce531908df7304d5e96cd36b0f47ad14, type: 3}
+  koreanFont: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
+  boardBg: {fileID: 21300000, guid: 3b5357840db441ee982121ddbf01d450, type: 3}
+  tileSprites:
+  - {fileID: 21300000, guid: da965f650f96437bb781aac8d931d40b, type: 3}
+  - {fileID: 21300000, guid: 4c3e135556a946afa03561e288a97212, type: 3}
+  - {fileID: 21300000, guid: a8f1b536779e49ce9e9eae247aa59185, type: 3}
+  - {fileID: 21300000, guid: afdedcc9ebaf4d9799139a8148a9f9ee, type: 3}
+  - {fileID: 21300000, guid: 961cdea4e22b41fb9ec58f099bb77f33, type: 3}
+  - {fileID: 21300000, guid: 7205bcaec9904604ad196366af6ccbe4, type: 3}
+  - {fileID: 21300000, guid: 1d6bd013a5894cbb9e971f6c3e1ae32c, type: 3}
+  - {fileID: 21300000, guid: da8fc428a76248f18ed82e9d46474df1, type: 3}
+  - {fileID: 21300000, guid: 1c3dc09655cf4ded888e6218c64fb9aa, type: 3}
+  - {fileID: 21300000, guid: 69183e23499f4684b349fe231b351bb2, type: 3}
+  headerBar: {fileID: 21300000, guid: 7db577e9af1248e489dce2f6358b04b5, type: 3}
+  chipPill: {fileID: 21300000, guid: 51a6226be932463d98dcd1c286a01ba3, type: 3}
+  closeBtn: {fileID: 21300000, guid: 025e61f3d64440a88bf7177412570c5d, type: 3}
+  medalSprite: {fileID: 21300000, guid: dcaa106a53d14fc4a9dc126c54c8b930, type: 3}
+  btnGold: {fileID: 21300000, guid: 128481b98b534f79ac01e49d87b4e19d, type: 3}
+  btnDark: {fileID: 21300000, guid: fb328db97a42443a90aefbe09830507b, type: 3}
+  rewardCard: {fileID: 21300000, guid: 9be4d792ed4b41879b95af7cb66d1d9f, type: 3}
+  coachCard: {fileID: 21300000, guid: 9d31bab108224918ab41fb4a3fa31916, type: 3}
+  iconBone: {fileID: 21300000, guid: cde55bd4dabe41eba651dc379943b168, type: 3}
+  iconDogface: {fileID: 21300000, guid: a0f0ac15800645a998f2340862b51863, type: 3}
 --- !u!4 &2114320084
 Transform:
   m_ObjectHideFlags: 0

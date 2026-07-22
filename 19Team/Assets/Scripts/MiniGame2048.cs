@@ -1,74 +1,78 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
-/// A complete, self-contained 2048 mini-game UI for the minigame02 scene.
-/// Built at runtime so the scene remains easy to edit and the layout is responsive.
+/// MG2(2048) — minigame02 씬. mg2-2048-mockup.html 시안 그대로 구현한다:
+/// 393×852 · 콘텐츠 폭 362(좌우 15.5) · 보드 362, 셀 80, 간격 8, 내측 패딩 9.
+/// 아트는 Assets/UI/MiniGame2 (svg-mg2 렌더본). UI는 전부 코드로 만든다.
+/// 화면은 시안의 MG2-B(플레이) / MG2-C(결과) 두 장이다.
 /// </summary>
 public sealed class MiniGame2048 : MonoBehaviour
 {
     private const int Size = 4;
-    private const float BoardPadding = 18f;
     private readonly int[,] board = new int[Size, Size];
-    private readonly int[,] previousBoard = new int[Size, Size];
     private readonly Image[,] tileImages = new Image[Size, Size];
-    private readonly Text[,] tileLabels = new Text[Size, Size];
-    private readonly Image[,,] tileIconImages = new Image[Size, Size, 4];
-    private readonly Color[] tileColors =
-    {
-        new Color32(238, 231, 218, 255), new Color32(239, 225, 196, 255),
-        new Color32(245, 180, 100, 255), new Color32(241, 139, 82, 255),
-        new Color32(236, 105, 75, 255), new Color32(211, 78, 103, 255),
-        new Color32(157, 92, 181, 255), new Color32(90, 109, 190, 255),
-        new Color32(58, 83, 160, 255), new Color32(42, 57, 117, 255),
-        new Color32(34, 42, 90, 255), new Color32(25, 31, 70, 255)
-    };
 
-    public Sprite pawSprite;
-    public Sprite boneSprite;
-    public Sprite jerkySprite;
-    public Sprite dogSprite;
+    [Header("MG2 아트 (Assets/UI/MiniGame2)")]
+    [SerializeField] private TMP_FontAsset koreanFont;
+    [SerializeField] private Sprite boardBg;
+    [SerializeField] private Sprite[] tileSprites = new Sprite[10]; // lv1 x1/x2/x4, lv2 x1/x2/x4, lv3 x1/x2/x4, lv4(강아지)
+    [SerializeField] private Sprite headerBar;
+    [SerializeField] private Sprite chipPill;
+    [SerializeField] private Sprite closeBtn;
+    [SerializeField] private Sprite medalSprite;
+    [SerializeField] private Sprite btnGold;
+    [SerializeField] private Sprite btnDark;
+    [SerializeField] private Sprite rewardCard;
+    [SerializeField] private Sprite coachCard;
+    [SerializeField] private Sprite iconBone;
+    [SerializeField] private Sprite iconDogface;
 
-    private Transform boardRoot;
-    private Text scoreText;
-    private Text bestText;
-    private Text statusText;
-    private GameObject gameOverOverlay;
+    // ---- 시안 토큰 ----
+    private static readonly Color Cream = FromHex(0xFAF3E6);
+    private static readonly Color Ink = FromHex(0x4A3327);
+    private static readonly Color SubInk = FromHex(0x8A7A62);
+    private static readonly Color GoldInk = FromHex(0xB8762A);
+
+    // 보드 격자: 내측 패딩 9 + 셀 80·4 + 간격 8·3 = 362
+    private const float CellStep = 88f;   // 80 + 8
+    private const float CellHalfSpan = 132f; // (362 - 18 - 80) / 2
+
+    private GameObject playPanel, resultPanel;
+    private TextMeshProUGUI scoreChipText, bestChipText, hintText;
+    private TextMeshProUGUI resultTitle, resultBones, resultSubLine, coachText;
+    private Image resultBoneIcon;
     private int score;
     private int best;
-    private bool hasUndo;
+    private int moves;
     private bool busy;
+    private bool playing;
     private Vector2 touchStart;
     private Vector2 mouseStart;
     private bool mouseDragging;
-    private bool cleared;
 
-    private static readonly Color Ink = new Color32(42, 48, 77, 255);
-    private static readonly Color Muted = new Color32(112, 119, 147, 255);
-    private static readonly Color Cream = new Color32(255, 248, 237, 255);
-    private static readonly Color BoardColor = new Color32(49, 57, 98, 255);
-    private static readonly Color Orange = new Color32(244, 126, 66, 255);
-    private static readonly Color Purple = new Color32(99, 89, 171, 255);
+    private const string DefaultHint = "같은 간식을 밀어서 합치면 다음 간식이 돼요";
 
     private void Start()
     {
         Application.targetFrameRate = 60;
         best = PlayerPrefs.GetInt("MiniGame2048Best", 0);
-        BuildInterface();
-        // 서버에서 발바닥 잔량을 받아온 뒤 첫 판을 연다 (오프라인이면 추정값으로 진행)
-        Backend.Game2048Bridge.Refresh(NewGame);
+        if (koreanFont == null) koreanFont = TMP_Settings.defaultFontAsset;
+        BuildUI();
+        // 서버에서 발바닥 잔량을 동기화한 뒤 첫 판을 연다 (오프라인이면 추정값으로 진행)
+        Backend.Game2048Bridge.Refresh(StartRound);
     }
 
     private void Update()
     {
-        if (busy) return;
+        if (!playing || busy) return;
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null)
         {
@@ -112,200 +116,171 @@ public sealed class MiniGame2048 : MonoBehaviour
             : (delta.y > 0 ? Vector2Int.up : Vector2Int.down));
     }
 
-    private void BuildInterface()
+    // ---- UI 구성 (시안 좌표를 중앙 원점으로 환산: x-196.5, y 426-top) ----
+
+    private void BuildUI()
     {
-        if (EventSystem.current == null)
+        var canvasGo = new GameObject("MG2Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        canvasGo.transform.SetParent(transform, false);
+        canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        var scaler = canvasGo.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(393, 852);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        if (FindFirstObjectByType<EventSystem>() == null)
         {
-            GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            eventSystem.transform.SetParent(transform, false);
+            var es = new GameObject("EventSystem", typeof(EventSystem));
+#if ENABLE_INPUT_SYSTEM
+            es.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+#else
+            es.AddComponent<StandaloneInputModule>();
+#endif
         }
 
-        Canvas canvas = GetComponentInChildren<Canvas>();
-        if (canvas == null)
-        {
-            GameObject canvasObject = new GameObject("2048 Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvasObject.transform.SetParent(transform, false);
-            canvas = canvasObject.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
-            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.45f;
-        }
-
-        RectTransform root = canvas.GetComponent<RectTransform>();
-        CreateImage("Background", root, new Color32(241, 244, 252, 255), Vector2.zero, Vector2.one);
-        RectTransform contentRoot = CreateSafeArea(root);
-        CreateRoundedPanel("TopGlow", contentRoot, new Color32(226, 231, 250, 255), new Vector2(0.5f, 0.9f), new Vector2(0.92f, 0.18f), 26f);
-
-        Text eyebrow = CreateText("Eyebrow", contentRoot, "PAWS & PUZZLES  /  MINI GAME", 22, Muted, TextAnchor.MiddleLeft);
-        SetRect(eyebrow.rectTransform, new Vector2(0.08f, 0.935f), new Vector2(0.92f, 0.97f));
-        Text title = CreateText("Title", contentRoot, "2048\nPaw Edition", 64, Ink, TextAnchor.MiddleLeft);
-        title.fontStyle = FontStyle.Bold;
-        SetRect(title.rectTransform, new Vector2(0.08f, 0.81f), new Vector2(0.62f, 0.93f));
-
-        Text subtitle = CreateText("Subtitle", contentRoot, "작은 한 수가 큰 꼬리 흔들기를 만들어요", 25, Muted, TextAnchor.MiddleLeft);
-        SetRect(subtitle.rectTransform, new Vector2(0.08f, 0.765f), new Vector2(0.92f, 0.81f));
-
-        CreateScoreCard(contentRoot, "SCORE", new Vector2(0.69f, 0.865f), out scoreText);
-        CreateScoreCard(contentRoot, "BEST", new Vector2(0.86f, 0.865f), out bestText);
-
-        boardRoot = new GameObject("2048 Board", typeof(RectTransform)).transform;
-        boardRoot.SetParent(contentRoot, false);
-        RectTransform boardRect = boardRoot as RectTransform;
-        SetRect(boardRect, new Vector2(0.075f, 0.31f), new Vector2(0.925f, 0.73f));
-        CreateRoundedPanel("BoardSurface", boardRoot, BoardColor, new Vector2(0.5f, 0.5f), Vector2.one, 28f);
-        BuildBoardSlots(boardRoot);
-
-        Text hint = CreateText("Hint", contentRoot, "DRAG THE BOARD TO MOVE", 20, Muted, TextAnchor.MiddleCenter);
-        hint.fontStyle = FontStyle.Bold;
-        SetRect(hint.rectTransform, new Vector2(0.15f, 0.265f), new Vector2(0.85f, 0.3f));
-        statusText = CreateText("Status", contentRoot, "합쳐서 더 큰 숫자를 만들어 보세요!", 24, Purple, TextAnchor.MiddleCenter);
-        statusText.fontStyle = FontStyle.Bold;
-        SetRect(statusText.rectTransform, new Vector2(0.08f, 0.205f), new Vector2(0.92f, 0.26f));
-
-        Button home = CreateButton(contentRoot, "⌂  HOME", new Vector2(0.08f, 0.105f), new Vector2(0.35f, 0.18f), Purple);
-        home.onClick.AddListener(() => SceneManager.LoadScene("Suntail Village"));
-        Button hintButton = CreateButton(contentRoot, "✦  HINT", new Vector2(0.365f, 0.105f), new Vector2(0.635f, 0.18f), new Color32(75, 91, 143, 255));
-        hintButton.onClick.AddListener(ShowHint);
-        Button newGame = CreateButton(contentRoot, "NEW GAME", new Vector2(0.65f, 0.105f), new Vector2(0.92f, 0.18f), Orange);
-        newGame.onClick.AddListener(NewGame);
-
-        Text footer = CreateText("Footer", contentRoot, "DRAG THE BOARD  •  MERGE THE PAWS  •  REACH 2048", 17, Muted, TextAnchor.MiddleCenter);
-        SetRect(footer.rectTransform, new Vector2(0.06f, 0.045f), new Vector2(0.94f, 0.085f));
+        BuildPlayPanel(canvasGo.transform);
+        BuildResultPanel(canvasGo.transform);
+        resultPanel.SetActive(false);
     }
 
-    private void BuildBoardSlots(Transform parent)
+    private void BuildPlayPanel(Transform parent)
     {
+        playPanel = MakePanel(parent, "PlayPanel");
+        var bg = MakeImage(playPanel.transform, "Bg", Cream, null);
+        Stretch(bg.rectTransform);
+
+        // X 버튼: x15.5 y16 44×44 (+아래 그림자 3)
+        var close = MakeImage(playPanel.transform, "CloseBtn", Color.white, closeBtn);
+        close.raycastTarget = true;
+        SetRect(close.rectTransform, new Vector2(-159f, 386.5f), new Vector2(44f, 47f));
+        var closeButton = close.gameObject.AddComponent<Button>();
+        closeButton.targetGraphic = close;
+        closeButton.onClick.AddListener(ReturnToVillage);
+
+        // 헤더 바: y72 362×64 — "멍멍 2048" + 점수/베스트 칩
+        var header = MakeImage(playPanel.transform, "Header", Color.white, headerBar);
+        SetRect(header.rectTransform, new Vector2(0f, 322f), new Vector2(362f, 64f));
+        var title = MakeText(header.transform, "Title", "멍멍 2048", 20, FontStyles.Bold, Cream,
+            new Vector2(-97f, 0f), new Vector2(140f, 40f));
+        title.alignment = TextAlignmentOptions.Left;
+        title.characterSpacing = 2f;
+
+        scoreChipText = MakeChip(header.transform, "ScoreChip", new Vector2(-13f, 0f), new Vector2(104f, 32f));
+        bestChipText = MakeChip(header.transform, "BestChip", new Vector2(107f, 0f), new Vector2(120f, 32f));
+
+        // 보드: y172 362×362 — 빈 슬롯은 보드 아트에 새겨져 있다
+        var boardImg = MakeImage(playPanel.transform, "Board", Color.white, boardBg);
+        boardImg.raycastTarget = true;
+        SetRect(boardImg.rectTransform, new Vector2(0f, 73f), new Vector2(362f, 362f));
         for (int row = 0; row < Size; row++)
-        {
             for (int col = 0; col < Size; col++)
             {
-                GameObject slot = CreateRoundedPanel("Slot", parent, new Color32(66, 74, 116, 255), new Vector2(0.125f + col * 0.25f, 0.875f - row * 0.25f), new Vector2(0.205f, 0.205f), 18f);
-                Image tile = slot.GetComponent<Image>();
+                var tile = MakeImage(boardImg.transform, $"Tile {row}-{col}", Color.white, null);
+                SetRect(tile.rectTransform, CellCenter(row, col), new Vector2(80f, 80f));
+                tile.gameObject.SetActive(false);
                 tileImages[row, col] = tile;
-                Text label = CreateText("Tile", slot.transform, "", 58, Ink, TextAnchor.MiddleCenter);
-                label.fontStyle = FontStyle.Bold;
-                SetRect(label.rectTransform, Vector2.zero, Vector2.one);
-                label.gameObject.SetActive(false);
-                tileLabels[row, col] = label;
-                for (int icon = 0; icon < 4; icon++)
-                    tileIconImages[row, col, icon] = CreateTileIcon(slot.transform, icon);
             }
-        }
+
+        // 안내: y560
+        hintText = MakeText(playPanel.transform, "Hint", DefaultHint, 14, FontStyles.Normal, SubInk,
+            new Vector2(0f, -145f), new Vector2(362f, 22f));
     }
 
-    private Image CreateTileIcon(Transform parent, int index)
+    private void BuildResultPanel(Transform parent)
     {
-        GameObject obj = new GameObject("Icon " + index, typeof(RectTransform), typeof(Image));
-        obj.transform.SetParent(parent, false);
-        RectTransform rect = obj.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(64f, 64f);
-        Image image = obj.GetComponent<Image>();
-        image.raycastTarget = false;
-        image.preserveAspect = true;
-        obj.SetActive(false);
-        return image;
+        resultPanel = MakePanel(parent, "ResultPanel");
+        var bg = MakeImage(resultPanel.transform, "Bg", Cream, null);
+        Stretch(bg.rectTransform);
+        bg.raycastTarget = true;   // 뒤 보드 입력 차단
+
+        // 메달: y120 112×118
+        var medal = MakeImage(resultPanel.transform, "Medal", Color.white, medalSprite);
+        SetRect(medal.rectTransform, new Vector2(0f, 247f), new Vector2(112f, 118f));
+
+        resultTitle = MakeText(resultPanel.transform, "Title", "잘 놀았어요!", 32, FontStyles.Bold, Ink,
+            new Vector2(0f, 152f), new Vector2(362f, 46f));
+
+        // 보상 카드: y320 362×96 — "+N 🦴" + 요약 한 줄
+        var reward = MakeImage(resultPanel.transform, "RewardCard", Color.white, rewardCard);
+        SetRect(reward.rectTransform, new Vector2(0f, 58f), new Vector2(362f, 96f));
+        resultBones = MakeText(reward.transform, "Bones", "+0", 30, FontStyles.Bold, GoldInk,
+            new Vector2(-19f, 13f), new Vector2(240f, 40f));
+        resultBoneIcon = MakeImage(reward.transform, "BoneIcon", Color.white, iconBone);
+        resultBoneIcon.preserveAspect = true;
+        SetRect(resultBoneIcon.rectTransform, new Vector2(30f, 13f), new Vector2(30f, 30f));
+        resultSubLine = MakeText(reward.transform, "Sub", "", 14, FontStyles.Normal, SubInk,
+            new Vector2(0f, -26f), new Vector2(334f, 22f));
+
+        // 보호견 코멘트: y448 362×76 (점선 카드)
+        var coach = MakeImage(resultPanel.transform, "CoachCard", Color.white, coachCard);
+        SetRect(coach.rectTransform, new Vector2(0f, -60f), new Vector2(362f, 76f));
+        var face = MakeImage(coach.transform, "Face", Color.white, iconDogface);
+        face.preserveAspect = true;
+        SetRect(face.rectTransform, new Vector2(-156f, 14f), new Vector2(26f, 26f));
+        coachText = MakeText(coach.transform, "Msg", "", 15, FontStyles.Normal, Ink,
+            new Vector2(15f, -2f), new Vector2(304f, 56f));
+        coachText.alignment = TextAlignmentOptions.TopLeft;
+        coachText.lineSpacing = 8f;
+
+        // 버튼: y736 — 한 번 더(골드 216) / 홈으로(다크 136)
+        MakeArtButton(resultPanel.transform, "RetryBtn", "한 번 더 (발바닥 1)", Ink, btnGold,
+            new Vector2(-73f, -342f), new Vector2(216f, 64f), 18, RetryRound);
+        MakeArtButton(resultPanel.transform, "HomeBtn", "홈으로", Cream, btnDark,
+            new Vector2(113f, -342f), new Vector2(136f, 64f), 19, ReturnToVillage);
     }
 
-    private void CreateScoreCard(Transform parent, string caption, Vector2 center, out Text value)
-    {
-        GameObject card = CreateRoundedPanel(caption + " Card", parent, Cream, center, new Vector2(0.155f, 0.075f), 18f);
-        Text cap = CreateText("Caption", card.transform, caption, 16, Muted, TextAnchor.MiddleCenter);
-        cap.fontStyle = FontStyle.Bold;
-        SetRect(cap.rectTransform, new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.98f));
-        value = CreateText("Value", card.transform, "0", 30, Ink, TextAnchor.MiddleCenter);
-        value.fontStyle = FontStyle.Bold;
-        SetRect(value.rectTransform, new Vector2(0.05f, 0.04f), new Vector2(0.95f, 0.58f));
-    }
+    private static Vector2 CellCenter(int row, int col)
+    { return new Vector2(col * CellStep - CellHalfSpan, CellHalfSpan - row * CellStep); }
 
-    private Button CreateButton(Transform parent, string label, Vector2 min, Vector2 max, Color color)
-    {
-        GameObject obj = CreateRoundedPanel(label + " Button", parent, color, (min + max) * 0.5f, max - min, 18f);
-        Button button = obj.AddComponent<Button>();
-        button.targetGraphic = obj.GetComponent<Image>();
-        ColorBlock colors = button.colors;
-        colors.normalColor = color;
-        colors.highlightedColor = Color.Lerp(color, Color.white, 0.12f);
-        colors.pressedColor = Color.Lerp(color, Color.black, 0.12f);
-        button.colors = colors;
-        Text text = CreateText("Label", obj.transform, label, 21, Color.white, TextAnchor.MiddleCenter);
-        text.fontStyle = FontStyle.Bold;
-        SetRect(text.rectTransform, Vector2.zero, Vector2.one);
-        return button;
-    }
+    // ---- 흐름 ----
 
-    private GameObject CreateRoundedPanel(string name, Transform parent, Color color, Vector2 anchor, Vector2 size, float radius)
+    private void StartRound()
     {
-        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
-        obj.transform.SetParent(parent, false);
-        RectTransform rect = obj.GetComponent<RectTransform>();
-        rect.anchorMin = anchor - size * 0.5f; rect.anchorMax = anchor + size * 0.5f; rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = Vector2.zero; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
-        Image image = obj.GetComponent<Image>(); image.color = color; image.raycastTarget = true;
-        return obj;
-    }
-
-    private Image CreateImage(string name, Transform parent, Color color, Vector2 min, Vector2 max)
-    {
-        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image)); obj.transform.SetParent(parent, false);
-        RectTransform r = obj.GetComponent<RectTransform>(); r.anchorMin = min; r.anchorMax = max; r.offsetMin = Vector2.zero; r.offsetMax = Vector2.zero;
-        Image image = obj.GetComponent<Image>(); image.color = color; image.raycastTarget = false; return image;
-    }
-
-    private Text CreateText(string name, Transform parent, string content, int size, Color color, TextAnchor anchor)
-    {
-        GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Text)); obj.transform.SetParent(parent, false);
-        Text text = obj.GetComponent<Text>(); text.text = content; text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.fontSize = size; text.resizeTextForBestFit = true; text.resizeTextMinSize = Mathf.Max(10, size / 2); text.resizeTextMaxSize = size; text.color = color; text.alignment = anchor; text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Truncate; text.raycastTarget = false; return text;
-    }
-
-    private static void SetRect(RectTransform rect, Vector2 min, Vector2 max)
-    { rect.anchorMin = min; rect.anchorMax = max; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero; rect.pivot = new Vector2(0.5f, 0.5f); }
-
-    private static RectTransform CreateSafeArea(RectTransform parent)
-    {
-        GameObject safe = new GameObject("Safe Area", typeof(RectTransform));
-        safe.transform.SetParent(parent, false);
-        RectTransform rect = safe.GetComponent<RectTransform>();
-        Rect area = Screen.safeArea;
-        rect.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
-        rect.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
-        rect.offsetMin = new Vector2(24f, 18f);
-        rect.offsetMax = new Vector2(-24f, -18f);
-        return rect;
-    }
-
-    private void NewGame()
-    {
-        if (boardRoot == null) return;
         // 판 시작에 발바닥 1개를 쓴다 (PRD §5.1 — 미니게임 입장 전용)
         if (!Backend.Game2048Bridge.BeginRound())
         {
-            statusText.text = "발바닥이 다 떨어졌어요. 잠시 뒤 다시 채워집니다";
+            hintText.text = "발바닥이 다 떨어졌어요. 잠시 뒤 다시 채워집니다";
             return;
         }
-        score = 0; cleared = false; hasUndo = false; Array.Clear(board, 0, board.Length); AddRandomTile(); AddRandomTile(); UpdateView(); statusText.text = $"발바닥 {Backend.Game2048Bridge.Paws}개 남음 · 합쳐서 뼈다귀를 모아보세요!"; if (gameOverOverlay != null) Destroy(gameOverOverlay);
+        resultPanel.SetActive(false);
+        playPanel.SetActive(true);
+        playing = true;
+        score = 0;
+        moves = 0;
+        Array.Clear(board, 0, board.Length);
+        AddRandomTile();
+        AddRandomTile();
+        UpdateView();
+        hintText.text = DefaultHint;
     }
 
-    private void SaveUndo()
-    { Array.Copy(board, previousBoard, board.Length); hasUndo = true; }
+    private void RetryRound()
+    {
+        if (!Backend.Game2048Bridge.BeginRound())
+        {
+            coachText.text = "단추: 발바닥이 다 떨어졌어요. 잠시 뒤 다시 채워져요!";
+            return;
+        }
+        resultPanel.SetActive(false);
+        playing = true;
+        score = 0;
+        moves = 0;
+        Array.Clear(board, 0, board.Length);
+        AddRandomTile();
+        AddRandomTile();
+        UpdateView();
+        hintText.text = DefaultHint;
+    }
 
-    private void Undo()
-    { if (!hasUndo) { statusText.text = "아직 되돌릴 수가 없어요"; return; } Array.Copy(previousBoard, board, board.Length); hasUndo = false; UpdateView(); statusText.text = "한 수 되돌렸어요"; }
-
-    private void ShowHint()
-    { Vector2Int[] dirs = { Vector2Int.left, Vector2Int.up, Vector2Int.right, Vector2Int.down }; foreach (Vector2Int d in dirs) if (CanMove(d)) { statusText.text = "힌트: " + (d == Vector2Int.left ? "왼쪽" : d == Vector2Int.right ? "오른쪽" : d == Vector2Int.up ? "위쪽" : "아래쪽") + "으로 움직여 보세요 ✦"; return; } statusText.text = "새 게임이 필요해요"; }
+    private void ReturnToVillage()
+    {
+        SceneManager.LoadScene("Suntail Village");
+    }
 
     private void Move(Vector2Int direction)
     {
         if (busy) return;
-        if (!CanMove(direction)) { statusText.text = "그 방향으로는 움직일 수 없어요"; return; }
-        SaveUndo();
+        if (!CanMove(direction)) { hintText.text = "그 방향으로는 움직일 수 없어요"; return; }
         bool[,] merged = new bool[Size, Size];
         Vector2Int gridDirection = new Vector2Int(direction.x, -direction.y);
         bool horizontal = gridDirection.x != 0;
@@ -329,23 +304,27 @@ public sealed class MiniGame2048 : MonoBehaviour
                 }
             }
         }
+        moves++;
         if (score > best) { best = score; PlayerPrefs.SetInt("MiniGame2048Best", best); }
-        AddRandomTile(); UpdateView(); StartCoroutine(AnimateSlide(direction)); statusText.text = HasDog() ? "강아지 완성! CLEAR! 🎉" : "좋아요! 같은 펫 타일을 드래그해서 합쳐 보세요";
-        if (HasDog()) { cleared = true; ShowClear(); }
-        else if (!HasMoves()) ShowGameOver();
+        AddRandomTile(); UpdateView(); StartCoroutine(AnimateSlide(direction));
+        hintText.text = DefaultHint;
+        if (HasDog()) ShowResult(true);
+        else if (!HasMoves()) ShowResult(false);
     }
 
     private IEnumerator AnimateSlide(Vector2Int direction)
     {
         busy = true;
-        Vector2 offset = new Vector2(-direction.x * 70f, -direction.y * 70f);
-        List<RectTransform> moved = new List<RectTransform>();
+        Vector2 offset = new Vector2(-direction.x * 24f, -direction.y * 24f);
+        List<RectTransform> movedRects = new List<RectTransform>();
+        List<Vector2> homes = new List<Vector2>();
         for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++)
         {
             if (board[r, c] == 0) continue;
             RectTransform rect = tileImages[r, c].rectTransform;
-            rect.anchoredPosition = offset;
-            moved.Add(rect);
+            movedRects.Add(rect);
+            homes.Add(CellCenter(r, c));
+            rect.anchoredPosition = CellCenter(r, c) + offset;
             rect.localScale = Vector3.one * 0.94f;
         }
         float elapsed = 0f;
@@ -353,23 +332,27 @@ public sealed class MiniGame2048 : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / 0.16f));
-            foreach (RectTransform rect in moved)
+            for (int i = 0; i < movedRects.Count; i++)
             {
-                rect.anchoredPosition = Vector2.Lerp(offset, Vector2.zero, t);
-                rect.localScale = Vector3.Lerp(Vector3.one * 0.94f, Vector3.one, t);
+                movedRects[i].anchoredPosition = Vector2.Lerp(homes[i] + offset, homes[i], t);
+                movedRects[i].localScale = Vector3.Lerp(Vector3.one * 0.94f, Vector3.one, t);
             }
             yield return null;
         }
-        foreach (RectTransform rect in moved) { rect.anchoredPosition = Vector2.zero; rect.localScale = Vector3.one; }
+        for (int i = 0; i < movedRects.Count; i++) { movedRects[i].anchoredPosition = homes[i]; movedRects[i].localScale = Vector3.one; }
         busy = false;
     }
 
     private bool CanMove(Vector2Int direction)
     {
         Vector2Int gridDirection = new Vector2Int(direction.x, -direction.y);
-        int[,] copy = new int[Size, Size]; Array.Copy(board, copy, board.Length); bool moved = false;
-        for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++) if (board[r, c] != 0) { int nr = r + gridDirection.y, nc = c + gridDirection.x; if (nr >= 0 && nr < Size && nc >= 0 && nc < Size && (board[nr, nc] == 0 || board[nr, nc] == board[r, c])) moved = true; }
-        Array.Copy(copy, board, board.Length); return moved;
+        for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++)
+            if (board[r, c] != 0)
+            {
+                int nr = r + gridDirection.y, nc = c + gridDirection.x;
+                if (nr >= 0 && nr < Size && nc >= 0 && nc < Size && (board[nr, nc] == 0 || board[nr, nc] == board[r, c])) return true;
+            }
+        return false;
     }
 
     private bool HasMoves() { if (FindEmpty() >= 0) return true; return CanMove(Vector2Int.left) || CanMove(Vector2Int.right) || CanMove(Vector2Int.up) || CanMove(Vector2Int.down); }
@@ -379,69 +362,142 @@ public sealed class MiniGame2048 : MonoBehaviour
     private int FindEmpty() { for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++) if (board[r, c] == 0) return r * Size + c; return -1; }
     private void AddRandomTile() { List<int> empty = new List<int>(); for (int i = 0; i < Size * Size; i++) if (board[i / Size, i % Size] == 0) empty.Add(i); if (empty.Count == 0) return; int at = empty[UnityEngine.Random.Range(0, empty.Count)]; board[at / Size, at % Size] = UnityEngine.Random.value < 0.9f ? 1 : 2; }
 
-    private Sprite SpriteFor(int value)
-    { return value <= 4 ? pawSprite : value <= 32 ? boneSprite : value <= 256 ? jerkySprite : dogSprite; }
+    /// <summary>값 → 타일 스프라이트. lv1 발바닥(1·2·4) lv2 뼈다귀(8·16·32) lv3 육포(64·128·256) lv4 강아지(512+).</summary>
+    private Sprite TileSpriteFor(int value)
+    {
+        if (value >= 512) return tileSprites[9];
+        int level = value <= 4 ? 0 : value <= 32 ? 1 : 2;
+        int count = value <= 4 ? value : value <= 32 ? value / 8 : value / 64; // 1, 2, 4
+        int countIndex = count == 1 ? 0 : count == 2 ? 1 : 2;
+        return tileSprites[level * 3 + countIndex];
+    }
 
-    private int CountFor(int value)
-    { return value <= 4 ? value : value <= 32 ? value / 8 : value <= 256 ? value / 64 : 1; }
+    private int MaxTile()
+    { int max = 0; for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++) if (board[r, c] > max) max = board[r, c]; return max; }
+
+    private static string TileName(int value)
+    { return value <= 4 ? "발바닥" : value <= 32 ? "뼈다귀" : value <= 256 ? "육포" : "강아지"; }
 
     private void UpdateView()
     {
-        if (scoreText != null) scoreText.text = score.ToString();
-        if (bestText != null) bestText.text = best.ToString();
+        if (scoreChipText != null) scoreChipText.text = $"점수 {score:N0}";
+        if (bestChipText != null) bestChipText.text = $"베스트 {best:N0}";
         for (int r = 0; r < Size; r++) for (int c = 0; c < Size; c++)
         {
             int value = board[r, c];
-            int level = value <= 0 ? 0 : Mathf.Clamp(Mathf.RoundToInt(Mathf.Log(value, 2)) - 1, 0, tileColors.Length - 1);
-            Sprite sprite = value == 0 ? null : SpriteFor(value);
-            int count = value == 0 ? 0 : CountFor(value);
-            tileImages[r, c].sprite = null;
-            tileImages[r, c].preserveAspect = false;
-            tileImages[r, c].color = value == 0 ? new Color32(66, 74, 116, 255) : new Color32(255, 255, 255, 20);
-            tileLabels[r, c].text = "";
-            for (int icon = 0; icon < 4; icon++)
-            {
-                Image image = tileIconImages[r, c, icon];
-                bool visible = icon < count;
-                image.gameObject.SetActive(visible);
-                image.sprite = sprite;
-                image.color = Color.white;
-                RectTransform iconRect = image.rectTransform;
-                if (count <= 1) iconRect.anchoredPosition = Vector2.zero;
-                else if (count == 2) iconRect.anchoredPosition = new Vector2(icon == 0 ? -28f : 28f, 0f);
-                else iconRect.anchoredPosition = icon == 0 ? new Vector2(-25f, -25f) : icon == 1 ? new Vector2(25f, -25f) : icon == 2 ? new Vector2(-25f, 25f) : new Vector2(25f, 25f);
-            }
+            var tile = tileImages[r, c];
+            tile.gameObject.SetActive(value != 0);
+            if (value != 0) tile.sprite = TileSpriteFor(value);
         }
     }
 
-    /// <summary>판이 끝나면 서버에 점수를 올리고 지급 결과를 표시한다.</summary>
-    private void GrantBones()
+    private void ShowResult(bool cleared)
     {
+        playing = false;
+        int maxTile = MaxTile();
+        resultTitle.text = cleared ? "강아지 완성!" : "잘 놀았어요!";
+        resultSubLine.text = $"최고 타일 · {TileName(maxTile)} {maxTile} · 이동 {moves}회";
+        coachText.text = cleared
+            ? "단추: 강아지 타일까지 왔어요! 최고예요. 뼈다귀는 제가 잘 챙겨둘게요."
+            : "단추: 뼈다귀 냄새가 여기까지 나요! 다음엔 강아지 타일까지 가봐요.";
+        SetBones(0);
+        resultPanel.SetActive(true);
+
+        // 판이 끝났으니 서버에 점수를 올리고 지급 결과를 반영한다
         Backend.Game2048Bridge.EndRound(score, granted =>
         {
-            if (statusText == null) return;   // 씬을 이미 떠났을 수 있다
-            statusText.text = granted > 0
-                ? $"뼈다귀 {granted}개를 받았어요!"
-                : "이번 판은 뼈다귀를 모으지 못했어요";
+            if (resultBones == null) return;   // 씬을 이미 떠났을 수 있다
+            SetBones(granted);
         });
     }
 
-    private void ShowClear()
+    /// <summary>"+N" 텍스트와 뼈다귀 아이콘을 한 묶음으로 가운데 정렬한다.</summary>
+    private void SetBones(int granted)
     {
-        if (gameOverOverlay != null) return;
-        GrantBones();
-        Transform root = boardRoot.parent;
-        gameOverOverlay = new GameObject("Clear Overlay", typeof(RectTransform), typeof(Image));
-        gameOverOverlay.transform.SetParent(root, false);
-        RectTransform rect = gameOverOverlay.GetComponent<RectTransform>();
-        SetRect(rect, new Vector2(0.075f, 0.325f), new Vector2(0.925f, 0.765f));
-        Image image = gameOverOverlay.GetComponent<Image>(); image.color = new Color32(49, 57, 98, 238);
-        Text title = CreateText("Title", gameOverOverlay.transform, "CLEAR!", 64, Color.white, TextAnchor.MiddleCenter); title.fontStyle = FontStyle.Bold; SetRect(title.rectTransform, new Vector2(0.1f, 0.56f), new Vector2(0.9f, 0.75f));
-        Text sub = CreateText("Sub", gameOverOverlay.transform, "강아지를 완성했어요! 🎉", 28, Cream, TextAnchor.MiddleCenter); SetRect(sub.rectTransform, new Vector2(0.1f, 0.38f), new Vector2(0.9f, 0.53f));
-        Button retry = CreateButton(gameOverOverlay.transform, "PLAY AGAIN", new Vector2(0.27f, 0.18f), new Vector2(0.73f, 0.32f), Orange); retry.onClick.AddListener(NewGame);
+        resultBones.text = $"+{granted:N0}";
+        resultBones.ForceMeshUpdate();
+        float textW = resultBones.preferredWidth;
+        const float gap = 8f, iconW = 30f;
+        resultBones.rectTransform.anchoredPosition = new Vector2(-(gap + iconW) * 0.5f, 13f);
+        resultBoneIcon.rectTransform.anchoredPosition = new Vector2((textW + gap) * 0.5f, 13f);
     }
 
-    private void ShowGameOver()
+    // ---- UI 헬퍼 ----
+
+    private static Color FromHex(int rgb)
+    { return new Color(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f); }
+
+    private GameObject MakePanel(Transform parent, string name)
     {
-        if (gameOverOverlay != null) return; GrantBones(); Transform root = boardRoot.parent; gameOverOverlay = new GameObject("Game Over", typeof(RectTransform), typeof(Image)); gameOverOverlay.transform.SetParent(root, false); RectTransform rect = gameOverOverlay.GetComponent<RectTransform>(); SetRect(rect, new Vector2(0.075f, 0.325f), new Vector2(0.925f, 0.765f)); Image image = gameOverOverlay.GetComponent<Image>(); image.color = new Color32(35, 42, 83, 235); Text title = CreateText("Title", gameOverOverlay.transform, "NO MORE MOVES", 46, Color.white, TextAnchor.MiddleCenter); title.fontStyle = FontStyle.Bold; SetRect(title.rectTransform, new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f)); Text sub = CreateText("Sub", gameOverOverlay.transform, "한 번 더 도전해 볼까요?", 26, Cream, TextAnchor.MiddleCenter); SetRect(sub.rectTransform, new Vector2(0.1f, 0.38f), new Vector2(0.9f, 0.52f)); Button retry = CreateButton(gameOverOverlay.transform, "PLAY AGAIN", new Vector2(0.27f, 0.18f), new Vector2(0.73f, 0.32f), Orange); retry.onClick.AddListener(NewGame); }
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        Stretch((RectTransform)go.transform);
+        return go;
+    }
+
+    private Image MakeImage(Transform parent, string name, Color color, Sprite sprite)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
+        go.transform.SetParent(parent, false);
+        var img = go.AddComponent<Image>();
+        img.color = color;
+        img.sprite = sprite;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    private TextMeshProUGUI MakeText(Transform parent, string name, string text, float size, FontStyles style,
+        Color color, Vector2 pos, Vector2 sizeDelta)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
+        go.transform.SetParent(parent, false);
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        tmp.font = koreanFont;
+        tmp.text = text;
+        tmp.fontSize = size;
+        tmp.fontStyle = style;
+        tmp.color = color;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.textWrappingMode = TextWrappingModes.Normal;
+        tmp.raycastTarget = false;
+        SetRect(tmp.rectTransform, pos, sizeDelta);
+        return tmp;
+    }
+
+    /// <summary>헤더 칩 (9-slice 알약) — 라벨 텍스트를 돌려준다.</summary>
+    private TextMeshProUGUI MakeChip(Transform parent, string name, Vector2 pos, Vector2 size)
+    {
+        var img = MakeImage(parent, name, Color.white, chipPill);
+        img.type = Image.Type.Sliced;
+        SetRect(img.rectTransform, pos, size);
+        return MakeText(img.transform, "Label", "", 14, FontStyles.Bold, Cream, Vector2.zero, size);
+    }
+
+    /// <summary>3D 아트 버튼 — 그림자 6px가 아트에 새겨져 있어 라벨을 3px 올린다.</summary>
+    private Button MakeArtButton(Transform parent, string name, string label, Color fg, Sprite art,
+        Vector2 pos, Vector2 sizeDelta, float fontSize, UnityEngine.Events.UnityAction onClick)
+    {
+        var img = MakeImage(parent, name, Color.white, art);
+        img.raycastTarget = true;
+        SetRect(img.rectTransform, pos, sizeDelta);
+        var btn = img.gameObject.AddComponent<Button>();
+        btn.targetGraphic = img;
+        if (onClick != null) btn.onClick.AddListener(onClick);
+        MakeText(img.transform, "Label", label, fontSize, FontStyles.Bold, fg, new Vector2(0f, 3f), sizeDelta);
+        return btn;
+    }
+
+    private static void SetRect(RectTransform rt, Vector2 pos, Vector2 size)
+    {
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = pos;
+        rt.sizeDelta = size;
+    }
+
+    private static void Stretch(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
 }
