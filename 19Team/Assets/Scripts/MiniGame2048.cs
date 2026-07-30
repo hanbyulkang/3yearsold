@@ -66,8 +66,7 @@ public sealed class MiniGame2048 : MonoBehaviour
         best = PlayerPrefs.GetInt("MiniGame2048Best", 0);
         if (koreanFont == null) koreanFont = TMP_Settings.defaultFontAsset;
         BuildUI();
-        // 서버에서 발바닥 잔량을 동기화한 뒤 첫 판을 연다 (오프라인이면 추정값으로 진행)
-        Backend.Game2048Bridge.Refresh(StartRound);
+        StartRound();
     }
 
     private void Update()
@@ -152,14 +151,14 @@ public sealed class MiniGame2048 : MonoBehaviour
         // X 버튼: x15.5 y16 44×44 (+아래 그림자 3)
         var close = MakeImage(playPanel.transform, "CloseBtn", Color.white, closeBtn);
         close.raycastTarget = true;
-        SetRect(close.rectTransform, new Vector2(-159f, 386.5f), new Vector2(44f, 47f));
+        SetRect(close.rectTransform, new Vector2(-159f, 336.5f), new Vector2(44f, 47f));
         var closeButton = close.gameObject.AddComponent<Button>();
         closeButton.targetGraphic = close;
         closeButton.onClick.AddListener(ReturnToVillage);
 
         // 헤더 바: y72 362×64 — "멍멍 2048" + 점수/베스트 칩
         var header = MakeImage(playPanel.transform, "Header", Color.white, headerBar);
-        SetRect(header.rectTransform, new Vector2(0f, 322f), new Vector2(362f, 64f));
+        SetRect(header.rectTransform, new Vector2(0f, 272f), new Vector2(362f, 64f));
         var title = MakeText(header.transform, "Title", "멍멍 2048", 20, FontStyles.Bold, Cream,
             new Vector2(-97f, 0f), new Vector2(140f, 40f));
         title.alignment = TextAlignmentOptions.Left;
@@ -171,7 +170,7 @@ public sealed class MiniGame2048 : MonoBehaviour
         // 보드: y172 362×362 — 빈 슬롯은 보드 아트에 새겨져 있다
         var boardImg = MakeImage(playPanel.transform, "Board", Color.white, boardBg);
         boardImg.raycastTarget = true;
-        SetRect(boardImg.rectTransform, new Vector2(0f, 73f), new Vector2(362f, 362f));
+        SetRect(boardImg.rectTransform, new Vector2(0f, 23f), new Vector2(362f, 362f));
         for (int row = 0; row < Size; row++)
             for (int col = 0; col < Size; col++)
             {
@@ -183,7 +182,8 @@ public sealed class MiniGame2048 : MonoBehaviour
 
         // 안내: y560
         hintText = MakeText(playPanel.transform, "Hint", DefaultHint, 14, FontStyles.Normal, SubInk,
-            new Vector2(0f, -145f), new Vector2(362f, 22f));
+            new Vector2(0f, -195f), new Vector2(362f, 22f));
+
     }
 
     private void BuildResultPanel(Transform parent)
@@ -232,12 +232,14 @@ public sealed class MiniGame2048 : MonoBehaviour
     private static Vector2 CellCenter(int row, int col)
     { return new Vector2(col * CellStep - CellHalfSpan, CellHalfSpan - row * CellStep); }
 
+
     // ---- 흐름 ----
 
     private void StartRound()
     {
         // 판 시작에 발바닥 1개를 쓴다 (PRD §5.1 — 미니게임 입장 전용)
-        if (!Backend.Game2048Bridge.BeginRound())
+        bool entryAlreadyPaid = GameCurrencyStore.ConsumeEntryReservation();
+        if (!Backend.Game2048Bridge.BeginRound(entryAlreadyPaid))
         {
             hintText.text = "발바닥이 다 떨어졌어요. 잠시 뒤 다시 채워집니다";
             return;

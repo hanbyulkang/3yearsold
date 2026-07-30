@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>{{{ PRODUCT_NAME }}}</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="TemplateData/style.css">
+</head>
+<body>
+  <main id="unity-shell">
+    <div id="unity-container">
+      <canvas id="unity-canvas" width="1080" height="1920" tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-progress-bar"></div>
+      </div>
+      <div id="unity-warning"></div>
+    </div>
+  </main>
+  <script>
+    const canvas = document.querySelector("#unity-canvas");
+    const loadingBar = document.querySelector("#unity-loading-bar");
+    const progressBar = document.querySelector("#unity-progress-bar");
+    const warningBanner = document.querySelector("#unity-warning");
+
+    function unityShowBanner(message, type) {
+      const item = document.createElement("div");
+      item.textContent = message;
+      item.className = type || "warning";
+      warningBanner.appendChild(item);
+      if (type !== "error") setTimeout(() => item.remove(), 5000);
+    }
+
+    const buildUrl = "Build";
+    const config = {
+      arguments: [],
+      dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+      frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+      codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+      productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+      productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+      showBanner: unityShowBanner,
+      cacheControl: () => "no-store",
+      matchWebGLToCanvasSize: false,
+      devicePixelRatio: 1
+    };
+
+    const script = document.createElement("script");
+    script.src = buildUrl + "/{{{ LOADER_FILENAME }}}";
+    script.onload = () => {
+      createUnityInstance(canvas, config, progress => {
+        progressBar.style.transform = `scaleX(${progress})`;
+      }).then(instance => {
+        window.unityInstance = instance;
+        loadingBar.style.display = "none";
+      }).catch(alert);
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>

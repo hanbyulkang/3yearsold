@@ -33,9 +33,9 @@ public static class GameUIAutoWire
         Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
         if (canvas == null) return;
         Transform foot = FindDirect(canvas.transform, "Foot");
-        Transform top = FindDirect(canvas.transform, "TOP");
-        Transform bone = top != null ? FindDirect(top, "Bone") : null;
         Transform gamePanel = FindDirect(canvas.transform, "Game");
+        Transform gameTop = gamePanel != null ? FindDirect(gamePanel, "Top") : null;
+        Transform bone = gameTop != null ? FindDirect(gameTop, "Bone") : null;
         Transform horizontal = FindDirect(canvas.transform, "Horizontal");
         if (foot == null || horizontal == null) return;
         Transform homeTab = horizontal != null ? FindDirect(horizontal, "Main") : null;
@@ -104,6 +104,7 @@ public static class GameUIAutoWire
         Image inventoryImage = inventoryTab != null ? inventoryTab.GetComponent<Image>() : null;
         so.FindProperty("_homeTabButton").objectReferenceValue = homeButton;
         so.FindProperty("_gameTabButton").objectReferenceValue = gameButton;
+        so.FindProperty("_inventoryTabButton").objectReferenceValue = inventoryTab != null ? inventoryTab.GetComponent<Button>() : null;
         so.FindProperty("_gameTabImage").objectReferenceValue = gameImage;
         so.FindProperty("_gameTabRect").objectReferenceValue = gameTab as RectTransform;
         so.FindProperty("_gameNormalSprite").objectReferenceValue = gameImage != null ? gameImage.sprite : null;
@@ -111,6 +112,9 @@ public static class GameUIAutoWire
         so.FindProperty("_homeTabImage").objectReferenceValue = homeImage;
         so.FindProperty("_homeTabRect").objectReferenceValue = homeTab as RectTransform;
         so.FindProperty("_homeNormalSprite").objectReferenceValue = inventoryImage != null ? inventoryImage.sprite : null;
+        so.FindProperty("_inventoryTabImage").objectReferenceValue = inventoryImage;
+        so.FindProperty("_inventoryTabRect").objectReferenceValue = inventoryTab as RectTransform;
+        so.FindProperty("_inventoryNormalSprite").objectReferenceValue = inventoryImage != null ? inventoryImage.sprite : null;
         if (homeTab != null) so.FindProperty("_selectedScale").floatValue = homeTab.localScale.x;
         so.FindProperty("_gameView").objectReferenceValue = gamePanel != null ? gamePanel.gameObject : null;
         string[] floatingNames = { "DogHeart", "DogFood", "DogPoop" };

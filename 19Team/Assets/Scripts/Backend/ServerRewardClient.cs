@@ -41,7 +41,11 @@ namespace Backend
                 if (paw != null) _paws = JsonUtility.FromJson<PawRow>(paw).count;
 
                 var bones = await SupabaseClient.RpcRaw("my_bones");
-                if (bones != null && int.TryParse(bones.Trim(), out var b)) _bones = b;
+                if (bones != null && int.TryParse(bones.Trim(), out var b))
+                {
+                    _bones = b;
+                    GameCurrencyStore.SetBones(b);
+                }
 
                 Debug.Log($"[Reward] 서버 예열 — 발바닥 {_paws} · 뼈다귀 {_bones}");
             }
@@ -85,6 +89,7 @@ namespace Backend
             // 표시용 추정 — 최종 지급량은 서버(세션 상한 + 일일 상한)가 정한다 (D-023)
             int estimate = Mathf.Clamp(bones, 0, SessionCapGuess);
             if (_bones >= 0) _bones += estimate;
+            GameCurrencyStore.AddBones(estimate);
             SubmitAsync(bones);
             return estimate;
         }
@@ -105,7 +110,11 @@ namespace Backend
                 {
                     // 서버 확정값으로 잔액 재조회 (추정치 누적 오차 제거)
                     var raw = await SupabaseClient.RpcRaw("my_bones");
-                    if (raw != null && int.TryParse(raw.Trim(), out var b)) _bones = b;
+                    if (raw != null && int.TryParse(raw.Trim(), out var b))
+                    {
+                        _bones = b;
+                        GameCurrencyStore.SetBones(b);
+                    }
                     Debug.Log($"[Reward] 서버 지급 {r.pointsAwarded} 뼈다귀 (잔액 {_bones})");
                 }
             }
@@ -115,6 +124,6 @@ namespace Backend
             }
         }
 
-        public int GetTotalBones() => _bones >= 0 ? _bones : 0;
+        public int GetTotalBones() => _bones >= 0 ? _bones : GameCurrencyStore.GetBones();
     }
 }

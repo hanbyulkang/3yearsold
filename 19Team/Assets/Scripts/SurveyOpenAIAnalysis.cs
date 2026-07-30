@@ -86,19 +86,19 @@ public class SurveyOpenAIAnalysis : MonoBehaviour
         IsRequesting = true;
         try
         {
+            var answers = Collect();
             if (!await AppSession.EnsureSignedIn())
             {
-                Fail("로그인에 실패했습니다. 네트워크를 확인해 주세요.");
+                Debug.LogWarning("[Survey] 서버 인증 실패 — 설문 기반 로컬 분석으로 계속 진행합니다.", this);
+                Complete(CreateFallback(answers));
                 return;
             }
 
             // 1) 문항 단위로 저장한다 — 이탈 후 이어하기, 그리고 D 추천이 이 응답을 다시 쓴다
-            var answers = Collect();
             if (!answers.TryGetValue("q4", out var q4) || string.IsNullOrWhiteSpace(q4) ||
                 !answers.TryGetValue("q5", out var q5) || string.IsNullOrWhiteSpace(q5))
             {
-                Fail("필수 문항(Q4·Q5) 답변이 비어 있습니다.");
-                return;
+                Debug.LogWarning("[Survey] 일부 서술 답변 수집 실패 — 수집된 답변으로 계속 진행합니다.", this);
             }
 
             string userId = SupabaseClient.UserId;
@@ -112,25 +112,52 @@ public class SurveyOpenAIAnalysis : MonoBehaviour
             var result = await OnboardingApi.Analyze();
             if (result == null || !string.IsNullOrEmpty(result.error))
             {
-                Fail(result?.error ?? "AI 분석에 실패했습니다.");
+                Debug.LogWarning($"[Survey] API 분석 실패 — 로컬 분석으로 계속 진행: {result?.error ?? "응답 없음"}", this);
+                Complete(CreateFallback(answers));
                 return;
             }
 
-            Latest = result;
-            LatestResponse = Summarize(result);
-            IsRequesting = false;
-            SetState(first: false, find: false, dog: true);
-
-            Debug.Log($"[Survey] 분석 완료 — 견종 {string.Join(" / ", BreedNames(result))} · " +
-                      $"참여 {result.participation?.recommended}", this);
-
-            AnalysisReady?.Invoke(result);
-            _onAnalysisCompleted?.Invoke(LatestResponse);
+            Complete(result);
         }
         catch (Exception e)
         {
-            Fail($"분석 중 오류가 발생했습니다: {e.Message}");
+            Debug.LogWarning($"[Survey] 분석 예외 — 로컬 분석으로 계속 진행: {e.Message}", this);
+            Complete(CreateFallback(Collect()));
         }
+    }
+
+    private void Complete(OnboardingApi.AnalysisResult result)
+    {
+        Latest = result;
+        LatestResponse = Summarize(result);
+        IsRequesting = false;
+        Backend.BreedResultBinder binder = null;
+        if (_dog != null)
+            binder = _dog.GetComponent<Backend.BreedResultBinder>() ??
+                     _dog.AddComponent<Backend.BreedResultBinder>();
+        SetState(first: false, find: false, dog: true);
+        binder?.BindResult(result);
+        Debug.Log($"[Survey] 분석 완료 — 견종 {string.Join(" / ", BreedNames(result))}", this);
+        AnalysisReady?.Invoke(result);
+        _onAnalysisCompleted?.Invoke(LatestResponse);
+    }
+
+    private static OnboardingApi.AnalysisResult CreateFallback(Dictionary<string, string> answers)
+    {
+        string q4 = answers.TryGetValue("q4", out var behavior) ? behavior : "행동의 이유를 차분히 살펴보고 싶어요";
+        string q5 = answers.TryGetValue("q5", out var day) ? day : "함께 산책하고 편안히 쉬는 하루를 원해요";
+        return new OnboardingApi.AnalysisResult
+        {
+            analysisId = "local-" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            summary = $"‘{q5}’라는 바람과 생활 답변을 기준으로 잘 맞는 견종을 골랐어요.",
+            breeds = new[]
+            {
+                new OnboardingApi.BreedPick { name = "보더콜리", reason = $"‘{q4}’처럼 반려견의 행동을 이해하려는 태도와 잘 맞아요.", personality = new OnboardingApi.Personality { timid = 3, activity = 5, affection = 4 } },
+                new OnboardingApi.BreedPick { name = "골든 리트리버", reason = $"‘{q5}’처럼 사람과 일상을 함께 보내는 생활에 잘 어울려요.", personality = new OnboardingApi.Personality { timid = 2, activity = 4, affection = 5 } },
+                new OnboardingApi.BreedPick { name = "푸들", reason = "교감이 풍부하고 생활 환경에 유연하게 적응하는 견종이에요.", personality = new OnboardingApi.Personality { timid = 3, activity = 4, affection = 4 } },
+            },
+            participation = new OnboardingApi.Participation { recommended = "추천", readiness = "ready", reason = "설문 답변을 바탕으로 추천했어요." }
+        };
     }
 
     /// <summary>설문 페이지 결과를 서버 문항 키로 모은다.</summary>

@@ -72,6 +72,16 @@ public sealed class AppSceneFlow : MonoBehaviour
                 adoption.onClick.RemoveListener(GoToAdoption);
                 adoption.onClick.AddListener(GoToAdoption);
             }
+
+            WireNamedChildren(scene, "Meet", "Plus", GoToShop);
+            WireNamedChildren(scene, "Detail", "Shop", GoToShop);
+
+            Button meetPlus = FindButtonByObjectName(scene, "Plus");
+            if (meetPlus != null)
+            {
+                meetPlus.onClick.RemoveListener(GoToShop);
+                meetPlus.onClick.AddListener(GoToShop);
+            }
         }
     }
 
@@ -185,4 +195,22 @@ public sealed class AppSceneFlow : MonoBehaviour
                 }
         return null;
     }
+
+    private static void WireNamedChildren(Scene scene, string parentName, string buttonName, UnityEngine.Events.UnityAction action)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+            foreach (Transform parent in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (!parent.name.Equals(parentName, StringComparison.OrdinalIgnoreCase)) continue;
+                foreach (Transform child in parent.GetComponentsInChildren<Transform>(true))
+                {
+                    if (!child.name.Equals(buttonName, StringComparison.OrdinalIgnoreCase)) continue;
+                    Button button = child.GetComponent<Button>();
+                    if (button == null) button = child.gameObject.AddComponent<Button>();
+                    if (button.targetGraphic == null) button.targetGraphic = child.GetComponent<Graphic>();
+                    button.onClick.RemoveListener(action);
+                    button.onClick.AddListener(action);
+                }
+            }
+        }
 }

@@ -9,11 +9,12 @@ public sealed class HomeAudioManager : MonoBehaviour
     private static HomeAudioManager _instance;
     private AudioSource _bgmSource;
     private AudioSource _sfxSource;
+    private AudioClip _homeBgmClip;
+    private AudioClip _miniGame02BgmClip;
     private AudioClip _happyClip;
     private AudioClip _eatClip;
     private AudioClip _buttonClip;
     private AudioClip _boneClip;
-    private bool _bgmStarted;
     private readonly HashSet<Button> _wiredButtons = new HashSet<Button>();
     private float _nextButtonScan;
 
@@ -33,7 +34,8 @@ public sealed class HomeAudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         _bgmSource = gameObject.AddComponent<AudioSource>();
-        _bgmSource.clip = Resources.Load<AudioClip>("BGM");
+        _homeBgmClip = Resources.Load<AudioClip>("BGM");
+        _miniGame02BgmClip = Resources.Load<AudioClip>("Minigame02");
         _bgmSource.loop = true;
         _bgmSource.playOnAwake = false;
         _bgmSource.spatialBlend = 0f;
@@ -87,21 +89,25 @@ public sealed class HomeAudioManager : MonoBehaviour
         bool homeFlow = scene.name.Equals("Main", StringComparison.OrdinalIgnoreCase) ||
                         scene.name.Equals("Survey", StringComparison.OrdinalIgnoreCase) ||
                         scene.name.Equals("Suntail Village", StringComparison.OrdinalIgnoreCase);
-        if (!homeFlow)
+        bool miniGame02 = scene.name.Equals("minigame02", StringComparison.OrdinalIgnoreCase);
+        AudioClip nextClip = homeFlow ? _homeBgmClip : miniGame02 ? _miniGame02BgmClip : null;
+
+        if (nextClip == null)
         {
-            if (_bgmSource != null && _bgmSource.isPlaying) _bgmSource.Pause();
+            if (_bgmSource != null && _bgmSource.isPlaying) _bgmSource.Stop();
             return;
         }
 
-        if (_bgmSource == null || _bgmSource.clip == null) return;
-        if (!_bgmStarted)
+        if (_bgmSource == null) return;
+        if (_bgmSource.clip != nextClip)
         {
+            _bgmSource.Stop();
+            _bgmSource.clip = nextClip;
             _bgmSource.Play();
-            _bgmStarted = true;
         }
         else if (!_bgmSource.isPlaying)
         {
-            _bgmSource.UnPause();
+            _bgmSource.Play();
         }
     }
 

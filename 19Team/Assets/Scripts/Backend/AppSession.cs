@@ -19,10 +19,14 @@ namespace Backend
         static Task<bool> _signIn;
 
         /// <summary>여러 곳에서 불러도 로그인은 한 번만 일어난다.</summary>
-        public static Task<bool> EnsureSignedIn()
+        public static async Task<bool> EnsureSignedIn()
         {
             if (_signIn == null) _signIn = SignInInternal();
-            return _signIn;
+            bool ok = await _signIn;
+            // WebGL은 첫 요청이 브라우저 준비/CORS/일시적 네트워크 문제로 실패할 수 있다.
+            // 실패한 Task를 영구 캐시하면 이후 제출도 서버를 다시 호출하지 않는다.
+            if (!ok) _signIn = null;
+            return ok;
         }
 
         static async Task<bool> SignInInternal()

@@ -30,11 +30,11 @@ namespace Backend
         public static int Paws => _paws >= 0 ? _paws : LocalPawGuess;
 
         /// <summary>판을 시작한다. 발바닥이 없으면 false — 화면에서 안내해야 한다.</summary>
-        public static bool BeginRound()
+        public static bool BeginRound(bool entryAlreadyPaid = false)
         {
-            if (Paws <= 0) return false;
+            if (!entryAlreadyPaid && !GameCurrencyStore.TrySpendPaw()) return false;
 
-            _paws = Paws - 1;      // 낙관적 차감. 서버 응답이 오면 교정된다
+            _paws = GameCurrencyStore.GetPaws();
             _sessionId = null;
             _submitted = false;
             _startTask = StartAsync();
@@ -46,7 +46,7 @@ namespace Backend
             try
             {
                 var r = await GameApi.Start("mg2");
-                if (r.code == "NO_PAW") { _paws = 0; return; }
+                if (r.code == "NO_PAW") return; // 서버 불일치가 로컬 데모 플레이를 막지 않게 한다.
                 if (!string.IsNullOrEmpty(r.error)) return;   // 오프라인 — 로컬 추정 유지
                 _sessionId = r.sessionId;
                 _paws = r.paw;

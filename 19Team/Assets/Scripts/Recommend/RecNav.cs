@@ -102,7 +102,12 @@ namespace Recommend
             appbar.sizeDelta = new Vector2(contentW, BarH);
 
             float titleX = 20f;
-            if (showBack)
+            if (id == "d01")
+            {
+                RecUI.BrownButton(appbar, "Home", "홈", AppSceneFlow.GoHome, 20f, (BarH - 45f) * 0.5f, 54f, 42f, RecTheme.Fs(15f), 0f, 12f, 3f);
+                titleX = 20f + 54f + 14f;
+            }
+            else if (showBack)
             {
                 RecUI.BrownButton(appbar, "Back", "←", Back, 20f, (BarH - 45f) * 0.5f, 42f, 42f, RecTheme.Fs(20f), 0f, 12f, 3f);
                 titleX = 20f + 42f + 14f;

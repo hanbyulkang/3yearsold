@@ -101,6 +101,8 @@ namespace Backend
             if (_mindNext != null) _mindNext.onClick.RemoveListener(CreateAndShowMeet);
         }
 
+        public void BindResult(OnboardingApi.AnalysisResult result) => Bind(result);
+
         void Bind(OnboardingApi.AnalysisResult result)
         {
             if (result?.breeds == null || result.breeds.Length == 0) return;

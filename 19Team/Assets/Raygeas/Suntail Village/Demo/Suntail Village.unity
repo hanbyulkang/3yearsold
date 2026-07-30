@@ -3766,7 +3766,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBA4D\uBA4D\uC774 \uC9D1\uC0AC"
+  m_text: "\uB2E8\uCD94\uC544\uBE60"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   m_sharedMaterial: {fileID: -971234123130120431, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
@@ -7094,7 +7094,7 @@ GameObject:
   - component: {fileID: 508613181}
   - component: {fileID: 508613180}
   m_Layer: 5
-  m_Name: Image (1)
+  m_Name: Plus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9151,7 +9151,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 24,500
+  m_text: "19,800\uC810"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   m_sharedMaterial: {fileID: -971234123130120431, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
@@ -10646,7 +10646,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBA4D\uBA4D\uC774 \uC9D1\uC0AC"
+  m_text: "\uC0B0\uCC45\uC655"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   m_sharedMaterial: {fileID: -971234123130120431, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
@@ -16536,7 +16536,7 @@ MonoBehaviour:
   _boneIconSource: {fileID: 1472036222}
   _boneTarget: {fileID: 122890840}
   _rewardLayer: {fileID: 1228213961}
-  _boneRewardCount: {x: 5, y: 6}
+  _boneRewardCount: {x: 5, y: 10}
   _boneFlyDuration: 0.75
   _boneScatterRadius: 70
   _boneIconSize: {x: 54, y: 54}
@@ -16606,7 +16606,7 @@ MonoBehaviour:
   _poopTemplate: {fileID: 1504542298}
   _boneRewardSource: {fileID: 1228213962}
   _missionController: {fileID: 2069269317}
-  _poopInterval: {x: 6, y: 10}
+  _poopInterval: {x: 12, y: 25}
   _sittingSeconds: 3
   _heightOffset: 0.8
   _popDuration: 0.4
@@ -16657,7 +16657,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameUIController
   _dataSet: {fileID: 11400000, guid: 3dd28af39226a4dbf8bab84b34792cfb, type: 2}
   _pawCountText: {fileID: 39880645}
-  _boneCountText: {fileID: 196189012}
+  _boneCountText: {fileID: 721358680}
   _recoveryTimerText: {fileID: 1659718503}
   _pawImages:
   - {fileID: 1210777936}
@@ -16690,6 +16690,10 @@ MonoBehaviour:
   _homeTabImage: {fileID: 1968580660}
   _homeTabRect: {fileID: 1968580659}
   _homeNormalSprite: {fileID: 21300000, guid: e4551d0f17da94266b0cec3316d09153, type: 3}
+  _inventoryTabButton: {fileID: 1530232252}
+  _inventoryTabImage: {fileID: 1530232250}
+  _inventoryTabRect: {fileID: 1530232249}
+  _inventoryNormalSprite: {fileID: 21300000, guid: e4551d0f17da94266b0cec3316d09153, type: 3}
   _selectedScale: 1.1
   _tabAnimationDuration: 0.18
   _gameView: {fileID: 586590264}
@@ -19531,6 +19535,18 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 586590264}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &1543044922
 GameObject:
@@ -23042,7 +23058,7 @@ GameObject:
   - component: {fileID: 1905411340}
   - component: {fileID: 1905411339}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Shop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24983,7 +24999,7 @@ GameObject:
   - component: {fileID: 2038734279}
   - component: {fileID: 2038734278}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Shop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26210,7 +26226,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 24,500
+  m_text: "21,100\uC810"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}
   m_sharedMaterial: {fileID: -971234123130120431, guid: f5a76bc7fc64647309ea7f723bc25dc7, type: 2}

@@ -41,6 +41,10 @@ public sealed class GameUIController : MonoBehaviour
     [SerializeField] private Image _homeTabImage;
     [SerializeField] private RectTransform _homeTabRect;
     [SerializeField] private Sprite _homeNormalSprite;
+    [SerializeField] private Button _inventoryTabButton;
+    [SerializeField] private Image _inventoryTabImage;
+    [SerializeField] private RectTransform _inventoryTabRect;
+    [SerializeField] private Sprite _inventoryNormalSprite;
     [SerializeField] private float _selectedScale = 1.1f;
     [SerializeField] private float _tabAnimationDuration = 0.18f;
     [Header("Game View Layer")]
@@ -57,6 +61,8 @@ public sealed class GameUIController : MonoBehaviour
 
     private void Awake()
     {
+        ResolveRuntimeInventoryTab();
+        ResolveGameBoneCountText();
         _recoveryTextTemplate = _recoveryTimerText != null ? _recoveryTimerText.text : string.Empty;
         ResolveRuntimePlayButtons();
         for (int i = 0; i < _playEntries.Length; i++)
@@ -66,8 +72,37 @@ public sealed class GameUIController : MonoBehaviour
         }
         if (_homeTabButton != null) _homeTabButton.onClick.AddListener(SelectHomeTab);
         if (_gameTabButton != null) _gameTabButton.onClick.AddListener(SelectGameTab);
+        if (_inventoryTabButton != null) _inventoryTabButton.onClick.AddListener(SelectInventoryTab);
         GameCurrencyStore.Changed += RefreshImmediately;
         RefreshImmediately();
+    }
+
+    private void ResolveRuntimeInventoryTab()
+    {
+        if (_inventoryTabButton != null && _inventoryTabImage != null && _inventoryTabRect != null) return;
+        foreach (Transform candidate in transform.GetComponentsInChildren<Transform>(true))
+        {
+            if (!candidate.name.Equals("Horizontal", StringComparison.OrdinalIgnoreCase)) continue;
+            Transform inventory = candidate.Find("Inventory");
+            if (inventory == null) continue;
+            _inventoryTabButton = inventory.GetComponent<Button>();
+            _inventoryTabImage = inventory.GetComponent<Image>();
+            _inventoryTabRect = inventory as RectTransform;
+            if (_inventoryNormalSprite == null && _inventoryTabImage != null)
+                _inventoryNormalSprite = _inventoryTabImage.sprite;
+            return;
+        }
+    }
+
+    private void ResolveGameBoneCountText()
+    {
+        if (_gameView == null) return;
+        foreach (Transform candidate in _gameView.GetComponentsInChildren<Transform>(true))
+        {
+            if (!candidate.name.Equals("Bone", StringComparison.OrdinalIgnoreCase)) continue;
+            _boneCountText = candidate.GetComponentInChildren<TMP_Text>(true);
+            if (_boneCountText != null) return;
+        }
     }
 
     private void ResolveRuntimePlayButtons()
@@ -106,6 +141,7 @@ public sealed class GameUIController : MonoBehaviour
         }
         if (_homeTabButton != null) _homeTabButton.onClick.RemoveListener(SelectHomeTab);
         if (_gameTabButton != null) _gameTabButton.onClick.RemoveListener(SelectGameTab);
+        if (_inventoryTabButton != null) _inventoryTabButton.onClick.RemoveListener(SelectInventoryTab);
     }
 
     private void Update() => RefreshIfChanged();
@@ -131,6 +167,7 @@ public sealed class GameUIController : MonoBehaviour
         ShowGameView();
         if (_homeTabImage != null && _homeNormalSprite != null) _homeTabImage.sprite = _homeNormalSprite;
         if (_homeTabRect != null) _homeTabRect.localScale = Vector3.one;
+        ResetInventoryTab();
         if (_gameTabImage != null && _gameSelectedSprite != null) _gameTabImage.sprite = _gameSelectedSprite;
         AnimateTab(_gameTabRect);
     }
@@ -140,8 +177,26 @@ public sealed class GameUIController : MonoBehaviour
         HideGameView();
         if (_gameTabImage != null && _gameNormalSprite != null) _gameTabImage.sprite = _gameNormalSprite;
         if (_gameTabRect != null) _gameTabRect.localScale = Vector3.one;
+        ResetInventoryTab();
         if (_homeTabImage != null && _gameSelectedSprite != null) _homeTabImage.sprite = _gameSelectedSprite;
         AnimateTab(_homeTabRect);
+    }
+
+    public void SelectInventoryTab()
+    {
+        HideGameView();
+        if (_gameTabImage != null && _gameNormalSprite != null) _gameTabImage.sprite = _gameNormalSprite;
+        if (_gameTabRect != null) _gameTabRect.localScale = Vector3.one;
+        ResetInventoryTab();
+        if (_homeTabImage != null && _gameSelectedSprite != null) _homeTabImage.sprite = _gameSelectedSprite;
+        AnimateTab(_homeTabRect);
+    }
+
+    private void ResetInventoryTab()
+    {
+        Sprite normal = _inventoryNormalSprite != null ? _inventoryNormalSprite : _gameNormalSprite;
+        if (_inventoryTabImage != null && normal != null) _inventoryTabImage.sprite = normal;
+        if (_inventoryTabRect != null) _inventoryTabRect.localScale = Vector3.one;
     }
 
     private void AnimateTab(RectTransform target)
@@ -200,7 +255,7 @@ public sealed class GameUIController : MonoBehaviour
     {
         if (_dataSet == null) return;
         int paws = _dataSet.Paws;
-        int bones = _dataSet.Bones;
+        int bones = GameCurrencyStore.GetBones();
         int seconds = _dataSet.SecondsUntilNextPaw;
         if (paws == _lastPaws && bones == _lastBones && seconds == _lastSeconds) return;
         Refresh(paws, bones, seconds);
@@ -209,7 +264,7 @@ public sealed class GameUIController : MonoBehaviour
     private void RefreshImmediately()
     {
         if (_dataSet == null) return;
-        Refresh(_dataSet.Paws, _dataSet.Bones, _dataSet.SecondsUntilNextPaw);
+        Refresh(_dataSet.Paws, GameCurrencyStore.GetBones(), _dataSet.SecondsUntilNextPaw);
     }
 
     private void Refresh(int paws, int bones, int seconds)

@@ -119,12 +119,31 @@ namespace Backend
             try
             {
                 await req.SendWebRequest();
+                string responseText = req.downloadHandler?.text ?? string.Empty;
                 if (req.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogError($"[Supabase] {method} {url} 실패 ({req.responseCode}): {req.downloadHandler.text}");
+                    Debug.LogError($"[Supabase] {method} {url} 실패 ({req.responseCode}, {req.result}): {req.error}\n{responseText}");
                     return default;
                 }
-                return JsonUtility.FromJson<T>(req.downloadHandler.text);
+                if (string.IsNullOrWhiteSpace(responseText))
+                {
+                    Debug.LogError($"[Supabase] {method} {url} HTTP {req.responseCode}지만 응답 본문이 비었습니다.");
+                    return default;
+                }
+                try
+                {
+                    T parsed = JsonUtility.FromJson<T>(responseText);
+                    if (parsed == null)
+                        Debug.LogError($"[Supabase] {method} {url} HTTP {req.responseCode} JSON 파싱 결과가 null입니다: {responseText}");
+                    else
+                        Debug.Log($"[Supabase] {method} {url} 완료 ({req.responseCode}, {responseText.Length} bytes)");
+                    return parsed;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Supabase] {method} {url} HTTP {req.responseCode} JSON 파싱 실패: {e.Message}\n{responseText}");
+                    return default;
+                }
             }
             finally { req.Dispose(); }
         }

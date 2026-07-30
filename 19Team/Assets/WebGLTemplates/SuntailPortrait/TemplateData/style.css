@@ -1,0 +1,77 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #17120e;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  overscroll-behavior: none;
+}
+
+#unity-shell {
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+#unity-container {
+  position: relative;
+  width: min(100vw, calc(100dvh * 9 / 16));
+  height: min(100dvh, calc(100vw * 16 / 9));
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  background: #000;
+}
+
+#unity-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  touch-action: none;
+}
+
+#unity-loading-bar {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#unity-progress-bar {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: #ffd033;
+}
+
+#unity-warning {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+#unity-warning > div {
+  padding: 10px;
+  color: #241a11;
+  background: #ffd65a;
+}
+
+#unity-warning > .error {
+  color: white;
+  background: #b3261e;
+}

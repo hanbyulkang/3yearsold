@@ -81,6 +81,8 @@ namespace Backend
         {
             var r = await SupabaseClient.Invoke<AnalysisResult>("survey-analyze");
             if (r == null) return new AnalysisResult { error = "네트워크 오류", retryable = true };
+            if (string.IsNullOrEmpty(r.error) && (r.breeds == null || r.breeds.Length != 3))
+                return new AnalysisResult { error = "서버 응답에 추천 견종 3개가 없습니다", retryable = true };
             return r;
         }
 

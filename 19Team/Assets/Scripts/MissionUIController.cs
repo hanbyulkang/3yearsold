@@ -34,6 +34,7 @@ public class MissionUIController : MonoBehaviour
     private void Awake()
     {
         if (_dataSet == null) { Debug.LogError("[Mission] Assign MissionDataSet.", this); return; }
+        ApplyDogNameToAllMissionTexts();
         _dataSet.EnsureCount(_missions.Length);
         _dataSet.LoadSavedState();
         for (int i = 0; i < _missions.Length; i++)
@@ -43,6 +44,15 @@ public class MissionUIController : MonoBehaviour
                 _missions[i].goButton.onClick.AddListener(() => OnGoClicked(index));
         }
         RefreshAll();
+    }
+
+    private void ApplyDogNameToAllMissionTexts()
+    {
+        string dogName = PlayerPrefs.GetString("selected_dog_name", "단추");
+        if (string.IsNullOrWhiteSpace(dogName)) dogName = "단추";
+        foreach (TMP_Text text in GetComponentsInChildren<TMP_Text>(true))
+            if (!string.IsNullOrEmpty(text.text) && text.text.Contains("{0}"))
+                text.text = text.text.Replace("{0}", dogName);
     }
 
     public void SetMissionCompleted(int index, bool completed)

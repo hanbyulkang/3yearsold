@@ -133,6 +133,8 @@ public class DogHeartInteraction : MonoBehaviour
         _dogHeartButton.onClick.AddListener(OnHeartClicked);
         Initialize(_dogAnimator);
         _boneCount = GameCurrencyStore.GetBones();
+        _meatCount = GameCurrencyStore.GetJerky();
+        GameCurrencyStore.Changed += RefreshSharedCurrency;
         RefreshBoneText();
         RefreshMeatText();
         RefreshHearts();
@@ -142,6 +144,7 @@ public class DogHeartInteraction : MonoBehaviour
 
     private void OnDestroy()
     {
+        GameCurrencyStore.Changed -= RefreshSharedCurrency;
         if (_dogHeartButton != null)
             _dogHeartButton.onClick.RemoveListener(OnHeartClicked);
     }
@@ -376,12 +379,13 @@ public class DogHeartInteraction : MonoBehaviour
     public void SetMeatCount(int value)
     {
         _meatCount = Mathf.Max(0, value);
+        GameCurrencyStore.SetJerky(_meatCount);
         RefreshMeatText();
     }
 
     public void AddMeat(int amount)
     {
-        _meatCount = Mathf.Max(0, _meatCount + amount);
+        _meatCount = GameCurrencyStore.AddJerky(amount);
         RefreshMeatText();
         _onMeatCountChanged?.Invoke(_meatCount);
     }
@@ -408,6 +412,14 @@ public class DogHeartInteraction : MonoBehaviour
     {
         if (_boneCountText != null)
             _boneCountText.text = _boneCount.ToString();
+    }
+
+    private void RefreshSharedCurrency()
+    {
+        _boneCount = GameCurrencyStore.GetBones();
+        _meatCount = GameCurrencyStore.GetJerky();
+        RefreshBoneText();
+        RefreshMeatText();
     }
 
     private void RefreshMeatText()

@@ -82,17 +82,34 @@ namespace Backend
 
         static async Task<Texture2D> FetchInternal(string url)
         {
-            using (var req = UnityWebRequestTexture.GetTexture(url))
+            string requestUrl = WebGLSafeUrl(url);
+            using (var req = UnityWebRequestTexture.GetTexture(requestUrl))
             {
                 req.timeout = 20;
                 await req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogWarning($"[RemoteImage] HTTP {req.responseCode} — {url}");
+                    Debug.LogWarning($"[RemoteImage] HTTP {req.responseCode} ({req.result}): {req.error} — {requestUrl}");
                     return null;
                 }
+                Debug.Log($"[RemoteImage] 이미지 완료 ({req.responseCode}) — {requestUrl}");
                 return DownloadHandlerTexture.GetContent(req);
             }
+        }
+
+        static string WebGLSafeUrl(string url)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (Uri.TryCreate(url, UriKind.Absolute, out var imageUri) &&
+                imageUri.Host.Equals("func.seoul.go.kr", StringComparison.OrdinalIgnoreCase) &&
+                imageUri.AbsolutePath.StartsWith("/upload/animal/", StringComparison.OrdinalIgnoreCase) &&
+                Uri.TryCreate(Application.absoluteURL, UriKind.Absolute, out var appUri))
+            {
+                string relative = imageUri.AbsolutePath.Substring("/upload/animal/".Length);
+                return appUri.GetLeftPart(UriPartial.Authority) + "/seoul-animal/" + relative;
+            }
+#endif
+            return url;
         }
     }
 }

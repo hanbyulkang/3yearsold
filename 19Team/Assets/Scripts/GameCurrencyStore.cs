@@ -7,6 +7,7 @@ public static class GameCurrencyStore
     public const int RecoverySeconds = 10 * 60;
     public const string PawKey = "mg1_paws";
     public const string BoneKey = "mg1_bones_total";
+    public const string JerkyKey = "game_jerky_total";
     private const string NextRecoveryKey = "game_paws_next_recovery_utc";
     private const string EntryReservationKey = "game_paw_entry_reservation";
 
@@ -20,6 +21,7 @@ public static class GameCurrencyStore
     }
 
     public static int GetBones() => Mathf.Max(0, PlayerPrefs.GetInt(BoneKey, 0));
+    public static int GetJerky() => Mathf.Max(0, PlayerPrefs.GetInt(JerkyKey, 0));
 
     public static int SecondsUntilNextPaw()
     {
@@ -65,6 +67,20 @@ public static class GameCurrencyStore
         PlayerPrefs.SetInt(BoneKey, Mathf.Max(0, amount));
         PlayerPrefs.Save();
         Changed?.Invoke();
+    }
+
+    public static void SetJerky(int amount)
+    {
+        PlayerPrefs.SetInt(JerkyKey, Mathf.Max(0, amount));
+        PlayerPrefs.Save();
+        Changed?.Invoke();
+    }
+
+    public static int AddJerky(int amount)
+    {
+        int total = Mathf.Max(0, GetJerky() + amount);
+        SetJerky(total);
+        return total;
     }
 
     public static void SetPaws(int amount)

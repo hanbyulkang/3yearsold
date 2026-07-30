@@ -57,7 +57,7 @@ public sealed class MarketFlow : MonoBehaviour
     private string _notice;       // 구매 결과 안내 (실패 사유 포함)
 
     /// <summary>서버에서 카탈로그·잔액·보유목록을 읽고 화면을 다시 그린다.</summary>
-    private async void LoadFromServer()
+    private async System.Threading.Tasks.Task LoadFromServer()
     {
         if (!await Backend.AppSession.EnsureSignedIn())
         {
@@ -68,7 +68,8 @@ public sealed class MarketFlow : MonoBehaviour
         _owned   = await Backend.ShopApi.GetOwned();
         _jerky   = await Backend.ShopApi.GetJerky();
         _bones   = await BonesAsync();
-        Refresh();
+        if (_jerky >= 0) GameCurrencyStore.SetJerky(_jerky);
+        if (_bones >= 0) GameCurrencyStore.SetBones(_bones);
     }
 
     private static async System.Threading.Tasks.Task<int> BonesAsync()
@@ -93,6 +94,7 @@ public sealed class MarketFlow : MonoBehaviour
         if (r.alreadyOwned) { _notice = "이미 보유한 스킨이에요"; Refresh(); return; }
 
         _jerky = r.jerkyLeft;
+        GameCurrencyStore.SetJerky(_jerky);
         _owned = await Backend.ShopApi.GetOwned();
         _notice = null;
         ShowSkinPurchased();
@@ -143,11 +145,13 @@ public sealed class MarketFlow : MonoBehaviour
         Topup     // F-05 육포 충전
     }
 
-    private void Start()
+    private async void Start()
     {
         BuildInterface();
+        canvas.enabled = false;
+        await LoadFromServer();
         ShowShop();
-        LoadFromServer();   // 카탈로그·잔액을 받아오면 Refresh가 화면을 다시 그린다
+        canvas.enabled = true;
     }
 
     /// <summary>현재 화면을 서버 값으로 다시 그린다. 잔액 라벨도 갱신된다.</summary>
@@ -739,6 +743,7 @@ private GameObject CreatePanel(string name, Transform parent, float x, float y, 
         }
 
         _jerky = await Backend.ShopApi.GetJerky();
+        if (_jerky >= 0) GameCurrencyStore.SetJerky(_jerky);
         _limit = await Backend.ShopApi.GetLimit();
         _notice = $"육포 {result.jerky}개를 지급했어요 (모의 결제)";
         Refresh();
